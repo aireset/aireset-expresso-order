@@ -28,7 +28,7 @@ $order_statuses = function_exists( 'wc_get_order_statuses' ) ? wc_get_order_stat
                     <button type="button" class="eop-btn" id="eop-orders-refresh"><?php esc_html_e( 'Atualizar', EOP_TEXT_DOMAIN ); ?></button>
                 </div>
 
-                <div class="eop-orders-browser__filters">
+                <form class="eop-orders-browser__filters" id="eop-orders-filters-form">
                     <div class="eop-field">
                         <label for="eop-orders-search"><?php esc_html_e( 'Buscar', EOP_TEXT_DOMAIN ); ?></label>
                         <input type="search" id="eop-orders-search" placeholder="<?php esc_attr_e( 'Pedido, cliente ou e-mail', EOP_TEXT_DOMAIN ); ?>" />
@@ -51,7 +51,8 @@ $order_statuses = function_exists( 'wc_get_order_statuses' ) ? wc_get_order_stat
                             <option value="completed"><?php esc_html_e( 'Concluidos', EOP_TEXT_DOMAIN ); ?></option>
                         </select>
                     </div>
-                </div>
+                    <button type="submit" class="screen-reader-text" hidden><?php esc_html_e( 'Filtrar pedidos', EOP_TEXT_DOMAIN ); ?></button>
+                </form>
             </div>
 
             <div class="eop-orders-browser__summary" id="eop-orders-summary"></div>

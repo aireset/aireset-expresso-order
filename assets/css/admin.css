@@ -945,6 +945,144 @@ body.eop-admin-spa-screen.is-plugin-fullscreen #wpcontent {
   color: #55607f;
 }
 
+.eop-performance-audit {
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid #d9e4ff;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7f9ff 100%);
+  box-shadow: 0 18px 44px rgba(15, 37, 87, 0.08);
+}
+
+.eop-performance-audit__header {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+}
+
+.eop-performance-audit__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.eop-performance-audit__toggle:focus {
+  outline: none;
+}
+
+.eop-performance-audit__header-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.eop-performance-audit__header-copy strong {
+  color: #11162f;
+  font-size: 18px;
+  line-height: 1.1;
+}
+
+.eop-performance-audit__header-copy span {
+  color: #55607f;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.eop-performance-audit__chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  min-height: 30px;
+  color: #0f1630;
+  transition: transform 0.18s ease;
+}
+
+.eop-performance-audit.is-open .eop-performance-audit__chevron {
+  transform: rotate(180deg);
+}
+
+.eop-performance-audit__body {
+  display: none;
+  gap: 16px;
+  padding: 0 18px 18px;
+}
+
+.eop-performance-audit.is-open .eop-performance-audit__body {
+  display: grid;
+}
+
+.eop-performance-audit__body[hidden] {
+  display: none !important;
+}
+
+.eop-performance-audit__actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.eop-performance-audit__summary {
+  display: grid;
+  gap: 12px;
+}
+
+.eop-performance-audit__table-wrap {
+  overflow: auto;
+  border: 1px solid #dde6f7;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.eop-performance-audit__table {
+  margin: 0;
+}
+
+.eop-performance-audit__table th,
+.eop-performance-audit__table td {
+  padding: 12px 14px;
+}
+
+.eop-performance-audit__table td small {
+  color: #667391;
+}
+
+.eop-admin-spa .eop-order-card__customer-name {
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.eop-admin-spa .eop-order-card__flow {
+  gap: 12px;
+}
+
+.eop-admin-spa .eop-order-card__flow-head {
+  display: grid;
+  gap: 4px;
+}
+
+.eop-admin-spa .eop-order-card__flow-stage {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #11162f;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
 .eop-admin-license-shell {
   max-width: 980px;
 }
@@ -1390,21 +1528,55 @@ body.eop-admin-spa-screen.is-plugin-fullscreen #wpcontent {
 }
 
 .eop-order-card__flow-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
 }
 
 .eop-order-card__flow-pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 30px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: #eef3ff;
-  color: #415274;
-  font-size: 12px;
-  line-height: 1.2;
+  display: grid;
+  gap: 4px;
+  min-height: 52px;
+  padding: 10px 12px;
+  border: 1px solid #dde6f7;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f9fbff 0%, #eef3ff 100%);
+  color: #11162f;
+}
+
+.eop-order-card__flow-pill-label {
+  color: #5f6e8e;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.eop-order-card__flow-pill-value {
+  color: #11162f;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.eop-order-card__flow-pill--success {
+  border-color: rgba(46, 160, 107, 0.2);
+  background: linear-gradient(180deg, rgba(46, 160, 107, 0.12) 0%, #f8fffb 100%);
+}
+
+.eop-order-card__flow-pill--warning {
+  border-color: rgba(227, 138, 48, 0.22);
+  background: linear-gradient(180deg, rgba(227, 138, 48, 0.14) 0%, #fffaf4 100%);
+}
+
+.eop-order-card__flow-pill--info {
+  border-color: rgba(66, 99, 201, 0.18);
+  background: linear-gradient(180deg, rgba(66, 99, 201, 0.1) 0%, #f8fbff 100%);
+}
+
+.eop-order-card__flow-pill--neutral {
+  border-color: #dde6f7;
+  background: linear-gradient(180deg, #f9fbff 0%, #ffffff 100%);
 }
 
 @media (max-width: 782px) {

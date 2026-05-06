@@ -261,38 +261,46 @@ $performance_initial_metrics = class_exists( 'EOP_Performance_Audit' )
 
             <?php if ( $can_manage_settings ) : ?>
                 <section
-                    class="eop-card eop-performance-audit"
+                    class="eop-card eop-performance-audit is-collapsed"
                     id="eop-performance-audit"
                     data-eop-performance-initial="<?php echo esc_attr( wp_json_encode( $performance_initial_metrics ) ); ?>"
                 >
                     <div class="eop-performance-audit__header">
-                        <div>
-                            <h2><?php esc_html_e( 'Baseline de performance', EOP_TEXT_DOMAIN ); ?></h2>
-                            <p><?php esc_html_e( 'Auditoria inicial da sessao para medir shell, views lazy, PDF e pedidos antes das proximas fases de otimizacao.', EOP_TEXT_DOMAIN ); ?></p>
-                        </div>
-                        <button type="button" class="button button-secondary" id="eop-performance-clear-session"><?php esc_html_e( 'Limpar baseline da sessao', EOP_TEXT_DOMAIN ); ?></button>
+                        <button type="button" class="eop-performance-audit__toggle" id="eop-performance-audit-toggle" aria-expanded="false" aria-controls="eop-performance-audit-body">
+                            <span class="eop-performance-audit__header-copy">
+                                <strong><?php esc_html_e( 'Baseline de performance', EOP_TEXT_DOMAIN ); ?></strong>
+                                <span><?php esc_html_e( 'Auditoria inicial da sessao para medir shell, views lazy, PDF e pedidos antes das proximas fases de otimizacao.', EOP_TEXT_DOMAIN ); ?></span>
+                            </span>
+                        <span class="eop-performance-audit__chevron dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span>
+                        </button>
                     </div>
 
-                    <div class="eop-performance-audit__summary" id="eop-performance-summary"></div>
+                    <div class="eop-performance-audit__body" id="eop-performance-audit-body" hidden>
+                        <div class="eop-performance-audit__actions">
+                            <button type="button" class="button button-secondary" id="eop-performance-clear-session"><?php esc_html_e( 'Limpar baseline da sessao', EOP_TEXT_DOMAIN ); ?></button>
+                        </div>
 
-                    <div class="eop-performance-audit__table-wrap">
-                        <table class="widefat striped eop-performance-audit__table">
-                            <thead>
-                                <tr>
-                                    <th><?php esc_html_e( 'Fluxo', EOP_TEXT_DOMAIN ); ?></th>
-                                    <th><?php esc_html_e( 'Origem', EOP_TEXT_DOMAIN ); ?></th>
-                                    <th><?php esc_html_e( 'Tempo total', EOP_TEXT_DOMAIN ); ?></th>
-                                    <th><?php esc_html_e( 'PHP', EOP_TEXT_DOMAIN ); ?></th>
-                                    <th><?php esc_html_e( 'Resposta', EOP_TEXT_DOMAIN ); ?></th>
-                                    <th><?php esc_html_e( 'Pico memoria', EOP_TEXT_DOMAIN ); ?></th>
-                                </tr>
-                            </thead>
-                            <tbody id="eop-performance-table-body">
-                                <tr>
-                                    <td colspan="6"><?php esc_html_e( 'Nenhuma medicao registrada ainda nesta sessao.', EOP_TEXT_DOMAIN ); ?></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="eop-performance-audit__summary" id="eop-performance-summary"></div>
+
+                        <div class="eop-performance-audit__table-wrap">
+                            <table class="widefat striped eop-performance-audit__table">
+                                <thead>
+                                    <tr>
+                                        <th><?php esc_html_e( 'Fluxo', EOP_TEXT_DOMAIN ); ?></th>
+                                        <th><?php esc_html_e( 'Origem', EOP_TEXT_DOMAIN ); ?></th>
+                                        <th><?php esc_html_e( 'Tempo total', EOP_TEXT_DOMAIN ); ?></th>
+                                        <th><?php esc_html_e( 'PHP', EOP_TEXT_DOMAIN ); ?></th>
+                                        <th><?php esc_html_e( 'Resposta', EOP_TEXT_DOMAIN ); ?></th>
+                                        <th><?php esc_html_e( 'Pico memoria', EOP_TEXT_DOMAIN ); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="eop-performance-table-body">
+                                    <tr>
+                                        <td colspan="6"><?php esc_html_e( 'Nenhuma medicao registrada ainda nesta sessao.', EOP_TEXT_DOMAIN ); ?></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
             <?php endif; ?>

@@ -150,10 +150,18 @@ class EOP_Orders_Page {
         if ( ! empty( $args['search'] ) ) {
             $search = sanitize_text_field( $args['search'] );
 
+            $matched_ids = function_exists( 'wc_order_search' ) ? wc_order_search( $search ) : array();
+
             if ( is_numeric( $search ) ) {
-                $query_args['include'] = array( absint( $search ) );
+                $matched_ids[] = absint( $search );
+            }
+
+            $matched_ids = array_values( array_filter( array_unique( array_map( 'absint', $matched_ids ) ) ) );
+
+            if ( ! empty( $matched_ids ) ) {
+                $query_args['post__in'] = $matched_ids;
             } else {
-                $query_args['s'] = $search;
+                $query_args['post__in'] = array( 0 );
             }
         }
 

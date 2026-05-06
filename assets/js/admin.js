@@ -12,6 +12,7 @@
     var currentView = eop_vars.initial_view || 'new-order';
     var ordersLoaded = false;
     var ordersPage = 1;
+    var ordersSearchDebounce = null;
     var currentEditingOrderId = 0;
     var pendingEditOrderId = 0;
     var editLoadToken = 0;
@@ -594,11 +595,12 @@
 
     function renderPerformanceAuditPanel() {
         var $panel = $('#eop-performance-audit');
+        var $container = $('#eop-performance-audit-body');
         var $body = $('#eop-performance-table-body');
         var entries;
         var rows = '';
 
-        if (!performanceAuditEnabled || !$panel.length || !$body.length) {
+        if (!performanceAuditEnabled || !$panel.length || !$container.length || !$body.length) {
             return;
         }
 
@@ -622,6 +624,23 @@
         });
 
         $body.html(rows);
+    }
+
+    function setPerformanceAuditState(isOpen) {
+        var $panel = $('#eop-performance-audit');
+        var $body = $('#eop-performance-audit-body');
+
+        if (!$body.length) {
+            $body = $panel.find('.eop-performance-audit__body').first();
+        }
+
+        if (!$panel.length || !$body.length) {
+            return;
+        }
+
+        $panel.toggleClass('is-open', Boolean(isOpen));
+        $body.prop('hidden', !isOpen);
+        $('#eop-performance-audit-toggle').attr('aria-expanded', isOpen ? 'true' : 'false');
     }
 
     function registerInitialPerformanceBaseline() {
@@ -1412,6 +1431,29 @@
         $('#eop-orders-pagination').html(html);
     }
 
+    function renderOrderFlowPill(label, value, tone) {
+        var toneClass = tone ? ' eop-order-card__flow-pill--' + tone : '';
+
+        return '<span class="eop-order-card__flow-pill' + toneClass + '">' +
+            '<span class="eop-order-card__flow-pill-label">' + escapeHtml(label) + '</span>' +
+            ' <strong class="eop-order-card__flow-pill-value">' + escapeHtml(value) + '</strong>' +
+        '</span>';
+    }
+
+    function renderOrderFlowStageControls(orderId, controls) {
+        if (!controls || !controls.can_update || !controls.options || !controls.options.length || !orderId) {
+            return '';
+        }
+
+        return '<div class="eop-order-card__flow-stage-controls" data-order-id="' + escapeHtml(orderId) + '">' +
+            '<span class="eop-order-card__flow-stage-label">' + escapeHtml(i18n.post_flow_stage_label || 'Etapa do fluxo') + '</span>' +
+            '<div class="eop-order-card__flow-stage-actions">' +
+                '<select class="eop-order-card__flow-stage-select">' + renderStageControlOptions(controls.options, controls.selected || 'auto') + '</select>' +
+                '<button type="button" class="eop-btn eop-btn-secondary eop-order-card__flow-stage-apply">' + escapeHtml(i18n.post_flow_stage_apply || 'Atualizar etapa') + '</button>' +
+            '</div>' +
+        '</div>';
+    }
+
     function renderOrdersList(orders, viewer) {
         var html = '';
         var isAdmin = viewer && viewer.is_admin;
@@ -1426,7 +1468,7 @@
             html += '<div class="eop-order-card__header">';
             html += '<div>';
             html += '<div class="eop-order-card__number">' + escapeHtml(order.number) + '</div>';
-            html += '<h3>' + escapeHtml(order.customer_name) + '</h3>';
+            html += '<h3 class="eop-order-card__customer-name">' + escapeHtml(order.customer_name) + '</h3>';
 
             if (order.customer_email) {
                 html += '<p class="eop-order-card__email">' + escapeHtml(order.customer_email) + '</p>';
@@ -1447,18 +1489,49 @@
             html += '</div>';
 
             if (order.post_confirmation_flow_summary && order.post_confirmation_flow_summary.active_for_order) {
+                var flowSummary = order.post_confirmation_flow_summary || {};
+                var contractAccepted = !!(flowSummary.contract && flowSummary.contract.accepted);
+                var documentsCompleted = flowSummary.documents ? (flowSummary.documents.completed + '/' + flowSummary.documents.total) : '0/0';
+                var documentsDone = flowSummary.documents ? (parseInt(flowSummary.documents.completed, 10) >= parseInt(flowSummary.documents.total, 10)) : false;
+                var attachmentUploaded = !!(flowSummary.attachment && flowSummary.attachment.uploaded);
+                var attachmentOptional = !!(flowSummary.attachment && !flowSummary.attachment.required);
+                var finalPdfReady = !!(flowSummary.final_pdf && flowSummary.final_pdf.ready);
+                var productsProgress = flowSummary.products ? (flowSummary.products.completed + '/' + flowSummary.products.editable) : '0/0';
+                var productsDone = flowSummary.products ? (parseInt(flowSummary.products.completed, 10) >= parseInt(flowSummary.products.editable, 10)) : false;
+
                 html += '<div class="eop-order-card__flow">';
                 html += '<div class="eop-order-card__flow-head">';
                 html += '<span>' + escapeHtml(i18n.orders_flow_title || 'Fluxo complementar') + '</span>';
-                html += '<strong>' + escapeHtml(order.post_confirmation_flow_summary.stage_label || '') + '</strong>';
+                html += ' <strong class="eop-order-card__flow-stage">' + escapeHtml(order.post_confirmation_flow_summary.stage_label || '') + '</strong>';
                 html += '</div>';
                 html += '<div class="eop-order-card__flow-list">';
-                html += '<span class="eop-order-card__flow-pill">' + escapeHtml((i18n.orders_flow_contract || 'Contrato') + ': ' + ((order.post_confirmation_flow_summary.contract && order.post_confirmation_flow_summary.contract.accepted) ? (i18n.post_flow_contract_done || 'Aceite registrado.') : (i18n.post_flow_pending || 'Pendente'))) + '</span>';
-                html += '<span class="eop-order-card__flow-pill">' + escapeHtml((i18n.orders_flow_fields || 'Campos') + ': ' + (order.post_confirmation_flow_summary.documents ? (order.post_confirmation_flow_summary.documents.completed + '/' + order.post_confirmation_flow_summary.documents.total) : '0/0')) + '</span>';
-                html += '<span class="eop-order-card__flow-pill">' + escapeHtml((i18n.orders_flow_attachment || 'Anexo') + ': ' + (order.post_confirmation_flow_summary.attachment ? (order.post_confirmation_flow_summary.attachment.uploaded ? (i18n.orders_flow_uploaded || 'Enviado') : (order.post_confirmation_flow_summary.attachment.required ? (i18n.post_flow_pending || 'Pendente') : (i18n.orders_flow_optional || 'Opcional'))) : '—')) + '</span>';
-                html += '<span class="eop-order-card__flow-pill">' + escapeHtml((i18n.orders_flow_final_pdf || 'PDF final') + ': ' + ((order.post_confirmation_flow_summary.final_pdf && order.post_confirmation_flow_summary.final_pdf.ready) ? (i18n.orders_flow_ready || 'Pronto') : (i18n.post_flow_pending || 'Pendente'))) + '</span>';
-                html += '<span class="eop-order-card__flow-pill">' + escapeHtml((i18n.orders_flow_products || 'Produtos') + ': ' + (order.post_confirmation_flow_summary.products ? (order.post_confirmation_flow_summary.products.completed + '/' + order.post_confirmation_flow_summary.products.editable) : '0/0')) + '</span>';
+                html += renderOrderFlowPill(
+                    i18n.orders_flow_contract || 'Contrato',
+                    contractAccepted ? (i18n.post_flow_contract_done || 'Aceito') : (i18n.post_flow_pending || 'Pendente'),
+                    contractAccepted ? 'success' : 'warning'
+                );
+                html += renderOrderFlowPill(
+                    i18n.orders_flow_fields || 'Campos',
+                    documentsCompleted,
+                    documentsDone ? 'success' : 'info'
+                );
+                html += renderOrderFlowPill(
+                    i18n.orders_flow_attachment || 'Anexo',
+                    attachmentUploaded ? (i18n.orders_flow_uploaded || 'Enviado') : (attachmentOptional ? (i18n.orders_flow_optional || 'Opcional') : (i18n.post_flow_pending || 'Pendente')),
+                    attachmentUploaded ? 'success' : (attachmentOptional ? 'neutral' : 'warning')
+                );
+                html += renderOrderFlowPill(
+                    i18n.orders_flow_final_pdf || 'PDF final',
+                    finalPdfReady ? (i18n.orders_flow_ready || 'Pronto') : (i18n.post_flow_pending || 'Pendente'),
+                    finalPdfReady ? 'success' : 'warning'
+                );
+                html += renderOrderFlowPill(
+                    i18n.orders_flow_products || 'Produtos',
+                    productsProgress,
+                    productsDone ? 'success' : 'info'
+                );
                 html += '</div>';
+                html += renderOrderFlowStageControls(order.id, flowSummary.stage_controls || null);
                 html += '</div>';
             }
 
@@ -1838,6 +1911,43 @@
         $('#eop-post-flow-public-link').prop('hidden', true).attr('href', '#');
         $('#eop-post-flow-pdf-link').prop('hidden', true).attr('href', '#');
         $('#eop-post-flow-final-pdf-link').prop('hidden', true).attr('href', '#');
+        resetPostFlowStageControls();
+    }
+
+    function renderStageControlOptions(options, selectedValue) {
+        var html = '';
+
+        (options || []).forEach(function (option) {
+            var value = option && typeof option.value !== 'undefined' ? String(option.value) : '';
+            var label = option && option.label ? String(option.label) : value;
+            var selected = String(selectedValue || 'auto') === value ? ' selected' : '';
+
+            html += '<option value="' + escapeHtml(value) + '"' + selected + '>' + escapeHtml(label) + '</option>';
+        });
+
+        return html;
+    }
+
+    function resetPostFlowStageControls() {
+        $('#eop-post-flow-stage-toolbar').prop('hidden', true);
+        $('#eop-post-flow-stage-select').empty().prop('disabled', true);
+        $('#eop-post-flow-stage-apply').prop('disabled', true).data('orderId', 0).text(i18n.post_flow_stage_apply || 'Atualizar etapa');
+        $('#eop-post-flow-stage-hint').text(i18n.post_flow_stage_hint_auto || 'Use Automatico para voltar ao fluxo calculado pelo sistema.');
+    }
+
+    function renderPostFlowStageControls(flow) {
+        var controls = flow && flow.stage_controls ? flow.stage_controls : null;
+        var orderId = flow && flow.order && flow.order.id ? parseInt(flow.order.id, 10) : (currentEditingOrderId || 0);
+
+        if (!controls || !controls.can_update || !controls.options || !controls.options.length || !orderId) {
+            resetPostFlowStageControls();
+            return;
+        }
+
+        $('#eop-post-flow-stage-toolbar').prop('hidden', false);
+        $('#eop-post-flow-stage-select').html(renderStageControlOptions(controls.options, controls.selected || 'auto')).prop('disabled', false);
+        $('#eop-post-flow-stage-apply').prop('disabled', false).data('orderId', orderId).text(i18n.post_flow_stage_apply || 'Atualizar etapa');
+        $('#eop-post-flow-stage-hint').text((controls.manual_stage ? (i18n.post_flow_stage_hint_manual || 'Etapa travada manualmente. Use Automatico para voltar ao fluxo calculado pelo sistema.') : (i18n.post_flow_stage_hint_auto || 'Use Automatico para voltar ao fluxo calculado pelo sistema.')));
     }
 
     function appendPostFlowDownloadRow($container, label, url, linkLabel, note) {
@@ -1863,6 +1973,8 @@
             renderPostConfirmationFlowPlaceholder(i18n.post_flow_not_available || 'Este pedido nao esta usando o fluxo complementar da proposta.');
             return;
         }
+
+        renderPostFlowStageControls(flow);
 
         $('#eop-post-flow-badge').text((flow.status && flow.status.current_stage_label) || '').attr('class', 'eop-post-flow-badge is-active');
         $('#eop-post-flow-subtitle').text((flow.status && flow.status.completed_at) ? ((i18n.post_flow_completed_at || 'Concluido em') + ' ' + flow.status.completed_at + '.') : (i18n.post_flow_summary_ready || 'Payload estruturado pronto para PDF, admin e integracoes futuras.'));
@@ -2005,6 +2117,61 @@
         } else {
             $('#eop-post-flow-final-pdf-link').prop('hidden', true).attr('href', '#');
         }
+    }
+
+    function updatePostConfirmationStage(orderId, stageValue, onSuccess, onComplete) {
+        var normalizedOrderId = parseInt(orderId, 10) || 0;
+
+        if (!normalizedOrderId) {
+            showNotice(i18n.error || 'Erro ao criar pedido. Tente novamente.', 'error');
+            if (typeof onComplete === 'function') {
+                onComplete(false);
+            }
+            return;
+        }
+
+        $.post(eop_vars.ajax_url, {
+            action: 'eop_set_post_confirmation_stage',
+            nonce: eop_vars.nonce,
+            order_id: normalizedOrderId,
+            stage: stageValue || 'auto'
+        }, function (res) {
+            if (!res || !res.success) {
+                showNotice((res && res.data && res.data.message) ? res.data.message : (i18n.error || 'Erro ao criar pedido. Tente novamente.'), 'error');
+                if (typeof onComplete === 'function') {
+                    onComplete(false, res);
+                }
+                return;
+            }
+
+            removeCache(sessionStore, getPostFlowCacheKey(normalizedOrderId));
+            removeCache(sessionStore, getOrderCacheKey(normalizedOrderId));
+            removeCacheByPrefix(sessionStore, getCacheKey('orders-list', ''));
+            ordersLoaded = false;
+
+            if (typeof onSuccess === 'function') {
+                onSuccess(res.data || {});
+            }
+
+            if ($('#eop-orders-list').length) {
+                loadOrdersList(ordersPage || 1);
+            }
+
+            if (currentEditingOrderId === normalizedOrderId && res.data && res.data.flow) {
+                renderPostConfirmationFlow(res.data.flow);
+            }
+
+            showNotice((res.data && res.data.message) ? res.data.message : (i18n.post_flow_stage_apply || 'Atualizar etapa'), 'success');
+
+            if (typeof onComplete === 'function') {
+                onComplete(true, res);
+            }
+        }).fail(function () {
+            showNotice(i18n.error || 'Erro ao criar pedido. Tente novamente.', 'error');
+            if (typeof onComplete === 'function') {
+                onComplete(false);
+            }
+        });
     }
 
     function loadPostConfirmationFlow(orderId) {
@@ -2705,10 +2872,23 @@
         loadOrdersList(1);
     });
 
+    $(document).on('submit', '#eop-orders-filters-form', function (e) {
+        e.preventDefault();
+        loadOrdersList(1);
+    });
+
+    $(document).on('input', '#eop-orders-search', function () {
+        clearTimeout(ordersSearchDebounce);
+        ordersSearchDebounce = window.setTimeout(function () {
+            loadOrdersList(1);
+        }, 300);
+    });
+
     $(document).on('keydown', '#eop-orders-search', function (e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            loadOrdersList(1);
+            clearTimeout(ordersSearchDebounce);
+            $('#eop-orders-filters-form').trigger('submit');
         }
     });
 
@@ -2758,6 +2938,33 @@
         setPdfPreviewState($(this).closest('.eop-pdf-admin'), false);
     });
 
+    $(document).on('click', '#eop-post-flow-stage-apply', function () {
+        var $button = $(this);
+        var orderId = parseInt($button.data('orderId'), 10) || currentEditingOrderId || 0;
+        var stageValue = $('#eop-post-flow-stage-select').val() || 'auto';
+        var defaultLabel = i18n.post_flow_stage_apply || 'Atualizar etapa';
+
+        $button.prop('disabled', true).text(i18n.post_flow_stage_saving || 'Salvando etapa...');
+
+        updatePostConfirmationStage(orderId, stageValue, null, function () {
+            $button.prop('disabled', false).text(defaultLabel);
+        });
+    });
+
+    $(document).on('click', '.eop-order-card__flow-stage-apply', function () {
+        var $button = $(this);
+        var $wrapper = $button.closest('.eop-order-card__flow-stage-controls');
+        var orderId = parseInt($wrapper.data('orderId'), 10) || 0;
+        var stageValue = $wrapper.find('.eop-order-card__flow-stage-select').val() || 'auto';
+        var defaultLabel = i18n.post_flow_stage_apply || 'Atualizar etapa';
+
+        $button.prop('disabled', true).text(i18n.post_flow_stage_saving || 'Salvando etapa...');
+
+        updatePostConfirmationStage(orderId, stageValue, null, function () {
+            $button.prop('disabled', false).text(defaultLabel);
+        });
+    });
+
     $(window).on('popstate', function () {
         var params = new URLSearchParams(window.location.search);
         var view = params.get('view') || eop_vars.initial_view || 'new-order';
@@ -2780,6 +2987,7 @@
         restorePluginFullscreen();
         initProductSearch($(document));
         syncSidebarState(bootstrapView);
+        setPerformanceAuditState(false);
         renderPerformanceAuditPanel();
         registerInitialPerformanceBaseline();
 
@@ -2799,6 +3007,31 @@
 
         $(document).on('click', '#eop-performance-clear-session', function () {
             clearPerformanceEntries();
+        });
+
+        $(document).on('click', '#eop-performance-audit-toggle', function (e) {
+            var $panel = $('#eop-performance-audit');
+
+            if (!$panel.length) {
+                return;
+            }
+
+            e.preventDefault();
+            setPerformanceAuditState(!$panel.hasClass('is-open'));
+        });
+
+        $(document).on('click', '#eop-performance-audit .eop-performance-audit__header', function (e) {
+            if ($(e.target).closest('button, a, input, select, textarea').length) {
+                return;
+            }
+
+            var $panel = $('#eop-performance-audit');
+
+            if (!$panel.length) {
+                return;
+            }
+
+            setPerformanceAuditState(!$panel.hasClass('is-open'));
         });
     });
 

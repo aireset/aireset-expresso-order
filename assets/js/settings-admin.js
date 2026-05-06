@@ -159,6 +159,258 @@
         return '<span class="eop-settings-media__empty">' + emptyText + '</span>';
     }
 
+    function getProposalPreviewCard($context) {
+        var $scope = $context && $context.length ? $context : $(document);
+
+        if ($scope.hasClass('eop-proposal-preview-card')) {
+            return $scope;
+        }
+
+        if ($scope.hasClass('eop-settings-form')) {
+            return $scope.find('.eop-proposal-preview-card').first();
+        }
+
+        return $scope.closest('.eop-proposal-preview-card');
+    }
+
+    function getProposalPreviewFrame($context) {
+        return getProposalPreviewCard($context).find('.eop-proposal-preview-render').first();
+    }
+
+    function getProposalPreviewRoot($context) {
+        var $frame = getProposalPreviewFrame($context);
+
+        if (!$frame.length || !$frame[0].contentDocument) {
+            return $();
+        }
+
+        return $($frame[0].contentDocument).find('[data-eop-proposal-preview-root]').first();
+    }
+
+    function setProposalPreviewViewport($card, viewport) {
+        var activeViewport = viewport === 'mobile' ? 'mobile' : 'desktop';
+
+        if (!$card.length) {
+            return activeViewport;
+        }
+
+        $card.attr('data-preview-viewport', activeViewport);
+        $card.find('.eop-proposal-preview-viewport').each(function () {
+            var $button = $(this);
+            var buttonViewport = String($button.attr('data-preview-viewport') || 'desktop');
+            var isActive = buttonViewport === activeViewport;
+
+            $button.toggleClass('is-active', isActive);
+            $button.attr('aria-pressed', isActive ? 'true' : 'false');
+        });
+
+        return activeViewport;
+    }
+
+    function setPreviewText($root, selector, value, fallback) {
+        var text = $.trim(String(value || ''));
+        var $target = $root.find(selector).first();
+
+        if (!$target.length) {
+            return;
+        }
+
+        $target.text(text || fallback || '');
+    }
+
+    function setPreviewLogo($root, url) {
+        var hasUrl = Boolean(url);
+        var $wrap = $root.find('[data-preview-logo-wrap]').first();
+
+        if ($wrap.length) {
+            $wrap.toggleClass('is-empty', !hasUrl);
+            $wrap.empty();
+
+            if (hasUrl) {
+                $('<img>', {
+                    'data-preview-logo': 'true',
+                    src: url,
+                    alt: ''
+                }).appendTo($wrap);
+            } else {
+                $('<span>', {
+                    class: 'eop-proposal-brand__fallback',
+                    'data-preview-logo-fallback': 'true',
+                    text: 'Logo opcional'
+                }).appendTo($wrap);
+            }
+        }
+    }
+
+    function getFieldValue($scope, name, fallback) {
+        var $field = $scope.find('[name="eop_settings[' + name + ']"]').first();
+
+        if (!$field.length) {
+            return fallback || '';
+        }
+
+        return String($field.val() || fallback || '');
+    }
+
+    function colorToRgba(color, alpha, fallback) {
+        var value = String(color || '').trim();
+        var normalized;
+        var r;
+        var g;
+        var b;
+        var resolvedAlpha = Math.max(0, Math.min(1, Number(alpha)));
+
+        if (!value || value.charAt(0) !== '#') {
+            return fallback || value;
+        }
+
+        normalized = value.replace('#', '');
+
+        if (normalized.length === 3) {
+            normalized = normalized.split('').map(function (part) {
+                return part + part;
+            }).join('');
+        }
+
+        if (normalized.length !== 6) {
+            return fallback || value;
+        }
+
+        r = parseInt(normalized.slice(0, 2), 16);
+        g = parseInt(normalized.slice(2, 4), 16);
+        b = parseInt(normalized.slice(4, 6), 16);
+
+        if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) {
+            return fallback || value;
+        }
+
+        return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + resolvedAlpha + ')';
+    }
+
+    function toPreviewFontFamily(value, fallback) {
+        var raw = String(value || '').trim();
+        var family;
+
+        if (!raw) {
+            return fallback || "'Segoe UI', sans-serif";
+        }
+
+        family = raw.indexOf(':') !== -1 ? raw.split(':')[0].trim() : raw;
+
+        if (!family) {
+            return fallback || "'Segoe UI', sans-serif";
+        }
+
+        if (family.indexOf(',') !== -1 || family.indexOf('"') !== -1 || family.indexOf("'") !== -1) {
+            return family;
+        }
+
+        return "'" + family.replace(/'/g, "\\'") + "', sans-serif";
+    }
+
+    function updateProposalPreview($form) {
+        var $scope = $form && $form.length ? $form : $(document);
+        var $card = getProposalPreviewCard($scope);
+        var $root;
+        var pageBg;
+        var heroBg;
+        var panelBg;
+        var sideBg;
+        var accent;
+        var textColor;
+        var mutedColor;
+        var borderColor;
+        var fontFamily;
+        var radius;
+        var maxWidth;
+        var titleSize;
+        var textSize;
+
+        if (!$card.length) {
+            return;
+        }
+
+        $root = getProposalPreviewRoot($card);
+
+        if (!$root.length) {
+            return;
+        }
+
+        pageBg = getFieldValue($scope, 'proposal_background_color', '#f5f7ff');
+        heroBg = getFieldValue($scope, 'primary_color', '#00034b');
+        panelBg = getFieldValue($scope, 'proposal_card_color', '#ffffff');
+        sideBg = getFieldValue($scope, 'surface_color', '#f6f8fc');
+        accent = getFieldValue($scope, 'primary_color', '#d78a2f');
+        textColor = getFieldValue($scope, 'proposal_text_color', '#172033');
+        mutedColor = getFieldValue($scope, 'proposal_muted_color', '#5b6474');
+        borderColor = getFieldValue($scope, 'border_color', '#dbe3f0');
+        fontFamily = toPreviewFontFamily(getFieldValue($scope, 'font_family', 'Montserrat:400,700'), "'Segoe UI', sans-serif");
+        radius = parseInt(getFieldValue($scope, 'border_radius', '18'), 10);
+        maxWidth = parseInt(getFieldValue($scope, 'proposal_max_width', '1120'), 10);
+        titleSize = parseInt(getFieldValue($scope, 'proposal_title_size', '40'), 10);
+        textSize = parseInt(getFieldValue($scope, 'proposal_text_size', '16'), 10);
+
+        if (!$root[0].style) {
+            return;
+        }
+
+        $root[0].style.setProperty('--eop-preview-page-bg', pageBg);
+        $root[0].style.setProperty('--eop-preview-hero-bg', heroBg);
+        $root[0].style.setProperty('--eop-preview-panel-bg', panelBg);
+        $root[0].style.setProperty('--eop-preview-side-bg', sideBg);
+        $root[0].style.setProperty('--eop-preview-accent', accent);
+        $root[0].style.setProperty('--eop-preview-text', textColor);
+        $root[0].style.setProperty('--eop-preview-muted', mutedColor);
+        $root[0].style.setProperty('--eop-preview-border-soft', colorToRgba(borderColor, 0.18, borderColor));
+        $root[0].style.setProperty('--eop-preview-brand-bg', colorToRgba(panelBg, 0.12, panelBg));
+        $root[0].style.setProperty('--eop-preview-panel-soft', colorToRgba(panelBg, 0.18, panelBg));
+        $root[0].style.setProperty('--eop-preview-accent-soft', colorToRgba(accent, 0.12, accent));
+        $root[0].style.setProperty('--eop-preview-accent-border', colorToRgba(accent, 0.28, accent));
+        $root[0].style.setProperty('--eop-preview-accent-glow', colorToRgba(accent, 0.28, accent));
+        $root[0].style.setProperty('--eop-preview-accent-shadow', colorToRgba(accent, 0.2, accent));
+        $root[0].style.setProperty('--eop-preview-font-family', fontFamily);
+        $root[0].style.setProperty('--eop-preview-radius', (isNaN(radius) ? 18 : radius) + 'px');
+        $root[0].style.setProperty('--eop-preview-max-width', (isNaN(maxWidth) ? 1120 : maxWidth) + 'px');
+        $root[0].style.setProperty('--eop-preview-title-size', (isNaN(titleSize) ? 40 : titleSize) + 'px');
+        $root[0].style.setProperty('--eop-preview-text-size', (isNaN(textSize) ? 16 : textSize) + 'px');
+
+        setPreviewLogo($root, getFieldValue($scope, 'brand_logo_url', ''));
+        setPreviewText($root, '[data-preview-status]', getSettingsVar('preview_status', 'Preview ao vivo'), 'Preview ao vivo');
+        setPreviewText($root, '[data-preview-stage]', getSettingsVar('preview_stage', 'Layout real'), 'Layout real');
+        setPreviewText($root, '[data-preview-title]', getFieldValue($scope, 'proposal_title', ''), getSettingsVar('proposal_title_fallback', 'Sua proposta esta pronta'));
+        setPreviewText($root, '[data-preview-description]', getFieldValue($scope, 'proposal_description', ''), getSettingsVar('proposal_description_fallback', 'Revise os itens e siga para a conclusao.'));
+        setPreviewText($root, '[data-preview-total-label]', getFieldValue($scope, 'customer_experience_total_label', '') || 'Investimento aprovado', 'Investimento aprovado');
+        setPreviewText($root, '[data-preview-total-note]', getFieldValue($scope, 'customer_experience_total_note', '') || 'Assim que a etapa atual for concluida, o pedido segue para o time responsavel.', 'Assim que a etapa atual for concluida, o pedido segue para o time responsavel.');
+        setPreviewText($root, '[data-preview-items-eyebrow]', getFieldValue($scope, 'customer_experience_items_eyebrow', '') || 'Resumo visual', 'Resumo visual');
+        setPreviewText($root, '[data-preview-items-title]', getFieldValue($scope, 'customer_experience_items_title', '') || 'Itens', 'Itens');
+        setPreviewText($root, '[data-preview-summary-eyebrow]', getFieldValue($scope, 'customer_experience_summary_eyebrow', '') || 'Contexto rapido', 'Contexto rapido');
+        setPreviewText($root, '[data-preview-summary-title]', getFieldValue($scope, 'customer_experience_summary_title', '') || 'Visao do pedido', 'Visao do pedido');
+        setPreviewText($root, '[data-preview-financial-eyebrow]', getFieldValue($scope, 'customer_experience_financial_eyebrow', '') || 'Fechamento', 'Fechamento');
+        setPreviewText($root, '[data-preview-financial-title]', getFieldValue($scope, 'customer_experience_financial_title', '') || 'Resumo', 'Resumo');
+        setPreviewText($root, '[data-preview-actions-eyebrow]', getFieldValue($scope, 'customer_experience_actions_eyebrow', '') || 'Proxima acao', 'Proxima acao');
+        setPreviewText($root, '[data-preview-actions-title]', getFieldValue($scope, 'customer_experience_actions_title', '') || 'Como seguir agora', 'Como seguir agora');
+        setPreviewText($root, '[data-preview-confirm-button]', getFieldValue($scope, 'proposal_button_label', '') || 'Confirmar proposta', 'Confirmar proposta');
+        setPreviewText($root, '[data-preview-pay-button]', getFieldValue($scope, 'proposal_pay_button_label', '') || 'Ir para pagamento', 'Ir para pagamento');
+    }
+
+    function initProposalPreview(scope) {
+        var $scope = scope && scope.jquery ? scope : $(scope || document);
+
+        $scope.find('.eop-proposal-preview-card').each(function () {
+            var $card = $(this);
+            var $form = $card.closest('.eop-settings-form');
+            var viewport = String($card.attr('data-preview-viewport') || 'desktop');
+
+            setProposalPreviewViewport($card, viewport);
+
+            $card.find('.eop-proposal-preview-render').off('load.eopProposalPreview').on('load.eopProposalPreview', function () {
+                updateProposalPreview($form);
+            });
+
+            updateProposalPreview($form);
+        });
+    }
+
     function setMediaOnWrap($wrap, url) {
         var hasUrl = Boolean(url);
         var $hiddenInput = $wrap.find('input[type="hidden"]').first();
@@ -172,6 +424,8 @@
         $preview
             .toggleClass('has-image', hasUrl)
             .html(hasUrl ? createPreviewMarkup(url) : createEmptyMarkup());
+        $hiddenInput.trigger('input').trigger('change');
+        $urlInput.trigger('input').trigger('change');
         $removeButton.toggleClass('is-hidden', !hasUrl);
         $selectButton.text(hasUrl ? getSettingsVar('change_logo', 'Trocar logo') : getSettingsVar('select_logo', 'Selecionar logo'));
     }
@@ -832,6 +1086,7 @@
         initColorFields($scope);
         mountColorDefaultButtons($scope);
         initLockedProductsSelector($scope);
+        initProposalPreview($scope);
         initBinarySwitches($scope);
         $scope.find('[data-signature-document]').each(function () {
             var $document = $(this);
@@ -878,10 +1133,34 @@
 
             $button.toggleClass('is-enabled', nextEnabled);
             $button.attr('aria-checked', nextEnabled ? 'true' : 'false');
-            $input.val(nextEnabled ? enabledValue : disabledValue);
+            $input.val(nextEnabled ? enabledValue : disabledValue).trigger('input').trigger('change');
             $button
                 .siblings('.eop-settings-switcher__status')
                 .text(nextEnabled ? 'Ativado' : 'Desativado');
+        });
+
+        $(document).on('input change', '.eop-settings-form input, .eop-settings-form textarea, .eop-settings-form select', function () {
+            var $field = $(this);
+            var $form = $field.closest('.eop-settings-form');
+
+            if (!$form.length) {
+                return;
+            }
+
+            updateProposalPreview($form);
+        });
+
+        $(document).on('click', '.eop-proposal-preview-viewport', function (event) {
+            var $button = $(this);
+            var $card = $button.closest('.eop-proposal-preview-card');
+            var viewport = String($button.attr('data-preview-viewport') || 'desktop');
+            var $form;
+
+            event.preventDefault();
+
+            viewport = setProposalPreviewViewport($card, viewport);
+            $form = $card.closest('.eop-settings-form');
+            updateProposalPreview($form);
         });
 
         if (eop_settings_vars && eop_settings_vars.has_fontselect && $.fn.fontselect) {

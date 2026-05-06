@@ -1300,14 +1300,17 @@ class EOP_Settings {
                         <?php endif; ?>
 
                         <?php if ( self::should_render_admin_section( $section, 'order-link-style' ) ) : ?>
-                        <section class="eop-settings-card">
-                            <h2><?php esc_html_e( 'Visual', EOP_TEXT_DOMAIN ); ?></h2>
-                                        <?php self::render_help_label( 'label', __( 'Titulo da conclusao', EOP_TEXT_DOMAIN ), 'post_confirmation_completion_title', array( 'for' => 'eop_post_confirmation_completion_title' ) ); ?>
-                            <div class="eop-settings-grid">
+                        <section class="eop-settings-card eop-proposal-preview-settings">
+                            <h2><?php esc_html_e( 'Visual do Link do Pedido', EOP_TEXT_DOMAIN ); ?></h2>
+                            <p><?php esc_html_e( 'Separe a identidade visual principal do shell e do link do pedido para ajustes rapidos de marca.', EOP_TEXT_DOMAIN ); ?></p>
+                            <?php if ( class_exists( 'EOP_Public_Proposal' ) && method_exists( 'EOP_Public_Proposal', 'render_admin_preview_card' ) ) : ?>
+                                <?php echo EOP_Public_Proposal::render_admin_preview_card( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                            <?php endif; ?>
+                            <div class="eop-settings-grid eop-proposal-preview-settings__grid">
                                 <div class="eop-settings-field is-full">
-                                    <label for="eop_logo"><?php esc_html_e( 'Logo', EOP_TEXT_DOMAIN ); ?></label>
-                                        <?php self::render_help_label( 'label', __( 'Descricao da conclusao', EOP_TEXT_DOMAIN ), 'post_confirmation_completion_description', array( 'for' => 'eop_post_confirmation_completion_description' ) ); ?>
-                                        <textarea id="eop_post_confirmation_completion_description" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[post_confirmation_completion_description]"><?php echo esc_textarea( $settings['post_confirmation_completion_description'] ); ?></textarea>
+                                    <label for="eop_brand_logo_url"><?php esc_html_e( 'Logo', EOP_TEXT_DOMAIN ); ?></label>
+                                    <div class="eop-settings-media">
+                                        <div class="eop-settings-media__preview<?php echo $settings['brand_logo_url'] ? ' has-image' : ''; ?>" data-media-preview>
                                             <?php if ( $settings['brand_logo_url'] ) : ?>
                                                 <img src="<?php echo esc_url( $settings['brand_logo_url'] ); ?>" alt="<?php esc_attr_e( 'Preview da logo', EOP_TEXT_DOMAIN ); ?>" />
                                             <?php else : ?>
@@ -1315,7 +1318,14 @@ class EOP_Settings {
                                             <?php endif; ?>
                                         </div>
                                         <div class="eop-settings-media__details">
-                                            <input type="url" class="eop-settings-media__url" value="<?php echo esc_attr( $settings['brand_logo_url'] ); ?>" readonly data-media-url />
+                                            <input
+                                                id="eop_brand_logo_url"
+                                                type="url"
+                                                class="eop-settings-media__url"
+                                                value="<?php echo esc_attr( $settings['brand_logo_url'] ); ?>"
+                                                readonly
+                                                data-media-url
+                                            />
                                             <div class="eop-settings-media__actions">
                                                 <button type="button" class="button button-secondary eop-settings-media__select" data-media-select>
                                                     <?php echo $settings['brand_logo_url'] ? esc_html__( 'Trocar logo', EOP_TEXT_DOMAIN ) : esc_html__( 'Selecionar logo', EOP_TEXT_DOMAIN ); ?>
@@ -1326,7 +1336,7 @@ class EOP_Settings {
                                             </div>
                                         </div>
                                     </div>
-                                    <small class="eop-settings-help"><?php esc_html_e( 'Use a biblioteca de midia para selecionar a logo da proposta e do painel.', EOP_TEXT_DOMAIN ); ?></small>
+                                    <small class="eop-settings-help"><?php esc_html_e( 'Use a biblioteca de midia para selecionar a logo usada na pagina publica do cliente.', EOP_TEXT_DOMAIN ); ?></small>
                                 </div>
                                 <div class="eop-settings-field">
                                     <label for="eop_primary_color"><?php esc_html_e( 'Cor principal', EOP_TEXT_DOMAIN ); ?></label>

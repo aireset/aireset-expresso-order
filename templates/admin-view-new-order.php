@@ -219,6 +219,17 @@ defined( 'ABSPATH' ) || exit;
                         <span class="eop-post-flow-badge is-inactive" id="eop-post-flow-badge"><?php esc_html_e( 'Inativo', EOP_TEXT_DOMAIN ); ?></span>
                     </div>
 
+                    <div class="eop-post-flow-card__toolbar" id="eop-post-flow-stage-toolbar" hidden>
+                        <div class="eop-post-flow-stage-form eop-post-flow-stage-form--inline">
+                            <div class="eop-post-flow-stage-field">
+                                <label for="eop-post-flow-stage-select"><?php esc_html_e( 'Etapa do fluxo', EOP_TEXT_DOMAIN ); ?></label>
+                                <select id="eop-post-flow-stage-select" disabled></select>
+                            </div>
+                            <button type="button" class="eop-btn eop-btn-secondary" id="eop-post-flow-stage-apply" disabled><?php esc_html_e( 'Atualizar etapa', EOP_TEXT_DOMAIN ); ?></button>
+                        </div>
+                        <p class="eop-post-flow-stage-hint" id="eop-post-flow-stage-hint"><?php esc_html_e( 'Use Automatico para voltar ao fluxo calculado pelo sistema.', EOP_TEXT_DOMAIN ); ?></p>
+                    </div>
+
                     <div class="eop-post-flow-card__stats" id="eop-post-flow-stats"></div>
 
                     <div class="eop-post-flow-card__section">

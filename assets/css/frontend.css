@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /*! Generated from assets/scss/frontend/*.scss. Edit the SCSS source files, not assets/css/frontend.css. */
 :root {
   --eop-primary: #00034b;
@@ -1721,7 +1722,8 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
   gap: 0;
 }
 .eop-post-flow--final-step .eop-post-flow__contract-header {
-  padding: 20px 20px 68px;
+  padding: 20px 20px 24px;
+  background: var(--eop-post-flow-hero-bg, linear-gradient(135deg, #00034b 0%, #243553 100%));
 }
 .eop-post-flow--final-step .eop-post-flow__final-step-card {
   margin-top: 0;
@@ -1772,10 +1774,92 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
 }
 .eop-post-flow__contract-header {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 18px;
+  padding: 10px 6px 24px;
+}
+.eop-post-flow__contract-header-main {
+  display: flex;
+  align-items: stretch;
+  gap: 18px;
+  min-width: 0;
+
+    justify-content: space-between;
+}
+.eop-post-flow__breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  padding: 10px 6px 34px;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 0 6px;
+}
+.eop-post-flow__breadcrumb-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 4px 14px 4px 8px;
+  border: 1px solid rgba(15, 27, 53, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--eop-post-flow-muted);
+  box-shadow: 0 10px 24px rgba(15, 27, 53, 0.06);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.eop-post-flow__breadcrumb-item::after {
+  content: "›";
+  margin-left: 2px;
+  color: rgba(15, 27, 53, 0.28);
+  font-size: 18px;
+  line-height: 1;
+}
+.eop-post-flow__breadcrumb-item:last-child::after {
+  content: none;
+}
+.eop-post-flow__breadcrumb-item.is-completed {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--eop-post-flow-text, #172033);
+}
+.eop-post-flow__breadcrumb-item.is-current {
+  border-color: var(--eop-post-flow-accent-border, rgba(215, 138, 47, 0.2));
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.72));
+  color: var(--eop-post-flow-text, #172033);
+  box-shadow: 0 16px 30px rgba(15, 27, 53, 0.1);
+}
+.eop-post-flow__breadcrumb-item.is-upcoming {
+  opacity: 0.82;
+}
+.eop-post-flow__breadcrumb-item.is-current::after {
+  color: var(--eop-post-flow-accent, #d78a2f);
+}
+.eop-post-flow__breadcrumb-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--eop-post-flow-accent-soft, rgba(215, 138, 47, 0.12));
+  color: var(--eop-post-flow-accent, #d78a2f);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.eop-post-flow__breadcrumb-item.is-completed .eop-post-flow__breadcrumb-index {
+  background: rgba(15, 27, 53, 0.06);
+  color: var(--eop-post-flow-text, #172033);
+}
+.eop-post-flow__breadcrumb-item.is-current .eop-post-flow__breadcrumb-index {
+  background: var(--eop-post-flow-accent, #d78a2f);
+  color: #ffffff;
+}
+.eop-post-flow__breadcrumb-label {
+  display: inline-block;
 }
 .eop-post-flow__contract-brand {
   display: flex;
@@ -1837,9 +1921,10 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
 .eop-post-flow__contract-meta {
   display: grid;
   gap: 6px;
+  min-width: 0;
   padding: 14px 16px;
   border-radius: 22px;
-  text-align: right;
+  text-align: left;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.14);
   backdrop-filter: blur(10px);
@@ -2500,8 +2585,12 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
   .eop-post-flow__sidebar {
     position: static;
   }
-  .eop-post-flow__stage-intro, .eop-post-flow__document-reader-head, .eop-post-flow__contract-header, .eop-post-flow__final-upload-row, .eop-post-flow__final-products-head, .eop-post-flow__final-product-row {
+  .eop-post-flow__stage-intro, .eop-post-flow__document-reader-head, .eop-post-flow__final-upload-row, .eop-post-flow__final-products-head, .eop-post-flow__final-product-row {
     grid-template-columns: 1fr;
+  }
+  .eop-post-flow__contract-header-main {
+    flex-direction: column;
+    align-items: flex-start;
   }
   .eop-post-flow__stage-pills {
     justify-content: flex-start;
@@ -2583,9 +2672,25 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
     min-width: 0;
     min-height: 72px;
     padding: 12px 14px;
+    align-self: stretch;
   }
   .eop-post-flow__contract-header {
     padding: 4px 4px 18px;
+  }
+  .eop-post-flow__breadcrumb {
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 0 4px;
+  }
+  .eop-post-flow__breadcrumb-item {
+    padding: 4px 10px 4px 6px;
+    font-size: 11px;
+    gap: 8px;
+  }
+  .eop-post-flow__breadcrumb-index {
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
   }
   .eop-post-flow__document-reader-actions {
     justify-content: stretch;
@@ -2618,7 +2723,7 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
     padding: 0 12px 12px;
   }
   .eop-post-flow--final-step .eop-post-flow__contract-header {
-    padding: 14px 14px 18px;
+    padding: 14px 14px 16px;
   }
   .eop-post-flow--final-step .eop-post-flow__final-step-card {
     padding: 0 6px 6px;

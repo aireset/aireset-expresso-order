@@ -12,6 +12,7 @@ class EOP_Ajax_Handlers {
 
         add_action( 'wp_ajax_eop_search_customer', array( __CLASS__, 'search_customer' ) );
         add_action( 'wp_ajax_eop_search_products', array( __CLASS__, 'search_products' ) );
+        add_action( 'wp_ajax_eop_search_product_categories', array( __CLASS__, 'search_product_categories' ) );
         add_action( 'wp_ajax_eop_create_order', array( __CLASS__, 'create_order' ) );
     }
 
@@ -136,6 +137,69 @@ class EOP_Ajax_Handlers {
                 'name'  => $product->get_name(),
                 'sku'   => $product->get_sku(),
                 'image' => $image_url,
+            );
+        }
+
+        wp_send_json( array( 'results' => $results ) );
+    }
+
+    /**
+     * Search product categories by name (Select2 format).
+     */
+    public static function search_product_categories() {
+        check_ajax_referer( 'eop_nonce', 'nonce' );
+
+        if ( ! current_user_can( 'edit_shop_orders' ) ) {
+            wp_send_json_error( array( 'message' => __( 'Sem permissao.', EOP_TEXT_DOMAIN ) ) );
+        }
+
+        $term = sanitize_text_field( wp_unslash( $_GET['term'] ?? '' ) );
+
+        if ( empty( $term ) ) {
+            wp_send_json( array( 'results' => array() ) );
+        }
+
+        $terms = get_terms(
+            array(
+                'taxonomy'   => 'product_cat',
+                'hide_empty' => false,
+                'search'     => $term,
+                'number'     => 20,
+                'orderby'    => 'name',
+                'order'      => 'ASC',
+            )
+        );
+
+        if ( is_wp_error( $terms ) || empty( $terms ) ) {
+            wp_send_json( array( 'results' => array() ) );
+        }
+
+        $results = array();
+
+        foreach ( $terms as $term_obj ) {
+            if ( ! $term_obj || ! isset( $term_obj->term_id ) ) {
+                continue;
+            }
+
+            $term_id = (int) $term_obj->term_id;
+            $label   = (string) $term_obj->name;
+            $parents = array_reverse( get_ancestors( $term_id, 'product_cat' ) );
+            $parts   = array();
+
+            foreach ( $parents as $parent_id ) {
+                $parent = get_term( $parent_id, 'product_cat' );
+
+                if ( $parent && ! is_wp_error( $parent ) ) {
+                    $parts[] = $parent->name;
+                }
+            }
+
+            $parts[] = $label;
+            $label   = implode( ' / ', array_filter( $parts ) );
+
+            $results[] = array(
+                'id'   => $term_id,
+                'text' => $label,
             );
         }
 

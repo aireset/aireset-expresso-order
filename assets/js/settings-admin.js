@@ -699,30 +699,39 @@
         bindSignatureDocuments();
     }
 
-    function initLockedProductsSelector(scope) {
+    function initSettingsAjaxSelectors(scope) {
         var $scope = scope && scope.jquery ? scope : $(scope || document);
 
         if (!$.fn.select2) {
             return;
         }
 
-        $scope.find('.eop-settings-product-selector').each(function () {
+        $scope.find('.eop-settings-product-selector, .eop-settings-category-selector').each(function () {
             var $select = $(this);
             var targetSelector = String($select.data('target-input') || '');
             var $target = targetSelector ? $(targetSelector) : $();
+            var searchAction = String($select.data('search-action') || 'eop_search_products');
+            var placeholder = String($select.data('placeholder') || getSettingsVar('locked_placeholder', 'Busque produtos por nome ou SKU...'));
+            var noResults = String($select.data('no-results') || getSettingsVar('locked_no_results', 'Nenhum produto encontrado.'));
+            var minimumInputLength = parseInt($select.data('minimum-input-length'), 10);
 
             if ($select.hasClass('select2-hidden-accessible')) {
                 return;
+            }
+
+            if (isNaN(minimumInputLength)) {
+                minimumInputLength = 3;
             }
 
             $select.select2({
                 width: '100%',
                 multiple: true,
                 allowClear: true,
-                placeholder: getSettingsVar('locked_placeholder', 'Busque produtos por nome ou SKU...'),
+                placeholder: placeholder,
+                minimumInputLength: minimumInputLength,
                 language: {
                     noResults: function () {
-                        return getSettingsVar('locked_no_results', 'Nenhum produto encontrado.');
+                        return noResults;
                     }
                 },
                 ajax: {
@@ -731,7 +740,7 @@
                     delay: 250,
                     data: function (params) {
                         return {
-                            action: 'eop_search_products',
+                            action: searchAction,
                             nonce: getSettingsVar('nonce', ''),
                             term: params.term || ''
                         };
@@ -1085,7 +1094,7 @@
 		injectSettingsHelpTooltips($scope);
         initColorFields($scope);
         mountColorDefaultButtons($scope);
-        initLockedProductsSelector($scope);
+        initSettingsAjaxSelectors($scope);
         initProposalPreview($scope);
         initBinarySwitches($scope);
         $scope.find('[data-signature-document]').each(function () {

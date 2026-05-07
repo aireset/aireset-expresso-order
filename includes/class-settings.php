@@ -20,6 +20,7 @@ class EOP_Settings {
             'discount_mode'                          => 'both',
             'enable_checkout_confirmation'           => 'no',
             'service_products'                       => '',
+            'service_product_categories'             => '',
             'order_page_id'                          => 0,
             'proposal_page_id'                       => 0,
             'brand_logo_url'                         => '',
@@ -141,6 +142,7 @@ class EOP_Settings {
             'discount_mode'                         => in_array( $input['discount_mode'] ?? $defaults['discount_mode'], array( 'both', 'percent', 'fixed' ), true ) ? (string) ( $input['discount_mode'] ?? $defaults['discount_mode'] ) : $defaults['discount_mode'],
             'enable_checkout_confirmation'         => 'yes' === ( $input['enable_checkout_confirmation'] ?? 'no' ) ? 'yes' : 'no',
             'service_products'                     => sanitize_text_field( str_replace( array( "\r", "\n", ';' ), ',', (string) ( $input['service_products'] ?? $defaults['service_products'] ) ) ),
+            'service_product_categories'           => sanitize_text_field( str_replace( array( "\r", "\n", ';' ), ',', (string) ( $input['service_product_categories'] ?? $defaults['service_product_categories'] ) ) ),
             'order_page_id'                        => absint( $input['order_page_id'] ?? $defaults['order_page_id'] ),
             'proposal_page_id'                     => absint( $input['proposal_page_id'] ?? $defaults['proposal_page_id'] ),
             'brand_logo_url'                       => esc_url_raw( $input['brand_logo_url'] ?? $defaults['brand_logo_url'] ),
@@ -323,29 +325,72 @@ class EOP_Settings {
         return array_values( array_unique( array_filter( array_map( 'strtolower', array_map( 'trim', explode( ',', $raw ) ) ) ) ) );
     }
 
+    public static function get_service_product_category_selector_state( $settings = array() ) {
+		$settings = ! empty( $settings ) && is_array( $settings ) ? wp_parse_args( $settings, self::get_defaults() ) : self::get_all();
+        $raw      = str_replace( array( "\r", "\n", ';' ), ',', (string) ( $settings['service_product_categories'] ?? '' ) );
+
+        return self::get_service_product_category_selector_state_from_raw( $raw );
+    }
+
+    public static function get_service_product_category_tokens( $settings = array() ) {
+		$settings = ! empty( $settings ) && is_array( $settings ) ? wp_parse_args( $settings, self::get_defaults() ) : self::get_all();
+        $raw      = str_replace( array( "\r", "\n", ';' ), ',', (string) ( $settings['service_product_categories'] ?? '' ) );
+
+        return array_values( array_unique( array_filter( array_map( 'trim', explode( ',', $raw ) ) ) ) );
+    }
+
     public static function is_service_product( $product ) {
         if ( ! $product instanceof WC_Product ) {
             return false;
         }
 
-        $tokens = self::get_service_product_tokens();
+        $tokens          = self::get_service_product_tokens();
+        $category_tokens  = self::get_service_product_category_tokens();
 
-        if ( empty( $tokens ) ) {
+        if ( ! empty( $tokens ) ) {
+            $candidates = array_filter(
+                array(
+                    strtolower( (string) $product->get_id() ),
+                    strtolower( (string) $product->get_parent_id() ),
+                    strtolower( (string) $product->get_sku() ),
+                ),
+                static function ( $value ) {
+                    return '' !== trim( (string) $value ) && '0' !== (string) $value;
+                }
+            );
+
+            if ( ! empty( array_intersect( $tokens, $candidates ) ) ) {
+                return true;
+            }
+        }
+
+        if ( empty( $category_tokens ) ) {
             return false;
         }
 
-        $candidates = array_filter(
-            array(
-                strtolower( (string) $product->get_id() ),
-                strtolower( (string) $product->get_parent_id() ),
-                strtolower( (string) $product->get_sku() ),
-            ),
-            static function ( $value ) {
-                return '' !== trim( (string) $value ) && '0' !== (string) $value;
+        $category_ids = $product->get_category_ids();
+
+        if ( empty( $category_ids ) && $product->get_parent_id() ) {
+            $parent_product = wc_get_product( $product->get_parent_id() );
+
+            if ( $parent_product instanceof WC_Product ) {
+                $category_ids = $parent_product->get_category_ids();
             }
+        }
+
+        $category_candidates = array_values(
+            array_filter(
+                array_map(
+                    'strval',
+                    array_map( 'absint', is_array( $category_ids ) ? $category_ids : array() )
+                ),
+                static function ( $value ) {
+                    return '' !== trim( (string) $value ) && '0' !== (string) $value;
+                }
+            )
         );
 
-        return (bool) array_intersect( $tokens, $candidates );
+        return ! empty( array_intersect( $category_tokens, $category_candidates ) );
     }
 
     private static function get_product_selector_state_from_raw( $raw ) {
@@ -400,6 +445,74 @@ class EOP_Settings {
 
             $options[ $product_id ] = array(
                 'id'   => $product_id,
+                'text' => $label,
+            );
+        }
+
+        return array(
+            'options'          => array_values( $options ),
+            'missing_tokens'   => $missing,
+            'serialized_value' => implode( ',', array_merge( array_map( 'strval', array_keys( $options ) ), $missing ) ),
+        );
+    }
+
+    private static function get_service_product_category_selector_state_from_raw( $raw ) {
+        $tokens = array_values( array_unique( array_filter( array_map( 'trim', explode( ',', $raw ) ) ) ) );
+
+        if ( ! taxonomy_exists( 'product_cat' ) || ! function_exists( 'get_term' ) || ! function_exists( 'get_terms' ) ) {
+            return array(
+                'options'          => array(),
+                'missing_tokens'   => $tokens,
+                'serialized_value' => implode( ',', $tokens ),
+            );
+        }
+
+        $options = array();
+        $missing = array();
+
+        foreach ( $tokens as $token ) {
+            $term = null;
+
+            if ( ctype_digit( $token ) ) {
+                $term = get_term( absint( $token ), 'product_cat' );
+            } else {
+                $terms = get_terms(
+                    array(
+                        'taxonomy'   => 'product_cat',
+                        'hide_empty' => false,
+                        'search'     => sanitize_text_field( $token ),
+                        'number'     => 1,
+                    )
+                );
+
+                if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
+                    $term = reset( $terms );
+                }
+            }
+
+            if ( ! $term || is_wp_error( $term ) ) {
+                $missing[] = $token;
+                continue;
+            }
+
+            $term_id = $term->term_id;
+            $label   = $term->name;
+            $parents = array_reverse( get_ancestors( $term_id, 'product_cat' ) );
+            $parts   = array();
+
+            foreach ( $parents as $parent_id ) {
+                $parent = get_term( $parent_id, 'product_cat' );
+
+                if ( $parent && ! is_wp_error( $parent ) ) {
+                    $parts[] = $parent->name;
+                }
+            }
+
+            $parts[] = $label;
+            $label    = implode( ' / ', array_filter( $parts ) );
+
+            $options[ $term_id ] = array(
+                'id'   => $term_id,
                 'text' => $label,
             );
         }
@@ -528,6 +641,7 @@ class EOP_Settings {
             'post_confirmation_contract_checkbox_label' => self::build_help_tooltip_payload( __( 'Texto do aceite', EOP_TEXT_DOMAIN ), __( 'Frase que acompanha o checkbox de aceite do contrato.', EOP_TEXT_DOMAIN ), __( 'Deixa explicito o consentimento antes do avanço.', EOP_TEXT_DOMAIN ) ),
             'post_confirmation_contract_button_label' => self::build_help_tooltip_payload( __( 'Botao do contrato', EOP_TEXT_DOMAIN ), __( 'Texto do botao que envia o aceite e libera a proxima etapa do fluxo.', EOP_TEXT_DOMAIN ), __( 'Muda a chamada para a acao principal na etapa do contrato.', EOP_TEXT_DOMAIN ) ),
             'service_products' => self::build_help_tooltip_payload( __( 'Produtos considerados servicos', EOP_TEXT_DOMAIN ), __( 'Selecione produtos que devem aparecer separados dos produtos comuns nos totalizadores.', EOP_TEXT_DOMAIN ), __( 'Tambem remove esses itens da edicao de nomes no fluxo complementar.', EOP_TEXT_DOMAIN ) ),
+            'service_product_categories' => self::build_help_tooltip_payload( __( 'Categorias de produtos considerados servicos', EOP_TEXT_DOMAIN ), __( 'Selecione categorias inteiras que devem entrar na mesma regra dos servicos.', EOP_TEXT_DOMAIN ), __( 'Qualquer produto de uma categoria marcada aqui passa a ser tratado como servico.', EOP_TEXT_DOMAIN ) ),
             'post_confirmation_locked_products' => self::build_help_tooltip_payload( __( 'Produtos bloqueados', EOP_TEXT_DOMAIN ), __( 'Selecione os produtos cujo nome nao deve ser alterado na etapa final de personalizacao.', EOP_TEXT_DOMAIN ), __( 'Esses itens ficam protegidos contra edicao do nome pelo cliente.', EOP_TEXT_DOMAIN ) ),
             'post_confirmation_require_attachment' => self::build_help_tooltip_payload( __( 'Exigir anexo', EOP_TEXT_DOMAIN ), __( 'Define se o envio do anexo sera obrigatorio antes de continuar o fluxo.', EOP_TEXT_DOMAIN ), __( 'Quando ativado, o cliente precisa anexar o arquivo para seguir.', EOP_TEXT_DOMAIN ) ),
             'post_confirmation_upload_title' => self::build_help_tooltip_payload( __( 'Titulo do upload', EOP_TEXT_DOMAIN ), __( 'Titulo principal da etapa em que o cliente envia arquivos complementares.', EOP_TEXT_DOMAIN ), __( 'Aparece no topo do bloco de upload.', EOP_TEXT_DOMAIN ) ),
@@ -610,6 +724,7 @@ class EOP_Settings {
             'confirmation-flow-general',
             'confirmation-flow-documents',
             'confirmation-flow-preview',
+            'confirmation-flow-upload-products-preview',
             'order-link-style',
             'proposal-link-style',
             'customer-experience',
@@ -933,8 +1048,14 @@ class EOP_Settings {
         $should_render_confirmation_general = self::should_render_admin_section( $section, 'confirmation-flow-general' );
         $should_render_confirmation_documents = self::should_render_admin_section( $section, 'confirmation-flow-documents' );
         $should_render_confirmation_preview = self::should_render_admin_section( $section, 'confirmation-flow-preview' );
+        $should_render_confirmation_upload_products_preview = self::should_render_admin_section( $section, 'confirmation-flow-upload-products-preview' );
         $pages                          = $should_render_general_config ? get_pages() : array();
         $service_selector               = $should_render_general_config ? self::get_service_product_selector_state( $settings ) : array(
+            'options'          => array(),
+            'missing_tokens'   => array(),
+            'serialized_value' => '',
+        );
+        $service_category_selector      = $should_render_general_config ? self::get_service_product_category_selector_state( $settings ) : array(
             'options'          => array(),
             'missing_tokens'   => array(),
             'serialized_value' => '',
@@ -1004,7 +1125,16 @@ class EOP_Settings {
                                 <div class="eop-settings-field is-full">
                                     <?php self::render_help_label( 'label', __( 'Produtos considerados servicos', EOP_TEXT_DOMAIN ), 'service_products', array( 'for' => 'eop_service_products_selector' ) ); ?>
                                     <input id="eop_service_products" type="hidden" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[service_products]" value="<?php echo esc_attr( $service_selector['serialized_value'] ); ?>" />
-                                    <select id="eop_service_products_selector" class="eop-settings-product-selector" data-target-input="#eop_service_products" multiple>
+                                    <select
+                                        id="eop_service_products_selector"
+                                        class="eop-settings-product-selector"
+                                        data-target-input="#eop_service_products"
+                                        data-search-action="eop_search_products"
+                                        data-placeholder="<?php echo esc_attr__( 'Busque produtos por nome ou SKU...', EOP_TEXT_DOMAIN ); ?>"
+                                        data-no-results="<?php echo esc_attr__( 'Nenhum produto encontrado.', EOP_TEXT_DOMAIN ); ?>"
+                                        data-minimum-input-length="3"
+                                        multiple
+                                    >
                                         <?php foreach ( $service_selector['options'] as $option ) : ?>
                                             <option value="<?php echo esc_attr( $option['id'] ); ?>" selected="selected"><?php echo esc_html( $option['text'] ); ?></option>
                                         <?php endforeach; ?>
@@ -1012,6 +1142,28 @@ class EOP_Settings {
                                     <small class="eop-settings-help"><?php esc_html_e( 'Esses itens aparecem em uma linha Servicos antes do total e nao entram na edicao do fluxo complementar.', EOP_TEXT_DOMAIN ); ?></small>
                                     <?php if ( ! empty( $service_selector['missing_tokens'] ) ) : ?>
                                         <small class="eop-settings-help"><?php echo esc_html( sprintf( __( 'Tokens antigos preservados ate a proxima atualizacao desta lista: %s', EOP_TEXT_DOMAIN ), implode( ', ', $service_selector['missing_tokens'] ) ) ); ?></small>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="eop-settings-field is-full">
+                                    <?php self::render_help_label( 'label', __( 'Categorias de produtos considerados servicos', EOP_TEXT_DOMAIN ), 'service_product_categories', array( 'for' => 'eop_service_product_categories_selector' ) ); ?>
+                                    <input id="eop_service_product_categories" type="hidden" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[service_product_categories]" value="<?php echo esc_attr( $service_category_selector['serialized_value'] ); ?>" />
+                                    <select
+                                        id="eop_service_product_categories_selector"
+                                        class="eop-settings-category-selector"
+                                        data-target-input="#eop_service_product_categories"
+                                        data-search-action="eop_search_product_categories"
+                                        data-placeholder="<?php echo esc_attr__( 'Busque categorias de produto...', EOP_TEXT_DOMAIN ); ?>"
+                                        data-no-results="<?php echo esc_attr__( 'Nenhuma categoria encontrada.', EOP_TEXT_DOMAIN ); ?>"
+                                        data-minimum-input-length="1"
+                                        multiple
+                                    >
+                                        <?php foreach ( $service_category_selector['options'] as $option ) : ?>
+                                            <option value="<?php echo esc_attr( $option['id'] ); ?>" selected="selected"><?php echo esc_html( $option['text'] ); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <small class="eop-settings-help"><?php esc_html_e( 'Essas categorias fazem qualquer produto delas entrar no grupo de servicos nos totalizadores e no fluxo complementar.', EOP_TEXT_DOMAIN ); ?></small>
+                                    <?php if ( ! empty( $service_category_selector['missing_tokens'] ) ) : ?>
+                                        <small class="eop-settings-help"><?php echo esc_html( sprintf( __( 'Tokens antigos preservados ate a proxima atualizacao desta lista: %s', EOP_TEXT_DOMAIN ), implode( ', ', $service_category_selector['missing_tokens'] ) ) ); ?></small>
                                     <?php endif; ?>
                                 </div>
                                 <div class="eop-settings-field is-full">
@@ -1295,6 +1447,87 @@ class EOP_Settings {
                             <p><?php esc_html_e( 'Leitura visual da pagina publica com o documento principal, o aceite e o resumo lateral.', EOP_TEXT_DOMAIN ); ?></p>
                             <?php if ( class_exists( 'EOP_Post_Confirmation_Flow' ) && method_exists( 'EOP_Post_Confirmation_Flow', 'render_admin_contract_preview_markup' ) ) : ?>
                                 <?php echo EOP_Post_Confirmation_Flow::render_admin_contract_preview_markup( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                            <?php endif; ?>
+                        </section>
+                        <?php endif; ?>
+
+                        <?php if ( $should_render_confirmation_upload_products_preview ) : ?>
+                        <section class="eop-settings-card eop-contract-preview-settings">
+                            <h2><?php esc_html_e( 'Visual da pagina de upload e produtos', EOP_TEXT_DOMAIN ); ?></h2>
+                            <p><?php esc_html_e( 'Ajuste os textos e o visual da etapa final em que o cliente envia o arquivo e personaliza os produtos.', EOP_TEXT_DOMAIN ); ?></p>
+                            <div class="eop-settings-grid">
+                                <div class="eop-settings-field is-full">
+                                    <label for="eop_post_confirmation_upload_title_visual"><?php esc_html_e( 'Titulo do upload', EOP_TEXT_DOMAIN ); ?></label>
+                                    <input id="eop_post_confirmation_upload_title_visual" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[post_confirmation_upload_title]" value="<?php echo esc_attr( $settings['post_confirmation_upload_title'] ); ?>" />
+                                </div>
+                                <div class="eop-settings-field is-full">
+                                    <label for="eop_post_confirmation_upload_description_visual"><?php esc_html_e( 'Descricao do upload', EOP_TEXT_DOMAIN ); ?></label>
+                                    <textarea id="eop_post_confirmation_upload_description_visual" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[post_confirmation_upload_description]"><?php echo esc_textarea( $settings['post_confirmation_upload_description'] ); ?></textarea>
+                                </div>
+                                <div class="eop-settings-field">
+                                    <label for="eop_post_confirmation_upload_field_label_visual"><?php esc_html_e( 'Label do arquivo', EOP_TEXT_DOMAIN ); ?></label>
+                                    <input id="eop_post_confirmation_upload_field_label_visual" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[post_confirmation_upload_field_label]" value="<?php echo esc_attr( $settings['post_confirmation_upload_field_label'] ); ?>" />
+                                </div>
+                                <div class="eop-settings-field">
+                                    <label for="eop_post_confirmation_upload_button_label_visual"><?php esc_html_e( 'Botao do upload', EOP_TEXT_DOMAIN ); ?></label>
+                                    <input id="eop_post_confirmation_upload_button_label_visual" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[post_confirmation_upload_button_label]" value="<?php echo esc_attr( $settings['post_confirmation_upload_button_label'] ); ?>" />
+                                </div>
+                                <div class="eop-settings-field is-full">
+                                    <label for="eop_post_confirmation_products_title_visual"><?php esc_html_e( 'Titulo da personalizacao', EOP_TEXT_DOMAIN ); ?></label>
+                                    <input id="eop_post_confirmation_products_title_visual" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[post_confirmation_products_title]" value="<?php echo esc_attr( $settings['post_confirmation_products_title'] ); ?>" />
+                                </div>
+                                <div class="eop-settings-field is-full">
+                                    <label for="eop_post_confirmation_products_description_visual"><?php esc_html_e( 'Descricao da personalizacao', EOP_TEXT_DOMAIN ); ?></label>
+                                    <textarea id="eop_post_confirmation_products_description_visual" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[post_confirmation_products_description]"><?php echo esc_textarea( $settings['post_confirmation_products_description'] ); ?></textarea>
+                                </div>
+                                <div class="eop-settings-field">
+                                    <label for="eop_post_confirmation_products_button_label_visual"><?php esc_html_e( 'Botao da personalizacao', EOP_TEXT_DOMAIN ); ?></label>
+                                    <input id="eop_post_confirmation_products_button_label_visual" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[post_confirmation_products_button_label]" value="<?php echo esc_attr( $settings['post_confirmation_products_button_label'] ); ?>" />
+                                </div>
+                                <div class="eop-settings-field is-full">
+                                    <label for="eop_customer_experience_font_family_upload_products_preview"><?php esc_html_e( 'Fonte da experiencia publica', EOP_TEXT_DOMAIN ); ?></label>
+                                    <input id="eop_customer_experience_font_family_upload_products_preview" class="select_font eop-font-field" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_font_family]" value="<?php echo esc_attr( $settings['customer_experience_font_family'] ); ?>" />
+                                </div>
+                                <div class="eop-settings-field">
+                                    <label for="eop_customer_experience_title_size_upload_products_preview"><?php esc_html_e( 'Tamanho do titulo principal (px)', EOP_TEXT_DOMAIN ); ?></label>
+                                    <input id="eop_customer_experience_title_size_upload_products_preview" type="number" min="24" max="76" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_title_size]" value="<?php echo esc_attr( $settings['customer_experience_title_size'] ); ?>" />
+                                </div>
+                                <div class="eop-settings-field">
+                                    <label for="eop_customer_experience_text_size_upload_products_preview"><?php esc_html_e( 'Tamanho do texto base (px)', EOP_TEXT_DOMAIN ); ?></label>
+                                    <input id="eop_customer_experience_text_size_upload_products_preview" type="number" min="13" max="24" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_text_size]" value="<?php echo esc_attr( $settings['customer_experience_text_size'] ); ?>" />
+                                </div>
+                                <div class="eop-settings-field">
+                                    <label for="eop_customer_experience_background_color_upload_products_preview"><?php esc_html_e( 'Fundo da pagina', EOP_TEXT_DOMAIN ); ?></label>
+                                    <input id="eop_customer_experience_background_color_upload_products_preview" class="eop-color-field" type="text" data-default-color="#edf2fb" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_background_color]" value="<?php echo esc_attr( $settings['customer_experience_background_color'] ); ?>" />
+                                </div>
+                                <div class="eop-settings-field">
+                                    <label for="eop_customer_experience_hero_background_color_upload_products_preview"><?php esc_html_e( 'Fundo do topo', EOP_TEXT_DOMAIN ); ?></label>
+                                    <input id="eop_customer_experience_hero_background_color_upload_products_preview" class="eop-color-field" type="text" data-default-color="#0f1b35" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_hero_background_color]" value="<?php echo esc_attr( $settings['customer_experience_hero_background_color'] ); ?>" />
+                                </div>
+                                <div class="eop-settings-field">
+                                    <label for="eop_customer_experience_panel_background_color_upload_products_preview"><?php esc_html_e( 'Fundo dos cards', EOP_TEXT_DOMAIN ); ?></label>
+                                    <input id="eop_customer_experience_panel_background_color_upload_products_preview" class="eop-color-field" type="text" data-default-color="#ffffff" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_panel_background_color]" value="<?php echo esc_attr( $settings['customer_experience_panel_background_color'] ); ?>" />
+                                </div>
+                                <div class="eop-settings-field">
+                                    <label for="eop_customer_experience_accent_color_upload_products_preview"><?php esc_html_e( 'Cor de destaque', EOP_TEXT_DOMAIN ); ?></label>
+                                    <input id="eop_customer_experience_accent_color_upload_products_preview" class="eop-color-field" type="text" data-default-color="#d78a2f" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_accent_color]" value="<?php echo esc_attr( $settings['customer_experience_accent_color'] ); ?>" />
+                                </div>
+                                <div class="eop-settings-field">
+                                    <label for="eop_customer_experience_text_color_upload_products_preview"><?php esc_html_e( 'Texto principal', EOP_TEXT_DOMAIN ); ?></label>
+                                    <input id="eop_customer_experience_text_color_upload_products_preview" class="eop-color-field" type="text" data-default-color="#16243a" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_text_color]" value="<?php echo esc_attr( $settings['customer_experience_text_color'] ); ?>" />
+                                </div>
+                                <div class="eop-settings-field">
+                                    <label for="eop_customer_experience_muted_color_upload_products_preview"><?php esc_html_e( 'Texto auxiliar', EOP_TEXT_DOMAIN ); ?></label>
+                                    <input id="eop_customer_experience_muted_color_upload_products_preview" class="eop-color-field" type="text" data-default-color="#66768d" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_muted_color]" value="<?php echo esc_attr( $settings['customer_experience_muted_color'] ); ?>" />
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="eop-settings-card eop-contract-preview-card">
+                            <h2><?php esc_html_e( 'Preview da etapa de upload e produtos', EOP_TEXT_DOMAIN ); ?></h2>
+                            <p><?php esc_html_e( 'Leitura visual da pagina publica com upload do arquivo, anexo salvo e personalizacao dos produtos.', EOP_TEXT_DOMAIN ); ?></p>
+                            <?php if ( class_exists( 'EOP_Post_Confirmation_Flow' ) && method_exists( 'EOP_Post_Confirmation_Flow', 'render_admin_upload_products_preview_markup' ) ) : ?>
+                                <?php echo EOP_Post_Confirmation_Flow::render_admin_upload_products_preview_markup( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                             <?php endif; ?>
                         </section>
                         <?php endif; ?>

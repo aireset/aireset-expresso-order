@@ -1948,10 +1948,6 @@ class EOP_Post_Confirmation_Flow {
 		ob_start();
 		?>
 		<div class="eop-post-flow__final-block">
-							<div class="eop-post-flow__final-block-head">
-								<strong><?php echo esc_html( $upload_title ); ?></strong>
-								<small><?php echo esc_html( $upload_text ); ?></small>
-							</div>
 							<div class="eop-post-flow__final-upload-row">
 								<label class="eop-post-flow__field eop-post-flow__field--file">
 									<span><?php echo esc_html( $field_label ); ?></span>
@@ -2071,7 +2067,7 @@ class EOP_Post_Confirmation_Flow {
 	}
 
 	public static function get_admin_upload_products_preview_srcdoc( $settings = array() ) {
-		$settings = is_array( $settings ) ? wp_parse_args( $settings, EOP_Settings::get_defaults() ) : EOP_Settings::get_defaults();
+		$settings   = is_array( $settings ) ? wp_parse_args( $settings, EOP_Settings::get_defaults() ) : EOP_Settings::get_defaults();
 		$brand_name = class_exists( 'EOP_PDF_Settings' ) ? (string) EOP_PDF_Settings::get( 'shop_name', get_bloginfo( 'name' ) ) : get_bloginfo( 'name' );
 		$brand_name = '' !== trim( $brand_name ) ? $brand_name : get_bloginfo( 'name' );
 		$logo_url   = ! empty( $settings['brand_logo_url'] ) ? esc_url_raw( (string) $settings['brand_logo_url'] ) : '';
@@ -2084,47 +2080,40 @@ class EOP_Post_Confirmation_Flow {
 		$sample_items     = array(
 			array(
 				'item_id'   => 1,
-				'item_name' => __( 'Sérum Mágico', EOP_TEXT_DOMAIN ),
+				'item_name' => __( 'Serum Magico', EOP_TEXT_DOMAIN ),
 				'sku'       => 'SERMAG0002',
 				'value'     => '',
 				'image_url' => $sample_image_url,
 				'locked'    => false,
 			),
 		);
-		$markup = self::render_final_step_renderer_markup(
+		$steps            = array(
+			array(
+				'key'    => 'contract',
+				'label'  => self::get_stage_label( 'contract' ),
+				'status' => 'completed',
+			),
+			array(
+				'key'    => 'upload',
+				'label'  => self::get_stage_label( 'upload' ),
+				'status' => 'current',
+			),
+			array(
+				'key'    => 'completed',
+				'label'  => self::get_stage_label( 'completed' ),
+				'status' => 'upcoming',
+			),
+		);
+		$markup           = self::render_final_step_renderer_markup(
 			array(
 				'settings'       => $settings,
-				'brand_name'     => $brand_name,
-				'logo_url'       => $logo_url,
-				'stage'          => 'upload',
-				'order_number'   => 5238,
 				'field_label'    => $settings['post_confirmation_upload_field_label'],
-				'button_label'   => $settings['post_confirmation_upload_button_label'],
-				'action'         => 'upload',
-				'include_nonce'   => false,
 				'attachment_id'  => 1,
 				'attachment_url' => home_url( '/' ),
 				'filename'       => 'plesk-logo.png',
 				'uploaded_at'    => '2026-05-04 18:33:22',
 				'line_items'     => $sample_items,
 				'state'          => array(),
-				'steps'          => array(
-					array(
-						'key'    => 'contract',
-						'label'  => self::get_stage_label( 'contract' ),
-						'status' => 'completed',
-					),
-					array(
-						'key'    => 'upload',
-						'label'  => self::get_stage_label( 'upload' ),
-						'status' => 'current',
-					),
-					array(
-						'key'    => 'completed',
-						'label'  => self::get_stage_label( 'completed' ),
-						'status' => 'upcoming',
-					),
-				),
 			)
 		);
 
@@ -2135,6 +2124,7 @@ class EOP_Post_Confirmation_Flow {
 <head>
 	<meta charset="<?php echo esc_attr( get_bloginfo( 'charset' ) ); ?>">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="<?php echo esc_url( EOP_PLUGIN_URL . 'assets/css/frontend.css?ver=' . EOP_VERSION ); ?>">
 	<style>
 		html,
 		body {
@@ -2149,12 +2139,6 @@ class EOP_Post_Confirmation_Flow {
 			box-sizing: border-box;
 		}
 
-		body {
-			color: var(--eop-preview-text, #16243a);
-			font-family: var(--eop-preview-font-family, 'Segoe UI', sans-serif);
-			font-size: var(--eop-preview-text-size, 16px);
-		}
-
 		img {
 			max-width: 100%;
 			height: auto;
@@ -2162,20 +2146,53 @@ class EOP_Post_Confirmation_Flow {
 
 		.eop-final-flow-preview {
 			padding: 18px;
-			background: var(--eop-preview-page-bg, #f5f7ff);
+			background: #f5f7ff;
 		}
 	</style>
 	<?php self::render_post_flow_styles( $settings ); ?>
 </head>
 <body>
 	<div class="eop-final-flow-preview">
-		<?php echo $markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+		<div class="eop-post-flow eop-post-flow--stage-upload eop-post-flow--stage-contract eop-post-flow--final-step eop-post-flow--admin-preview eop-post-flow--admin-final-preview">
+			<div class="eop-post-flow__contract-header">
+				<div class="eop-post-flow__contract-header-main">
+					<div class="eop-post-flow__contract-brand">
+						<?php if ( '' !== $logo_url ) : ?>
+							<img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( $brand_name ); ?>">
+						<?php else : ?>
+							<span class="eop-post-flow__contract-brand-fallback"><?php echo esc_html( strtoupper( substr( $brand_name, 0, 1 ) ) ); ?></span>
+						<?php endif; ?>
+					</div>
+					<div class="eop-post-flow__contract-meta">
+						<strong><?php echo esc_html( $brand_name ); ?></strong>
+						<span><?php echo esc_html( sprintf( __( 'Pedido #%d', EOP_TEXT_DOMAIN ), 5238 ) ); ?></span>
+					</div>
+				</div>
+				<?php self::render_stage_breadcrumb( $steps, 'upload' ); ?>
+			</div>
+			<div class="eop-post-flow__layout">
+				<div class="eop-post-flow__main">
+					<div class="eop-post-flow__final-intro">
+						<span class="eop-post-flow__final-intro-eyebrow"><?php esc_html_e( 'Etapa final do pedido', EOP_TEXT_DOMAIN ); ?></span>
+						<h2 class="eop-post-flow__final-intro-title"><?php echo esc_html( $settings['post_confirmation_upload_title'] ); ?></h2>
+						<p class="eop-post-flow__final-intro-text"><?php echo esc_html( $settings['post_confirmation_upload_description'] ); ?></p>
+					</div>
+					<div class="eop-post-flow__final-step-card">
+						<form method="post" enctype="multipart/form-data" class="eop-post-flow__form eop-post-flow__form--final-step">
+							<?php echo $markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+							<button type="submit" class="eop-proposal-button eop-post-flow__final-submit"><?php echo esc_html( $settings['post_confirmation_upload_button_label'] ); ?></button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 </body>
 </html>
 		<?php
 
 		return (string) ob_get_clean();
+
 	}
 
 	private static function render_final_step_form( WC_Order $order, $token, $settings, $state, $line_items, $current_stage, $notice = null ) {
@@ -2201,42 +2218,27 @@ class EOP_Post_Confirmation_Flow {
 				}());
 			</script>
 		<?php endif; ?>
-		<?php echo self::render_final_step_renderer_markup( array( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-				'settings'       => $settings,
-				'brand_name'     => class_exists( 'EOP_PDF_Settings' ) ? (string) EOP_PDF_Settings::get( 'shop_name', get_bloginfo( 'name' ) ) : get_bloginfo( 'name' ),
-				'logo_url'       => ! empty( $settings['brand_logo_url'] ) ? esc_url_raw( (string) $settings['brand_logo_url'] ) : '',
-				'stage'          => $current_stage,
-				'order_number'   => $order->get_id(),
-				'field_label'    => $settings['post_confirmation_upload_field_label'],
-				'button_label'   => $button_label,
-				'action'         => $action,
-				'token'          => $token,
-				'include_nonce'  => true,
-				'attachment_id'  => $attachment_id,
-				'attachment_url' => $attachment_url,
-				'filename'       => $filename,
-				'uploaded_at'    => $uploaded_at,
-				'line_items'     => $line_items,
-				'state'          => $state,
-				'steps'          => array(
-					array(
-						'key'    => 'contract',
-						'label'  => self::get_stage_label( 'contract' ),
-						'status' => 'completed',
-					),
-					array(
-						'key'    => 'upload',
-						'label'  => self::get_stage_label( 'upload' ),
-						'status' => 'current',
-					),
-					array(
-						'key'    => 'completed',
-						'label'  => self::get_stage_label( 'completed' ),
-						'status' => 'upcoming',
-					),
-				),
-			) ); ?>
+		<div class="eop-post-flow__final-step-card">
+			<form method="post" enctype="multipart/form-data" class="eop-post-flow__form eop-post-flow__form--final-step">
+				<?php wp_nonce_field( 'eop_post_confirmation_' . $action, 'eop_post_confirmation_nonce' ); ?>
+				<input type="hidden" name="eop_post_confirmation_action" value="<?php echo esc_attr( $action ); ?>" />
+				<input type="hidden" name="eop_proposal_token" value="<?php echo esc_attr( $token ); ?>" />
+				<?php echo self::render_final_step_renderer_markup( array( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+					'settings'       => $settings,
+					'field_label'    => $settings['post_confirmation_upload_field_label'],
+					'attachment_id'  => $attachment_id,
+					'attachment_url' => $attachment_url,
+					'filename'       => $filename,
+					'uploaded_at'    => $uploaded_at,
+					'line_items'     => $line_items,
+					'state'          => $state,
+				) ); ?>
+				<button type="submit" class="eop-proposal-button eop-post-flow__final-submit"><?php echo esc_html( $button_label ); ?></button>
+			</form>
+		</div>
 		<?php
+
+		return;
 	}
 
 	private static function render_completion_panel( WC_Order $order, $settings, $state, $line_items, $pdf_url ) {

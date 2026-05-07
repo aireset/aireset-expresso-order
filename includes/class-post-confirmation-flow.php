@@ -1924,53 +1924,21 @@ class EOP_Post_Confirmation_Flow {
 	private static function render_final_step_renderer_markup( $context = array() ) {
 		$context = is_array( $context ) ? $context : array();
 		$settings = is_array( $context['settings'] ?? null ) ? wp_parse_args( $context['settings'], EOP_Settings::get_defaults() ) : EOP_Settings::get_defaults();
-		$brand_name = trim( (string) ( $context['brand_name'] ?? '' ) );
-		$brand_name = '' !== $brand_name ? $brand_name : ( class_exists( 'EOP_PDF_Settings' ) ? (string) EOP_PDF_Settings::get( 'shop_name', get_bloginfo( 'name' ) ) : get_bloginfo( 'name' ) );
-		$brand_name = '' !== trim( $brand_name ) ? $brand_name : get_bloginfo( 'name' );
-		$logo_url   = trim( (string) ( $context['logo_url'] ?? '' ) );
-
-		if ( '' === $logo_url && empty( $context['logo_url'] ) && class_exists( 'EOP_PDF_Settings' ) ) {
-			$logo_url = esc_url_raw( (string) EOP_PDF_Settings::get( 'shop_logo_url', '' ) );
-		}
-
 		$upload_title   = trim( (string) ( $context['upload_title'] ?? ( $settings['post_confirmation_upload_title'] ?? '' ) ) );
 		$upload_text    = trim( (string) ( $context['upload_text'] ?? ( $settings['post_confirmation_upload_description'] ?? '' ) ) );
 		$products_title = trim( (string) ( $context['products_title'] ?? ( $settings['post_confirmation_products_title'] ?? '' ) ) );
 		$products_text  = trim( (string) ( $context['products_text'] ?? ( $settings['post_confirmation_products_description'] ?? '' ) ) );
 		$field_label    = trim( (string) ( $context['field_label'] ?? ( $settings['post_confirmation_upload_field_label'] ?? '' ) ) );
-		$button_label   = trim( (string) ( $context['button_label'] ?? '' ) );
-		$button_label   = '' !== $button_label ? $button_label : ( 'upload' === (string) ( $context['action'] ?? 'upload' ) ? trim( (string) ( $settings['post_confirmation_upload_button_label'] ?? '' ) ) : trim( (string) ( $settings['post_confirmation_products_button_label'] ?? '' ) ) );
 		$upload_title   = '' !== $upload_title ? $upload_title : __( 'Anexo do cliente', EOP_TEXT_DOMAIN );
 		$upload_text    = '' !== $upload_text ? $upload_text : __( 'Selecione um arquivo em PDF ou PNG. Se ja houver um anexo salvo, voce pode visualiza-lo abaixo ou enviar outro para substituir.', EOP_TEXT_DOMAIN );
 		$products_title = '' !== $products_title ? $products_title : __( 'Produtos do pedido', EOP_TEXT_DOMAIN );
 		$products_text  = '' !== $products_text ? $products_text : __( 'Defina como cada produto deve aparecer para os itens liberados.', EOP_TEXT_DOMAIN );
 		$field_label    = '' !== $field_label ? $field_label : __( 'Arquivo', EOP_TEXT_DOMAIN );
-		$action         = 'upload' === (string) ( $context['action'] ?? 'upload' ) ? 'upload' : 'products';
-		$token          = trim( (string) ( $context['token'] ?? '' ) );
-		$include_nonce  = ! empty( $context['include_nonce'] );
 		$attachment_id  = absint( $context['attachment_id'] ?? 0 );
 		$attachment_url = trim( (string) ( $context['attachment_url'] ?? '' ) );
 		$filename       = trim( (string) ( $context['filename'] ?? '' ) );
 		$uploaded_at    = trim( (string) ( $context['uploaded_at'] ?? '' ) );
 		$line_items     = is_array( $context['line_items'] ?? null ) ? $context['line_items'] : array();
-		$steps          = is_array( $context['steps'] ?? null ) ? $context['steps'] : array(
-			array(
-				'key'    => 'contract',
-				'label'  => self::get_stage_label( 'contract' ),
-				'status' => 'completed',
-			),
-			array(
-				'key'    => 'upload',
-				'label'  => self::get_stage_label( 'upload' ),
-				'status' => 'current',
-			),
-			array(
-				'key'    => 'completed',
-				'label'  => self::get_stage_label( 'completed' ),
-				'status' => 'upcoming',
-			),
-		);
-		$order_number = absint( $context['order_number'] ?? 0 );
 		$show_upload_meta = $attachment_id > 0 && '' !== $attachment_url;
 		$image_url      = trim( (string) ( $context['image_url'] ?? '' ) );
 		if ( '' === $image_url && function_exists( 'wc_placeholder_img_src' ) ) {
@@ -1979,39 +1947,7 @@ class EOP_Post_Confirmation_Flow {
 
 		ob_start();
 		?>
-		<div class="eop-post-flow__final-step-card">
-			<form method="post" enctype="multipart/form-data" class="eop-post-flow__form eop-post-flow__form--final-step">
-				<?php if ( $include_nonce ) : ?>
-					<?php wp_nonce_field( 'eop_post_confirmation_' . $action, 'eop_post_confirmation_nonce' ); ?>
-				<?php endif; ?>
-				<input type="hidden" name="eop_post_confirmation_action" value="<?php echo esc_attr( $action ); ?>" />
-				<?php if ( '' !== $token ) : ?>
-					<input type="hidden" name="eop_proposal_token" value="<?php echo esc_attr( $token ); ?>" />
-				<?php endif; ?>
-				<div class="eop-post-flow__contract-header">
-					<div class="eop-post-flow__contract-header-main">
-						<div class="eop-post-flow__contract-brand">
-							<?php if ( '' !== $logo_url ) : ?>
-								<img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( $brand_name ); ?>">
-							<?php else : ?>
-								<span class="eop-post-flow__contract-brand-fallback"><?php echo esc_html( strtoupper( substr( $brand_name, 0, 1 ) ) ); ?></span>
-							<?php endif; ?>
-						</div>
-						<div class="eop-post-flow__contract-meta">
-							<strong><?php echo esc_html( $brand_name ); ?></strong>
-							<span><?php echo esc_html( sprintf( __( 'Pedido #%d', EOP_TEXT_DOMAIN ), $order_number > 0 ? $order_number : 5238 ) ); ?></span>
-						</div>
-					</div>
-					<?php self::render_stage_breadcrumb( $steps, 'upload' ); ?>
-				</div>
-				<div class="eop-post-flow__layout">
-					<div class="eop-post-flow__main">
-						<div class="eop-post-flow__final-intro">
-							<span class="eop-post-flow__final-intro-eyebrow"><?php esc_html_e( 'Etapa final do pedido', EOP_TEXT_DOMAIN ); ?></span>
-							<h2 class="eop-post-flow__final-intro-title"><?php echo esc_html( $upload_title ); ?></h2>
-							<p class="eop-post-flow__final-intro-text"><?php echo esc_html( $upload_text ); ?></p>
-						</div>
-						<div class="eop-post-flow__final-block">
+		<div class="eop-post-flow__final-block">
 							<div class="eop-post-flow__final-block-head">
 								<strong><?php echo esc_html( $upload_title ); ?></strong>
 								<small><?php echo esc_html( $upload_text ); ?></small>
@@ -2029,8 +1965,8 @@ class EOP_Post_Confirmation_Flow {
 									</div>
 								<?php endif; ?>
 							</div>
-						</div>
-						<div class="eop-post-flow__final-block">
+		</div>
+		<div class="eop-post-flow__final-block">
 							<div class="eop-post-flow__final-block-head">
 								<strong><?php echo esc_html( $products_title ); ?></strong>
 								<small><?php echo esc_html( $products_text ); ?></small>
@@ -2128,11 +2064,6 @@ class EOP_Post_Confirmation_Flow {
 									</div>
 								<?php endforeach; ?>
 							</div>
-						</div>
-						<button type="submit" class="eop-proposal-button eop-post-flow__final-submit"><?php echo esc_html( $button_label ); ?></button>
-					</div>
-				</div>
-			</form>
 		</div>
 		<?php
 

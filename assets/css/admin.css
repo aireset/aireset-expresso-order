@@ -1424,6 +1424,43 @@ body.eop-admin-spa-screen.is-plugin-fullscreen #wpcontent {
   font-size: 18px;
   line-height: 1.2;
 }
+.eop-post-flow-stat small {
+  color: #6a7998;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.eop-post-flow-stat--success {
+  border-color: #cdeedb;
+  background: linear-gradient(180deg, #ffffff 0%, #f3fff8 100%);
+}
+.eop-post-flow-stat--success strong {
+  color: #17653e;
+}
+
+.eop-post-flow-stat--warning {
+  border-color: #f4d2b2;
+  background: linear-gradient(180deg, #ffffff 0%, #fff8ef 100%);
+}
+.eop-post-flow-stat--warning strong {
+  color: #9f4f0d;
+}
+
+.eop-post-flow-stat--info {
+  border-color: #c9d8fb;
+  background: linear-gradient(180deg, #ffffff 0%, #f3f7ff 100%);
+}
+.eop-post-flow-stat--info strong {
+  color: #1e4fbf;
+}
+
+.eop-post-flow-stat--neutral {
+  border-color: #dde5f6;
+  background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
+}
+.eop-post-flow-stat--neutral strong {
+  color: #495776;
+}
 
 .eop-post-flow-card__section {
   display: grid;

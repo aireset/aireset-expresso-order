@@ -177,6 +177,10 @@
         return getProposalPreviewCard($context).find('.eop-proposal-preview-render').first();
     }
 
+    function getProposalPreviewShell($context) {
+        return getProposalPreviewCard($context).find('.eop-proposal-preview-card__shell').first();
+    }
+
     function getProposalPreviewRoot($context) {
         var $frame = getProposalPreviewFrame($context);
 
@@ -185,6 +189,84 @@
         }
 
         return $($frame[0].contentDocument).find('[data-eop-proposal-preview-root]').first();
+    }
+
+    function resizeProposalPreviewFrame($frame) {
+        var frame = $frame && $frame.length ? $frame[0] : null;
+        var doc;
+        var body;
+        var html;
+        var nextHeight;
+        var $shell;
+
+        if (!frame || !frame.contentDocument) {
+            return;
+        }
+
+        doc = frame.contentDocument;
+        body = doc.body;
+        html = doc.documentElement;
+
+        if (!body || !html) {
+            return;
+        }
+
+        nextHeight = Math.max(
+            body.scrollHeight || 0,
+            body.offsetHeight || 0,
+            html.scrollHeight || 0,
+            html.offsetHeight || 0,
+            html.clientHeight || 0
+        );
+
+        if (!nextHeight) {
+            return;
+        }
+
+        $shell = $frame.closest('.eop-proposal-preview-card__shell');
+        $frame.css({
+            height: nextHeight + 'px',
+            minHeight: nextHeight + 'px'
+        });
+
+        if ($shell.length) {
+            $shell.css('min-height', nextHeight + 'px');
+        }
+    }
+
+    function bindProposalPreviewAutoHeight($frame) {
+        var frame = $frame && $frame.length ? $frame[0] : null;
+        var doc;
+        var body;
+        var html;
+        var observer;
+
+        if (!frame || !$frame.length || $frame.data('eopAutoHeightBound')) {
+            return;
+        }
+
+        if (!frame.contentDocument) {
+            return;
+        }
+
+        doc = frame.contentDocument;
+        body = doc.body;
+        html = doc.documentElement;
+
+        if (!body || !html || typeof ResizeObserver === 'undefined') {
+            resizeProposalPreviewFrame($frame);
+            return;
+        }
+
+        observer = new ResizeObserver(function () {
+            resizeProposalPreviewFrame($frame);
+        });
+
+        observer.observe(body);
+        observer.observe(html);
+        $frame.data('eopAutoHeightBound', true);
+        $frame.data('eopAutoHeightObserver', observer);
+        resizeProposalPreviewFrame($frame);
     }
 
     function setProposalPreviewViewport($card, viewport) {
@@ -308,6 +390,22 @@
         return "'" + family.replace(/'/g, "\\'") + "', sans-serif";
     }
 
+    function normalizeCssSize(value, fallback) {
+        var raw = String(value || '').trim();
+
+        if (!raw) {
+            return fallback || '16px';
+        }
+
+        if (/^\d+(\.\d+)?$/.test(raw)) {
+            return raw + 'px';
+        }
+
+        raw = raw.replace(/[^0-9a-zA-Z#.%\s,\-()\/]/g, '').trim();
+
+        return raw || fallback || '16px';
+    }
+
     function updateProposalPreview($form) {
         var $scope = $form && $form.length ? $form : $(document);
         var $card = getProposalPreviewCard($scope);
@@ -347,8 +445,8 @@
         fontFamily = toPreviewFontFamily(getFieldValue($scope, 'font_family', 'Montserrat:400,700'), "'Segoe UI', sans-serif");
         radius = parseInt(getFieldValue($scope, 'border_radius', '18'), 10);
         maxWidth = parseInt(getFieldValue($scope, 'proposal_max_width', '1120'), 10);
-        titleSize = parseInt(getFieldValue($scope, 'proposal_title_size', '40'), 10);
-        textSize = parseInt(getFieldValue($scope, 'proposal_text_size', '16'), 10);
+        titleSize = normalizeCssSize(getFieldValue($scope, 'proposal_title_size', '40px'), '40px');
+        textSize = normalizeCssSize(getFieldValue($scope, 'proposal_text_size', '16px'), '16px');
 
         if (!$root[0].style) {
             return;
@@ -371,8 +469,8 @@
         $root[0].style.setProperty('--eop-preview-font-family', fontFamily);
         $root[0].style.setProperty('--eop-preview-radius', (isNaN(radius) ? 18 : radius) + 'px');
         $root[0].style.setProperty('--eop-preview-max-width', (isNaN(maxWidth) ? 1120 : maxWidth) + 'px');
-        $root[0].style.setProperty('--eop-preview-title-size', (isNaN(titleSize) ? 40 : titleSize) + 'px');
-        $root[0].style.setProperty('--eop-preview-text-size', (isNaN(textSize) ? 16 : textSize) + 'px');
+        $root[0].style.setProperty('--eop-preview-title-size', titleSize);
+        $root[0].style.setProperty('--eop-preview-text-size', textSize);
 
         setPreviewLogo($root, getFieldValue($scope, 'brand_logo_url', ''));
         setPreviewText($root, '[data-preview-status]', getSettingsVar('preview_status', 'Preview ao vivo'), 'Preview ao vivo');
@@ -404,10 +502,13 @@
             setProposalPreviewViewport($card, viewport);
 
             $card.find('.eop-proposal-preview-render').off('load.eopProposalPreview').on('load.eopProposalPreview', function () {
+                bindProposalPreviewAutoHeight($(this));
                 updateProposalPreview($form);
+                resizeProposalPreviewFrame($(this));
             });
 
             updateProposalPreview($form);
+            resizeProposalPreviewFrame($card.find('.eop-proposal-preview-render').first());
         });
     }
 

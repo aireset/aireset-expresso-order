@@ -32,8 +32,8 @@ class EOP_Settings {
             'proposal_text_color'                    => '#172033',
             'proposal_muted_color'                   => '#5b6474',
             'proposal_max_width'                     => '1120',
-            'proposal_title_size'                    => '40',
-            'proposal_text_size'                     => '16',
+            'proposal_title_size'                    => '40px',
+            'proposal_text_size'                     => '16px',
             'border_radius'                          => '18',
             'font_family'                            => 'Montserrat:400,700',
             'customer_experience_font_family'        => 'Montserrat:400,700',
@@ -52,8 +52,8 @@ class EOP_Settings {
             'customer_experience_accent_color'       => '#d78a2f',
             'customer_experience_text_color'         => '#16243a',
             'customer_experience_muted_color'        => '#66768d',
-            'customer_experience_title_size'         => '46',
-            'customer_experience_text_size'          => '16',
+            'customer_experience_title_size'         => '46px',
+            'customer_experience_text_size'          => '16px',
             'customer_experience_eyebrow'            => 'Experiencia do cliente',
             'customer_experience_title'              => 'Sua proposta esta pronta para seguir',
             'customer_experience_description'        => 'Confira os detalhes finais, valide os documentos e conclua a etapa atual em uma unica jornada.',
@@ -165,8 +165,8 @@ class EOP_Settings {
             'proposal_text_color'                  => self::sanitize_color( $input['proposal_text_color'] ?? $defaults['proposal_text_color'], $defaults['proposal_text_color'] ),
             'proposal_muted_color'                 => self::sanitize_color( $input['proposal_muted_color'] ?? $defaults['proposal_muted_color'], $defaults['proposal_muted_color'] ),
             'proposal_max_width'                   => (string) max( 720, min( 1600, absint( $input['proposal_max_width'] ?? $defaults['proposal_max_width'] ) ) ),
-            'proposal_title_size'                  => (string) max( 22, min( 72, absint( $input['proposal_title_size'] ?? $defaults['proposal_title_size'] ) ) ),
-            'proposal_text_size'                   => (string) max( 12, min( 24, absint( $input['proposal_text_size'] ?? $defaults['proposal_text_size'] ) ) ),
+            'proposal_title_size'                  => self::sanitize_css_size_value( $input['proposal_title_size'] ?? $defaults['proposal_title_size'], $defaults['proposal_title_size'] ),
+            'proposal_text_size'                   => self::sanitize_css_size_value( $input['proposal_text_size'] ?? $defaults['proposal_text_size'], $defaults['proposal_text_size'] ),
             'border_radius'                        => (string) max( 0, min( 48, absint( $input['border_radius'] ?? $defaults['border_radius'] ) ) ),
             'font_family'                          => self::sanitize_font_family( $input['font_family'] ?? $defaults['font_family'], $defaults['font_family'] ),
             'customer_experience_font_family'      => self::sanitize_font_family( $input['customer_experience_font_family'] ?? $defaults['customer_experience_font_family'], $defaults['customer_experience_font_family'] ),
@@ -185,8 +185,8 @@ class EOP_Settings {
             'customer_experience_accent_color'     => self::sanitize_color( $input['customer_experience_accent_color'] ?? $defaults['customer_experience_accent_color'], $defaults['customer_experience_accent_color'] ),
             'customer_experience_text_color'       => self::sanitize_color( $input['customer_experience_text_color'] ?? $defaults['customer_experience_text_color'], $defaults['customer_experience_text_color'] ),
             'customer_experience_muted_color'      => self::sanitize_color( $input['customer_experience_muted_color'] ?? $defaults['customer_experience_muted_color'], $defaults['customer_experience_muted_color'] ),
-            'customer_experience_title_size'       => (string) max( 24, min( 76, absint( $input['customer_experience_title_size'] ?? $defaults['customer_experience_title_size'] ) ) ),
-            'customer_experience_text_size'        => (string) max( 13, min( 24, absint( $input['customer_experience_text_size'] ?? $defaults['customer_experience_text_size'] ) ) ),
+            'customer_experience_title_size'       => self::sanitize_css_size_value( $input['customer_experience_title_size'] ?? $defaults['customer_experience_title_size'], $defaults['customer_experience_title_size'] ),
+            'customer_experience_text_size'        => self::sanitize_css_size_value( $input['customer_experience_text_size'] ?? $defaults['customer_experience_text_size'], $defaults['customer_experience_text_size'] ),
             'customer_experience_eyebrow'          => sanitize_text_field( $input['customer_experience_eyebrow'] ?? $defaults['customer_experience_eyebrow'] ),
             'customer_experience_title'            => sanitize_text_field( $input['customer_experience_title'] ?? $defaults['customer_experience_title'] ),
             'customer_experience_description'      => sanitize_textarea_field( $input['customer_experience_description'] ?? $defaults['customer_experience_description'] ),
@@ -301,11 +301,26 @@ class EOP_Settings {
                 'fields'      => array(
                     'post_confirmation_contract_visual_header_background_color' => array( 'label' => __( 'Fundo do header', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#0f1b35', 'css' => array( array( 'selector' => '.eop-post-flow__contract-header', 'property' => 'background' ) ) ),
                     'post_confirmation_contract_visual_header_padding'          => array( 'label' => __( 'Padding', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '10px 6px 24px', 'css' => array( array( 'selector' => '.eop-post-flow__contract-header', 'property' => 'padding' ) ) ),
-                    'post_confirmation_contract_visual_header_border_radius'    => array( 'label' => __( 'Border radius (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '0', 'min' => 0, 'max' => 48, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__contract-header', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_contract_visual_header_margin'           => array( 'label' => __( 'Margin', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__contract-header', 'property' => 'margin' ) ) ),
+                    'post_confirmation_contract_visual_header_border_radius'    => array( 'label' => __( 'Border radius', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '0px', 'css' => array( array( 'selector' => '.eop-post-flow__contract-header', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_contract_visual_header_border_width'     => array( 'label' => __( 'Borda', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '0px', 'css' => array( array( 'selector' => '.eop-post-flow__contract-header', 'property' => 'border-width' ) ) ),
+                    'post_confirmation_contract_visual_header_border_style'     => array( 'label' => __( 'Estilo da borda', EOP_TEXT_DOMAIN ), 'type' => 'select', 'default' => 'solid', 'choices' => array( 'solid' => 'Solid', 'dashed' => 'Dashed', 'dotted' => 'Dotted', 'none' => 'None' ), 'css' => array( array( 'selector' => '.eop-post-flow__contract-header', 'property' => 'border-style' ) ) ),
+                    'post_confirmation_contract_visual_header_border_color'     => array( 'label' => __( 'Cor da borda', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#0f1b35', 'css' => array( array( 'selector' => '.eop-post-flow__contract-header', 'property' => 'border-color' ) ) ),
                     'post_confirmation_contract_visual_header_box_shadow'       => array( 'label' => __( 'Box shadow', EOP_TEXT_DOMAIN ), 'type' => 'shadow', 'default' => 'none', 'css' => array( array( 'selector' => '.eop-post-flow__contract-header', 'property' => 'box-shadow' ) ) ),
+                    'post_confirmation_contract_visual_header_min_height'       => array( 'label' => __( 'Altura minima', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '0px', 'css' => array( array( 'selector' => '.eop-post-flow__contract-header', 'property' => 'min-height' ) ) ),
                     'post_confirmation_contract_visual_header_card_background_color' => array( 'label' => __( 'Fundo dos cards internos', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#31425f', 'css' => array( array( 'selector' => '.eop-post-flow__contract-brand, .eop-post-flow__contract-meta', 'property' => 'background' ) ) ),
+                    'post_confirmation_contract_visual_header_card_border_radius' => array( 'label' => __( 'Radius dos cards internos', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '18px', 'css' => array( array( 'selector' => '.eop-post-flow__contract-brand, .eop-post-flow__contract-meta', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_contract_visual_header_font_family'      => array( 'label' => __( 'Fonte do header', EOP_TEXT_DOMAIN ), 'type' => 'font', 'default' => 'Montserrat:400,700', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta', 'property' => 'font-family' ) ) ),
                     'post_confirmation_contract_visual_header_title_color'      => array( 'label' => __( 'Cor do nome da marca', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta strong', 'property' => 'color' ) ) ),
+                    'post_confirmation_contract_visual_header_title_size'       => array( 'label' => __( 'Tamanho do nome da marca', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '18px', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta strong', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_contract_visual_header_title_line_height' => array( 'label' => __( 'Line-height do nome da marca', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1.2', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta strong', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_contract_visual_header_title_padding'    => array( 'label' => __( 'Padding do titulo', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta strong', 'property' => 'padding' ) ) ),
+                    'post_confirmation_contract_visual_header_title_margin'     => array( 'label' => __( 'Margin do titulo', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta strong', 'property' => 'margin' ) ) ),
                     'post_confirmation_contract_visual_header_meta_color'       => array( 'label' => __( 'Cor do numero do pedido', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#cfd7ea', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta span', 'property' => 'color' ) ) ),
+                    'post_confirmation_contract_visual_header_meta_size'        => array( 'label' => __( 'Tamanho do numero do pedido', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '13px', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta span', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_contract_visual_header_meta_line_height' => array( 'label' => __( 'Line-height do numero do pedido', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1.3', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta span', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_contract_visual_header_meta_padding'     => array( 'label' => __( 'Padding do texto auxiliar', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta span', 'property' => 'padding' ) ) ),
+                    'post_confirmation_contract_visual_header_meta_margin'      => array( 'label' => __( 'Margin do texto auxiliar', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta span', 'property' => 'margin' ) ) ),
                 ),
             ),
             array(
@@ -314,10 +329,22 @@ class EOP_Settings {
                 'description' => __( 'Controle o visual da trilha de etapas do contrato.', EOP_TEXT_DOMAIN ),
                 'fields'      => array(
                     'post_confirmation_contract_visual_breadcrumb_gap' => array( 'label' => __( 'Espacamento entre itens (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '12', 'min' => 0, 'max' => 48, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb', 'property' => 'gap' ) ) ),
+                    'post_confirmation_contract_visual_breadcrumb_font_family' => array( 'label' => __( 'Fonte', EOP_TEXT_DOMAIN ), 'type' => 'font', 'default' => 'Montserrat:400,700', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'font-family' ) ) ),
+                    'post_confirmation_contract_visual_breadcrumb_font_size' => array( 'label' => __( 'Tamanho do texto', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '14px', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_contract_visual_breadcrumb_font_weight' => array( 'label' => __( 'Peso da fonte', EOP_TEXT_DOMAIN ), 'type' => 'select', 'default' => '700', 'choices' => array( '400' => '400', '500' => '500', '600' => '600', '700' => '700', '800' => '800' ), 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'font-weight' ) ) ),
+                    'post_confirmation_contract_visual_breadcrumb_line_height' => array( 'label' => __( 'Line-height do texto', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1.2', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_contract_visual_breadcrumb_padding' => array( 'label' => __( 'Padding dos itens', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '12px 18px', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'padding' ) ) ),
+                    'post_confirmation_contract_visual_breadcrumb_border_radius' => array( 'label' => __( 'Radius dos itens', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '999px', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_contract_visual_breadcrumb_border_width' => array( 'label' => __( 'Borda dos itens', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '1px', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'border-width' ) ) ),
+                    'post_confirmation_contract_visual_breadcrumb_border_style' => array( 'label' => __( 'Estilo da borda', EOP_TEXT_DOMAIN ), 'type' => 'select', 'default' => 'solid', 'choices' => array( 'solid' => 'Solid', 'dashed' => 'Dashed', 'dotted' => 'Dotted', 'none' => 'None' ), 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'border-style' ) ) ),
+                    'post_confirmation_contract_visual_breadcrumb_border_color' => array( 'label' => __( 'Cor da borda', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#dbe3f0', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'border-color' ) ) ),
                     'post_confirmation_contract_visual_breadcrumb_background_color' => array( 'label' => __( 'Fundo padrao', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'background' ) ) ),
                     'post_confirmation_contract_visual_breadcrumb_text_color' => array( 'label' => __( 'Texto padrao', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'color' ) ) ),
                     'post_confirmation_contract_visual_breadcrumb_current_background_color' => array( 'label' => __( 'Fundo do item atual', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item.is-current', 'property' => 'background' ) ) ),
                     'post_confirmation_contract_visual_breadcrumb_current_text_color' => array( 'label' => __( 'Texto do item atual', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item.is-current', 'property' => 'color' ) ) ),
+                    'post_confirmation_contract_visual_breadcrumb_completed_background_color' => array( 'label' => __( 'Fundo do item concluido', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item.is-completed', 'property' => 'background' ) ) ),
+                    'post_confirmation_contract_visual_breadcrumb_completed_text_color' => array( 'label' => __( 'Texto do item concluido', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item.is-completed', 'property' => 'color' ) ) ),
+                    'post_confirmation_contract_visual_breadcrumb_index_color' => array( 'label' => __( 'Cor do numero', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-index', 'property' => 'color' ) ) ),
                     'post_confirmation_contract_visual_breadcrumb_index_background_color' => array( 'label' => __( 'Fundo do numero', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#eff3fb', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-index', 'property' => 'background' ) ) ),
                     'post_confirmation_contract_visual_breadcrumb_current_index_background_color' => array( 'label' => __( 'Fundo do numero atual', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#d78a2f', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item.is-current .eop-post-flow__breadcrumb-index', 'property' => 'background' ) ) ),
                     'post_confirmation_contract_visual_breadcrumb_current_index_color' => array( 'label' => __( 'Cor do numero atual', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item.is-current .eop-post-flow__breadcrumb-index', 'property' => 'color' ) ) ),
@@ -330,14 +357,29 @@ class EOP_Settings {
                 'fields'      => array(
                     'post_confirmation_contract_visual_reader_background_color' => array( 'label' => __( 'Fundo do leitor', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader', 'property' => 'background' ) ) ),
                     'post_confirmation_contract_visual_reader_padding' => array( 'label' => __( 'Padding do leitor', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader', 'property' => 'padding' ) ) ),
-                    'post_confirmation_contract_visual_reader_border_radius' => array( 'label' => __( 'Border radius do leitor (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '0', 'min' => 0, 'max' => 48, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_contract_visual_reader_margin' => array( 'label' => __( 'Margin do leitor', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader', 'property' => 'margin' ) ) ),
+                    'post_confirmation_contract_visual_reader_border_radius' => array( 'label' => __( 'Border radius do leitor', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '0px', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_contract_visual_reader_border_width' => array( 'label' => __( 'Borda do leitor', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '0px', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader', 'property' => 'border-width' ) ) ),
+                    'post_confirmation_contract_visual_reader_border_style' => array( 'label' => __( 'Estilo da borda do leitor', EOP_TEXT_DOMAIN ), 'type' => 'select', 'default' => 'solid', 'choices' => array( 'solid' => 'Solid', 'dashed' => 'Dashed', 'dotted' => 'Dotted', 'none' => 'None' ), 'css' => array( array( 'selector' => '.eop-post-flow__document-reader', 'property' => 'border-style' ) ) ),
+                    'post_confirmation_contract_visual_reader_border_color' => array( 'label' => __( 'Cor da borda do leitor', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#dbe3f0', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader', 'property' => 'border-color' ) ) ),
                     'post_confirmation_contract_visual_reader_box_shadow' => array( 'label' => __( 'Sombra do leitor', EOP_TEXT_DOMAIN ), 'type' => 'shadow', 'default' => 'none', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader', 'property' => 'box-shadow' ) ) ),
+                    'post_confirmation_contract_visual_reader_font_family' => array( 'label' => __( 'Fonte do leitor', EOP_TEXT_DOMAIN ), 'type' => 'font', 'default' => 'Montserrat:400,700', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader', 'property' => 'font-family' ) ) ),
                     'post_confirmation_contract_visual_reader_title_color' => array( 'label' => __( 'Cor do titulo do documento', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader-head strong', 'property' => 'color' ) ) ),
+                    'post_confirmation_contract_visual_reader_title_size' => array( 'label' => __( 'Tamanho do titulo do documento', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '20px', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader-head strong', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_contract_visual_reader_title_line_height' => array( 'label' => __( 'Line-height do titulo do documento', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1.2', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader-head strong', 'property' => 'line-height' ) ) ),
                     'post_confirmation_contract_visual_reader_description_color' => array( 'label' => __( 'Cor da descricao do documento', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#66768d', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader-head small', 'property' => 'color' ) ) ),
+                    'post_confirmation_contract_visual_reader_description_size' => array( 'label' => __( 'Tamanho da descricao do documento', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '15px', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader-head small', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_contract_visual_reader_description_line_height' => array( 'label' => __( 'Line-height da descricao do documento', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1.5', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader-head small', 'property' => 'line-height' ) ) ),
                     'post_confirmation_contract_visual_reader_frame_background_color' => array( 'label' => __( 'Fundo da moldura', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader-frame', 'property' => 'background' ) ) ),
-                    'post_confirmation_contract_visual_reader_frame_border_radius' => array( 'label' => __( 'Radius da moldura (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '30', 'min' => 0, 'max' => 60, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader-frame', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_contract_visual_reader_frame_padding' => array( 'label' => __( 'Padding da moldura', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader-frame', 'property' => 'padding' ) ) ),
+                    'post_confirmation_contract_visual_reader_frame_border_radius' => array( 'label' => __( 'Radius da moldura', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '30px', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader-frame', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_contract_visual_reader_frame_border_width' => array( 'label' => __( 'Borda da moldura', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '1px', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader-frame', 'property' => 'border-width' ) ) ),
+                    'post_confirmation_contract_visual_reader_frame_border_style' => array( 'label' => __( 'Estilo da borda da moldura', EOP_TEXT_DOMAIN ), 'type' => 'select', 'default' => 'solid', 'choices' => array( 'solid' => 'Solid', 'dashed' => 'Dashed', 'dotted' => 'Dotted', 'none' => 'None' ), 'css' => array( array( 'selector' => '.eop-post-flow__document-reader-frame', 'property' => 'border-style' ) ) ),
+                    'post_confirmation_contract_visual_reader_frame_border_color' => array( 'label' => __( 'Cor da borda da moldura', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#dbe3f0', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader-frame', 'property' => 'border-color' ) ) ),
                     'post_confirmation_contract_visual_reader_content_background_color' => array( 'label' => __( 'Fundo do conteudo HTML', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader-content', 'property' => 'background' ) ) ),
                     'post_confirmation_contract_visual_reader_content_text_color' => array( 'label' => __( 'Cor do conteudo HTML', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader-content', 'property' => 'color' ) ) ),
+                    'post_confirmation_contract_visual_reader_content_font_size' => array( 'label' => __( 'Tamanho do conteudo HTML', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '16px', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader-content', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_contract_visual_reader_content_line_height' => array( 'label' => __( 'Line-height do conteudo HTML', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1.7', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader-content', 'property' => 'line-height' ) ) ),
                     'post_confirmation_contract_visual_reader_content_padding' => array( 'label' => __( 'Padding do conteudo HTML', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '24px', 'css' => array( array( 'selector' => '.eop-post-flow__document-reader-content', 'property' => 'padding' ) ) ),
                 ),
             ),
@@ -347,15 +389,35 @@ class EOP_Settings {
                 'description' => __( 'Ajuste os cards adicionais, o aceite e os paineis laterais.', EOP_TEXT_DOMAIN ),
                 'fields'      => array(
                     'post_confirmation_contract_visual_support_card_background_color' => array( 'label' => __( 'Fundo dos cards adicionais', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card', 'property' => 'background' ) ) ),
+                    'post_confirmation_contract_visual_support_card_padding' => array( 'label' => __( 'Padding dos cards adicionais', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '24px', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card', 'property' => 'padding' ) ) ),
+                    'post_confirmation_contract_visual_support_card_border_radius' => array( 'label' => __( 'Radius dos cards adicionais', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '28px', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_contract_visual_support_card_box_shadow' => array( 'label' => __( 'Sombra dos cards adicionais', EOP_TEXT_DOMAIN ), 'type' => 'shadow', 'default' => 'none', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card', 'property' => 'box-shadow' ) ) ),
                     'post_confirmation_contract_visual_support_card_title_color' => array( 'label' => __( 'Cor do titulo dos cards adicionais', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card strong', 'property' => 'color' ) ) ),
+                    'post_confirmation_contract_visual_support_card_title_size' => array( 'label' => __( 'Tamanho do titulo dos cards adicionais', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '18px', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card strong', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_contract_visual_support_card_title_line_height' => array( 'label' => __( 'Line-height do titulo dos cards adicionais', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1.2', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card strong', 'property' => 'line-height' ) ) ),
                     'post_confirmation_contract_visual_support_card_text_color' => array( 'label' => __( 'Cor do texto dos cards adicionais', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#66768d', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card small', 'property' => 'color' ) ) ),
+                    'post_confirmation_contract_visual_support_card_text_size' => array( 'label' => __( 'Tamanho do texto dos cards adicionais', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '14px', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card small', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_contract_visual_support_card_text_line_height' => array( 'label' => __( 'Line-height do texto dos cards adicionais', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1.5', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card small', 'property' => 'line-height' ) ) ),
                     'post_confirmation_contract_visual_acceptance_background_color' => array( 'label' => __( 'Fundo do card de aceite', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__acceptance-card', 'property' => 'background' ) ) ),
                     'post_confirmation_contract_visual_acceptance_padding' => array( 'label' => __( 'Padding do card de aceite', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '20px 0 0', 'css' => array( array( 'selector' => '.eop-post-flow__acceptance-card', 'property' => 'padding' ) ) ),
+                    'post_confirmation_contract_visual_acceptance_border_radius' => array( 'label' => __( 'Radius do card de aceite', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '0px', 'css' => array( array( 'selector' => '.eop-post-flow__acceptance-card', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_contract_visual_acceptance_box_shadow' => array( 'label' => __( 'Sombra do card de aceite', EOP_TEXT_DOMAIN ), 'type' => 'shadow', 'default' => 'none', 'css' => array( array( 'selector' => '.eop-post-flow__acceptance-card', 'property' => 'box-shadow' ) ) ),
                     'post_confirmation_contract_visual_acceptance_text_color' => array( 'label' => __( 'Cor do texto de aceite', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__checkbox span', 'property' => 'color' ) ) ),
+                    'post_confirmation_contract_visual_checkbox_font_family' => array( 'label' => __( 'Fonte do texto de aceite', EOP_TEXT_DOMAIN ), 'type' => 'font', 'default' => 'Montserrat:400,700', 'css' => array( array( 'selector' => '.eop-post-flow__checkbox span', 'property' => 'font-family' ) ) ),
+                    'post_confirmation_contract_visual_checkbox_font_size' => array( 'label' => __( 'Tamanho do texto de aceite', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '16px', 'css' => array( array( 'selector' => '.eop-post-flow__checkbox span', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_contract_visual_checkbox_line_height' => array( 'label' => __( 'Line-height do texto de aceite', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1.4', 'css' => array( array( 'selector' => '.eop-post-flow__checkbox span', 'property' => 'line-height' ) ) ),
                     'post_confirmation_contract_visual_sidebar_background_color' => array( 'label' => __( 'Fundo dos paineis laterais', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#f6f8fc', 'css' => array( array( 'selector' => '.eop-post-flow__panel', 'property' => 'background' ) ) ),
                     'post_confirmation_contract_visual_sidebar_label_color' => array( 'label' => __( 'Cor do titulo dos paineis laterais', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__panel-label', 'property' => 'color' ) ) ),
+                    'post_confirmation_contract_visual_sidebar_label_size' => array( 'label' => __( 'Tamanho do titulo dos paineis laterais', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '14px', 'css' => array( array( 'selector' => '.eop-post-flow__panel-label', 'property' => 'font-size' ) ) ),
                     'post_confirmation_contract_visual_sidebar_note_color' => array( 'label' => __( 'Cor do texto auxiliar lateral', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#66768d', 'css' => array( array( 'selector' => '.eop-post-flow__panel-note', 'property' => 'color' ) ) ),
+                    'post_confirmation_contract_visual_sidebar_note_size' => array( 'label' => __( 'Tamanho do texto auxiliar lateral', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '13px', 'css' => array( array( 'selector' => '.eop-post-flow__panel-note', 'property' => 'font-size' ) ) ),
                     'post_confirmation_contract_visual_sidebar_padding' => array( 'label' => __( 'Padding dos paineis laterais', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '8px 0 0 28px', 'css' => array( array( 'selector' => '.eop-post-flow__panel', 'property' => 'padding' ) ) ),
+                    'post_confirmation_contract_visual_summary_value_color' => array( 'label' => __( 'Cor dos valores do resumo', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__summary-total-row strong', 'property' => 'color' ) ) ),
+                    'post_confirmation_contract_visual_summary_value_size' => array( 'label' => __( 'Tamanho dos valores do resumo', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '18px', 'css' => array( array( 'selector' => '.eop-post-flow__summary-total-row strong', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_contract_visual_summary_text_color' => array( 'label' => __( 'Cor dos labels do resumo', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#66768d', 'css' => array( array( 'selector' => '.eop-post-flow__summary-total-row > span', 'property' => 'color' ) ) ),
+                    'post_confirmation_contract_visual_summary_text_size' => array( 'label' => __( 'Tamanho dos labels do resumo', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '14px', 'css' => array( array( 'selector' => '.eop-post-flow__summary-total-row > span', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_contract_visual_summary_note_color' => array( 'label' => __( 'Cor do texto final do resumo', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#66768d', 'css' => array( array( 'selector' => '.eop-post-flow__summary-note', 'property' => 'color' ) ) ),
+                    'post_confirmation_contract_visual_summary_note_size' => array( 'label' => __( 'Tamanho do texto final do resumo', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '13px', 'css' => array( array( 'selector' => '.eop-post-flow__summary-note', 'property' => 'font-size' ) ) ),
                 ),
             ),
             array(
@@ -365,12 +427,29 @@ class EOP_Settings {
                 'fields'      => array(
                     'post_confirmation_contract_visual_primary_button_background_color' => array( 'label' => __( 'Fundo do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#d78a2f', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'background' ) ) ),
                     'post_confirmation_contract_visual_primary_button_text_color' => array( 'label' => __( 'Texto do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'color' ) ) ),
-                    'post_confirmation_contract_visual_primary_button_border_radius' => array( 'label' => __( 'Radius do botao principal (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '18', 'min' => 0, 'max' => 48, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_contract_visual_primary_button_font_family' => array( 'label' => __( 'Fonte do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'font', 'default' => 'Montserrat:400,700', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'font-family' ) ) ),
+                    'post_confirmation_contract_visual_primary_button_font_size' => array( 'label' => __( 'Tamanho da fonte do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '18px', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_contract_visual_primary_button_line_height' => array( 'label' => __( 'Line-height do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_contract_visual_primary_button_font_weight' => array( 'label' => __( 'Peso da fonte do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'select', 'default' => '700', 'choices' => array( '400' => '400', '500' => '500', '600' => '600', '700' => '700', '800' => '800' ), 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'font-weight' ) ) ),
+                    'post_confirmation_contract_visual_primary_button_padding' => array( 'label' => __( 'Padding do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '16px 24px', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'padding' ) ) ),
+                    'post_confirmation_contract_visual_primary_button_margin' => array( 'label' => __( 'Margin do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'margin' ) ) ),
+                    'post_confirmation_contract_visual_primary_button_border_width' => array( 'label' => __( 'Borda do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '0px', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'border-width' ) ) ),
+                    'post_confirmation_contract_visual_primary_button_border_style' => array( 'label' => __( 'Estilo da borda do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'select', 'default' => 'solid', 'choices' => array( 'solid' => 'Solid', 'dashed' => 'Dashed', 'dotted' => 'Dotted', 'none' => 'None' ), 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'border-style' ) ) ),
+                    'post_confirmation_contract_visual_primary_button_border_color' => array( 'label' => __( 'Cor da borda do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#d78a2f', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'border-color' ) ) ),
+                    'post_confirmation_contract_visual_primary_button_border_radius' => array( 'label' => __( 'Radius do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '18px', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'border-radius' ) ) ),
                     'post_confirmation_contract_visual_primary_button_box_shadow' => array( 'label' => __( 'Sombra do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'shadow', 'default' => '0 16px 30px rgba(215, 138, 47, .20)', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'box-shadow' ) ) ),
                     'post_confirmation_contract_visual_secondary_button_background_color' => array( 'label' => __( 'Fundo dos botoes secundarios', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card .eop-proposal-button--secondary', 'property' => 'background' ) ) ),
                     'post_confirmation_contract_visual_secondary_button_text_color' => array( 'label' => __( 'Texto dos botoes secundarios', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card .eop-proposal-button--secondary', 'property' => 'color' ) ) ),
+                    'post_confirmation_contract_visual_secondary_button_font_family' => array( 'label' => __( 'Fonte dos botoes secundarios', EOP_TEXT_DOMAIN ), 'type' => 'font', 'default' => 'Montserrat:400,700', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card .eop-proposal-button--secondary', 'property' => 'font-family' ) ) ),
+                    'post_confirmation_contract_visual_secondary_button_font_size' => array( 'label' => __( 'Tamanho da fonte dos botoes secundarios', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '15px', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card .eop-proposal-button--secondary', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_contract_visual_secondary_button_line_height' => array( 'label' => __( 'Line-height dos botoes secundarios', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card .eop-proposal-button--secondary', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_contract_visual_secondary_button_font_weight' => array( 'label' => __( 'Peso da fonte dos botoes secundarios', EOP_TEXT_DOMAIN ), 'type' => 'select', 'default' => '700', 'choices' => array( '400' => '400', '500' => '500', '600' => '600', '700' => '700', '800' => '800' ), 'css' => array( array( 'selector' => '.eop-post-flow__upload-card .eop-proposal-button--secondary', 'property' => 'font-weight' ) ) ),
+                    'post_confirmation_contract_visual_secondary_button_padding' => array( 'label' => __( 'Padding dos botoes secundarios', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '12px 18px', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card .eop-proposal-button--secondary', 'property' => 'padding' ) ) ),
                     'post_confirmation_contract_visual_secondary_button_border_color' => array( 'label' => __( 'Borda dos botoes secundarios', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#dbe3f0', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card .eop-proposal-button--secondary', 'property' => 'border-color' ) ) ),
-                    'post_confirmation_contract_visual_secondary_button_border_radius' => array( 'label' => __( 'Radius dos botoes secundarios (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '18', 'min' => 0, 'max' => 48, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card .eop-proposal-button--secondary', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_contract_visual_secondary_button_border_width' => array( 'label' => __( 'Largura da borda dos botoes secundarios', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '1px', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card .eop-proposal-button--secondary', 'property' => 'border-width' ) ) ),
+                    'post_confirmation_contract_visual_secondary_button_border_style' => array( 'label' => __( 'Estilo da borda dos botoes secundarios', EOP_TEXT_DOMAIN ), 'type' => 'select', 'default' => 'solid', 'choices' => array( 'solid' => 'Solid', 'dashed' => 'Dashed', 'dotted' => 'Dotted', 'none' => 'None' ), 'css' => array( array( 'selector' => '.eop-post-flow__upload-card .eop-proposal-button--secondary', 'property' => 'border-style' ) ) ),
+                    'post_confirmation_contract_visual_secondary_button_border_radius' => array( 'label' => __( 'Radius dos botoes secundarios', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '18px', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card .eop-proposal-button--secondary', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_contract_visual_secondary_button_box_shadow' => array( 'label' => __( 'Sombra dos botoes secundarios', EOP_TEXT_DOMAIN ), 'type' => 'shadow', 'default' => 'none', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card .eop-proposal-button--secondary', 'property' => 'box-shadow' ) ) ),
                 ),
             ),
         );
@@ -386,19 +465,23 @@ class EOP_Settings {
                     'post_confirmation_visual_header_background_color' => array( 'label' => __( 'Fundo do header', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#0f1b35', 'css' => array( array( 'selector' => '.eop-post-flow--final-step .eop-post-flow__contract-header', 'property' => 'background' ) ) ),
                     'post_confirmation_visual_header_padding'          => array( 'label' => __( 'Padding', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '20px 20px 24px', 'css' => array( array( 'selector' => '.eop-post-flow--final-step .eop-post-flow__contract-header', 'property' => 'padding' ) ) ),
                     'post_confirmation_visual_header_margin'           => array( 'label' => __( 'Margin', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow--final-step .eop-post-flow__contract-header', 'property' => 'margin' ) ) ),
-                    'post_confirmation_visual_header_border_radius'    => array( 'label' => __( 'Border radius (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '0', 'min' => 0, 'max' => 48, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow--final-step .eop-post-flow__contract-header', 'property' => 'border-radius' ) ) ),
-                    'post_confirmation_visual_header_border_width'     => array( 'label' => __( 'Borda (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '0', 'min' => 0, 'max' => 12, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow--final-step .eop-post-flow__contract-header', 'property' => 'border-width' ) ) ),
+                    'post_confirmation_visual_header_border_radius'    => array( 'label' => __( 'Border radius', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '0px', 'css' => array( array( 'selector' => '.eop-post-flow--final-step .eop-post-flow__contract-header', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_visual_header_border_width'     => array( 'label' => __( 'Borda', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '0px', 'css' => array( array( 'selector' => '.eop-post-flow--final-step .eop-post-flow__contract-header', 'property' => 'border-width' ) ) ),
                     'post_confirmation_visual_header_border_style'     => array( 'label' => __( 'Estilo da borda', EOP_TEXT_DOMAIN ), 'type' => 'select', 'default' => 'solid', 'choices' => array( 'solid' => 'Solid', 'dashed' => 'Dashed', 'dotted' => 'Dotted', 'none' => 'None' ), 'css' => array( array( 'selector' => '.eop-post-flow--final-step .eop-post-flow__contract-header', 'property' => 'border-style' ) ) ),
                     'post_confirmation_visual_header_border_color'     => array( 'label' => __( 'Cor da borda', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#0f1b35', 'css' => array( array( 'selector' => '.eop-post-flow--final-step .eop-post-flow__contract-header', 'property' => 'border-color' ) ) ),
                     'post_confirmation_visual_header_box_shadow'       => array( 'label' => __( 'Box shadow', EOP_TEXT_DOMAIN ), 'type' => 'shadow', 'default' => 'none', 'css' => array( array( 'selector' => '.eop-post-flow--final-step .eop-post-flow__contract-header', 'property' => 'box-shadow' ) ) ),
-                    'post_confirmation_visual_header_min_height'       => array( 'label' => __( 'Altura minima (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '0', 'min' => 0, 'max' => 420, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow--final-step .eop-post-flow__contract-header', 'property' => 'min-height' ) ) ),
+                    'post_confirmation_visual_header_min_height'       => array( 'label' => __( 'Altura minima', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '0px', 'css' => array( array( 'selector' => '.eop-post-flow--final-step .eop-post-flow__contract-header', 'property' => 'min-height' ) ) ),
                     'post_confirmation_visual_header_card_background_color' => array( 'label' => __( 'Fundo dos cards internos', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#31425f', 'css' => array( array( 'selector' => '.eop-post-flow__contract-brand, .eop-post-flow__contract-meta', 'property' => 'background' ) ) ),
-                    'post_confirmation_visual_header_card_border_radius' => array( 'label' => __( 'Radius dos cards internos (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '18', 'min' => 0, 'max' => 48, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__contract-brand, .eop-post-flow__contract-meta', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_visual_header_card_border_radius' => array( 'label' => __( 'Radius dos cards internos', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '18px', 'css' => array( array( 'selector' => '.eop-post-flow__contract-brand, .eop-post-flow__contract-meta', 'property' => 'border-radius' ) ) ),
                     'post_confirmation_visual_header_title_color'      => array( 'label' => __( 'Cor do nome da marca', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta strong', 'property' => 'color' ) ) ),
                     'post_confirmation_visual_header_meta_color'       => array( 'label' => __( 'Cor do texto auxiliar', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#cfd7ea', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta span', 'property' => 'color' ) ) ),
                     'post_confirmation_visual_header_font_family'      => array( 'label' => __( 'Fonte do header', EOP_TEXT_DOMAIN ), 'type' => 'font', 'default' => 'Montserrat:400,700', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta', 'property' => 'font-family' ) ) ),
-                    'post_confirmation_visual_header_title_size'       => array( 'label' => __( 'Tamanho do nome da marca (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '18', 'min' => 10, 'max' => 48, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta strong', 'property' => 'font-size' ) ) ),
-                    'post_confirmation_visual_header_meta_size'        => array( 'label' => __( 'Tamanho do pedido (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '13', 'min' => 10, 'max' => 36, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta span', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_visual_header_title_size'       => array( 'label' => __( 'Tamanho do nome da marca', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '18px', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta strong', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_visual_header_title_padding'    => array( 'label' => __( 'Padding do titulo', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta strong', 'property' => 'padding' ) ) ),
+                    'post_confirmation_visual_header_title_margin'     => array( 'label' => __( 'Margin do titulo', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta strong', 'property' => 'margin' ) ) ),
+                    'post_confirmation_visual_header_meta_size'        => array( 'label' => __( 'Tamanho do pedido', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '13px', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta span', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_visual_header_meta_padding'     => array( 'label' => __( 'Padding da descricao', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta span', 'property' => 'padding' ) ) ),
+                    'post_confirmation_visual_header_meta_margin'      => array( 'label' => __( 'Margin da descricao', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__contract-meta span', 'property' => 'margin' ) ) ),
                 ),
             ),
             array(
@@ -408,10 +491,10 @@ class EOP_Settings {
                 'fields'      => array(
                     'post_confirmation_visual_breadcrumb_gap'                     => array( 'label' => __( 'Espacamento entre itens (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '12', 'min' => 0, 'max' => 48, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb', 'property' => 'gap' ) ) ),
                     'post_confirmation_visual_breadcrumb_font_family'             => array( 'label' => __( 'Fonte', EOP_TEXT_DOMAIN ), 'type' => 'font', 'default' => 'Montserrat:400,700', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'font-family' ) ) ),
-                    'post_confirmation_visual_breadcrumb_font_size'               => array( 'label' => __( 'Tamanho do texto (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '14', 'min' => 10, 'max' => 32, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_visual_breadcrumb_font_size'               => array( 'label' => __( 'Tamanho do texto', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '14px', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'font-size' ) ) ),
                     'post_confirmation_visual_breadcrumb_padding'                 => array( 'label' => __( 'Padding dos itens', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '12px 18px', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'padding' ) ) ),
-                    'post_confirmation_visual_breadcrumb_border_radius'           => array( 'label' => __( 'Radius dos itens (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '999', 'min' => 0, 'max' => 999, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'border-radius' ) ) ),
-                    'post_confirmation_visual_breadcrumb_border_width'            => array( 'label' => __( 'Borda dos itens (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '1', 'min' => 0, 'max' => 12, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'border-width' ) ) ),
+                    'post_confirmation_visual_breadcrumb_border_radius'           => array( 'label' => __( 'Radius dos itens', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '999px', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_visual_breadcrumb_border_width'            => array( 'label' => __( 'Borda dos itens', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '1px', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'border-width' ) ) ),
                     'post_confirmation_visual_breadcrumb_border_style'            => array( 'label' => __( 'Estilo da borda', EOP_TEXT_DOMAIN ), 'type' => 'select', 'default' => 'solid', 'choices' => array( 'solid' => 'Solid', 'dashed' => 'Dashed', 'dotted' => 'Dotted', 'none' => 'None' ), 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'border-style' ) ) ),
                     'post_confirmation_visual_breadcrumb_border_color'            => array( 'label' => __( 'Cor da borda', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#dbe3f0', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'border-color' ) ) ),
                     'post_confirmation_visual_breadcrumb_background_color'        => array( 'label' => __( 'Fundo padrao', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item', 'property' => 'background' ) ) ),
@@ -434,20 +517,24 @@ class EOP_Settings {
                     'post_confirmation_visual_intro_background_color' => array( 'label' => __( 'Fundo do bloco', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro', 'property' => 'background' ) ) ),
                     'post_confirmation_visual_intro_padding'          => array( 'label' => __( 'Padding', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '34px 36px', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro', 'property' => 'padding' ) ) ),
                     'post_confirmation_visual_intro_margin'           => array( 'label' => __( 'Margin', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro', 'property' => 'margin' ) ) ),
-                    'post_confirmation_visual_intro_border_radius'    => array( 'label' => __( 'Border radius (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '38', 'min' => 0, 'max' => 80, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro', 'property' => 'border-radius' ) ) ),
-                    'post_confirmation_visual_intro_border_width'     => array( 'label' => __( 'Borda (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '1', 'min' => 0, 'max' => 12, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro', 'property' => 'border-width' ) ) ),
+                    'post_confirmation_visual_intro_border_radius'    => array( 'label' => __( 'Border radius', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '38px', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_visual_intro_border_width'     => array( 'label' => __( 'Borda', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '1px', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro', 'property' => 'border-width' ) ) ),
                     'post_confirmation_visual_intro_border_style'     => array( 'label' => __( 'Estilo da borda', EOP_TEXT_DOMAIN ), 'type' => 'select', 'default' => 'solid', 'choices' => array( 'solid' => 'Solid', 'dashed' => 'Dashed', 'dotted' => 'Dotted', 'none' => 'None' ), 'css' => array( array( 'selector' => '.eop-post-flow__final-intro', 'property' => 'border-style' ) ) ),
                     'post_confirmation_visual_intro_border_color'     => array( 'label' => __( 'Cor da borda', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#dbe3f0', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro', 'property' => 'border-color' ) ) ),
                     'post_confirmation_visual_intro_box_shadow'       => array( 'label' => __( 'Box shadow', EOP_TEXT_DOMAIN ), 'type' => 'shadow', 'default' => '0 16px 36px rgba(15, 27, 53, .06)', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro', 'property' => 'box-shadow' ) ) ),
                     'post_confirmation_visual_intro_font_family'      => array( 'label' => __( 'Fonte', EOP_TEXT_DOMAIN ), 'type' => 'font', 'default' => 'Montserrat:400,700', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro', 'property' => 'font-family' ) ) ),
                     'post_confirmation_visual_intro_eyebrow_color'    => array( 'label' => __( 'Cor da etiqueta superior', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#64748b', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro-eyebrow', 'property' => 'color' ) ) ),
-                    'post_confirmation_visual_intro_eyebrow_size'     => array( 'label' => __( 'Tamanho da etiqueta (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '15', 'min' => 10, 'max' => 32, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro-eyebrow', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_visual_intro_eyebrow_size'     => array( 'label' => __( 'Tamanho da etiqueta', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '15px', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro-eyebrow', 'property' => 'font-size' ) ) ),
                     'post_confirmation_visual_intro_title_color'      => array( 'label' => __( 'Cor do titulo', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro-title', 'property' => 'color' ) ) ),
-                    'post_confirmation_visual_intro_title_size'       => array( 'label' => __( 'Tamanho do titulo (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '56', 'min' => 18, 'max' => 90, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro-title', 'property' => 'font-size' ) ) ),
-                    'post_confirmation_visual_intro_title_line_height' => array( 'label' => __( 'Line-height do titulo', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '1', 'min' => 1, 'max' => 3, 'css' => array( array( 'selector' => '.eop-post-flow__final-intro-title', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_visual_intro_title_size'       => array( 'label' => __( 'Tamanho do titulo', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '56px', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro-title', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_visual_intro_title_line_height' => array( 'label' => __( 'Line-height do titulo', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro-title', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_visual_intro_title_padding'    => array( 'label' => __( 'Padding do titulo', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro-title', 'property' => 'padding' ) ) ),
+                    'post_confirmation_visual_intro_title_margin'     => array( 'label' => __( 'Margin do titulo', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro-title', 'property' => 'margin' ) ) ),
                     'post_confirmation_visual_intro_text_color'       => array( 'label' => __( 'Cor da descricao', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#66768d', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro-text', 'property' => 'color' ) ) ),
-                    'post_confirmation_visual_intro_text_size'        => array( 'label' => __( 'Tamanho da descricao (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '17', 'min' => 10, 'max' => 40, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro-text', 'property' => 'font-size' ) ) ),
-                    'post_confirmation_visual_intro_text_line_height' => array( 'label' => __( 'Line-height da descricao', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '2', 'min' => 1, 'max' => 3, 'css' => array( array( 'selector' => '.eop-post-flow__final-intro-text', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_visual_intro_text_size'        => array( 'label' => __( 'Tamanho da descricao', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '17px', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro-text', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_visual_intro_text_line_height' => array( 'label' => __( 'Line-height da descricao', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '2', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro-text', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_visual_intro_text_padding'     => array( 'label' => __( 'Padding da descricao', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro-text', 'property' => 'padding' ) ) ),
+                    'post_confirmation_visual_intro_text_margin'      => array( 'label' => __( 'Margin da descricao', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__final-intro-text', 'property' => 'margin' ) ) ),
                 ),
             ),
             array(
@@ -458,27 +545,27 @@ class EOP_Settings {
                     'post_confirmation_visual_upload_background_color' => array( 'label' => __( 'Fundo do bloco', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__final-step-card .eop-post-flow__final-block:first-child', 'property' => 'background' ) ) ),
                     'post_confirmation_visual_upload_padding'          => array( 'label' => __( 'Padding do bloco', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__final-step-card .eop-post-flow__final-block:first-child', 'property' => 'padding' ) ) ),
                     'post_confirmation_visual_upload_margin'           => array( 'label' => __( 'Margin do bloco', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__final-step-card .eop-post-flow__final-block:first-child', 'property' => 'margin' ) ) ),
-                    'post_confirmation_visual_upload_border_radius'    => array( 'label' => __( 'Radius do bloco (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '0', 'min' => 0, 'max' => 80, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__final-step-card .eop-post-flow__final-block:first-child', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_visual_upload_border_radius'    => array( 'label' => __( 'Radius do bloco', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '0px', 'css' => array( array( 'selector' => '.eop-post-flow__final-step-card .eop-post-flow__final-block:first-child', 'property' => 'border-radius' ) ) ),
                     'post_confirmation_visual_upload_box_shadow'       => array( 'label' => __( 'Sombra do bloco', EOP_TEXT_DOMAIN ), 'type' => 'shadow', 'default' => 'none', 'css' => array( array( 'selector' => '.eop-post-flow__final-step-card .eop-post-flow__final-block:first-child', 'property' => 'box-shadow' ) ) ),
                     'post_confirmation_visual_upload_label_color'      => array( 'label' => __( 'Cor da label do arquivo', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#64748b', 'css' => array( array( 'selector' => '.eop-post-flow__field--file > span', 'property' => 'color' ) ) ),
-                    'post_confirmation_visual_upload_label_size'       => array( 'label' => __( 'Tamanho da label (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '15', 'min' => 10, 'max' => 32, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__field--file > span', 'property' => 'font-size' ) ) ),
-                    'post_confirmation_visual_upload_label_line_height' => array( 'label' => __( 'Line-height da label', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '1', 'min' => 1, 'max' => 3, 'css' => array( array( 'selector' => '.eop-post-flow__field--file > span', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_visual_upload_label_size'       => array( 'label' => __( 'Tamanho da label', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '15px', 'css' => array( array( 'selector' => '.eop-post-flow__field--file > span', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_visual_upload_label_line_height' => array( 'label' => __( 'Line-height da label', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1', 'css' => array( array( 'selector' => '.eop-post-flow__field--file > span', 'property' => 'line-height' ) ) ),
                     'post_confirmation_visual_upload_input_background_color' => array( 'label' => __( 'Fundo do campo', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__field--file input', 'property' => 'background' ) ) ),
                     'post_confirmation_visual_upload_input_text_color' => array( 'label' => __( 'Cor do texto do campo', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__field--file input', 'property' => 'color' ) ) ),
-                    'post_confirmation_visual_upload_input_font_size' => array( 'label' => __( 'Tamanho do texto do campo (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '16', 'min' => 10, 'max' => 32, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__field--file input', 'property' => 'font-size' ) ) ),
-                    'post_confirmation_visual_upload_input_line_height' => array( 'label' => __( 'Line-height do campo', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '1', 'min' => 1, 'max' => 3, 'css' => array( array( 'selector' => '.eop-post-flow__field--file input', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_visual_upload_input_font_size' => array( 'label' => __( 'Tamanho do texto do campo', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '16px', 'css' => array( array( 'selector' => '.eop-post-flow__field--file input', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_visual_upload_input_line_height' => array( 'label' => __( 'Line-height do campo', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1', 'css' => array( array( 'selector' => '.eop-post-flow__field--file input', 'property' => 'line-height' ) ) ),
                     'post_confirmation_visual_upload_input_border_color' => array( 'label' => __( 'Cor da borda do campo', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#d6defd', 'css' => array( array( 'selector' => '.eop-post-flow__field--file input', 'property' => 'border-color' ) ) ),
-                    'post_confirmation_visual_upload_input_border_radius' => array( 'label' => __( 'Radius do campo (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '18', 'min' => 0, 'max' => 60, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__field--file input', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_visual_upload_input_border_radius' => array( 'label' => __( 'Radius do campo', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '18px', 'css' => array( array( 'selector' => '.eop-post-flow__field--file input', 'property' => 'border-radius' ) ) ),
                     'post_confirmation_visual_upload_input_padding'    => array( 'label' => __( 'Padding do campo', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '14px 16px', 'css' => array( array( 'selector' => '.eop-post-flow__field--file input', 'property' => 'padding' ) ) ),
                     'post_confirmation_visual_upload_meta_background_color' => array( 'label' => __( 'Fundo do card do anexo salvo', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#eef3ff', 'css' => array( array( 'selector' => '.eop-post-flow__final-upload-meta', 'property' => 'background' ) ) ),
                     'post_confirmation_visual_upload_meta_title_color' => array( 'label' => __( 'Cor do nome do anexo', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__final-upload-meta strong', 'property' => 'color' ) ) ),
-                    'post_confirmation_visual_upload_meta_title_size' => array( 'label' => __( 'Tamanho do nome do anexo (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '15', 'min' => 10, 'max' => 32, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__final-upload-meta strong', 'property' => 'font-size' ) ) ),
-                    'post_confirmation_visual_upload_meta_title_line_height' => array( 'label' => __( 'Line-height do nome do anexo', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '1', 'min' => 1, 'max' => 3, 'css' => array( array( 'selector' => '.eop-post-flow__final-upload-meta strong', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_visual_upload_meta_title_size' => array( 'label' => __( 'Tamanho do nome do anexo', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '15px', 'css' => array( array( 'selector' => '.eop-post-flow__final-upload-meta strong', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_visual_upload_meta_title_line_height' => array( 'label' => __( 'Line-height do nome do anexo', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1', 'css' => array( array( 'selector' => '.eop-post-flow__final-upload-meta strong', 'property' => 'line-height' ) ) ),
                     'post_confirmation_visual_upload_meta_text_color'  => array( 'label' => __( 'Cor da data do anexo', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#66768d', 'css' => array( array( 'selector' => '.eop-post-flow__final-upload-meta small', 'property' => 'color' ) ) ),
-                    'post_confirmation_visual_upload_meta_text_size'  => array( 'label' => __( 'Tamanho da data do anexo (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '14', 'min' => 10, 'max' => 28, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__final-upload-meta small', 'property' => 'font-size' ) ) ),
-                    'post_confirmation_visual_upload_meta_text_line_height' => array( 'label' => __( 'Line-height da data do anexo', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '1', 'min' => 1, 'max' => 3, 'css' => array( array( 'selector' => '.eop-post-flow__final-upload-meta small', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_visual_upload_meta_text_size'  => array( 'label' => __( 'Tamanho da data do anexo', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '14px', 'css' => array( array( 'selector' => '.eop-post-flow__final-upload-meta small', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_visual_upload_meta_text_line_height' => array( 'label' => __( 'Line-height da data do anexo', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1', 'css' => array( array( 'selector' => '.eop-post-flow__final-upload-meta small', 'property' => 'line-height' ) ) ),
                     'post_confirmation_visual_upload_meta_padding'     => array( 'label' => __( 'Padding do card do anexo', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '28px', 'css' => array( array( 'selector' => '.eop-post-flow__final-upload-meta', 'property' => 'padding' ) ) ),
-                    'post_confirmation_visual_upload_meta_border_radius' => array( 'label' => __( 'Radius do card do anexo (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '26', 'min' => 0, 'max' => 60, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__final-upload-meta', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_visual_upload_meta_border_radius' => array( 'label' => __( 'Radius do card do anexo', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '26px', 'css' => array( array( 'selector' => '.eop-post-flow__final-upload-meta', 'property' => 'border-radius' ) ) ),
                 ),
             ),
             array(
@@ -487,32 +574,32 @@ class EOP_Settings {
                 'description' => __( 'Controle o bloco de personalizacao dos produtos e as linhas da lista.', EOP_TEXT_DOMAIN ),
                 'fields'      => array(
                     'post_confirmation_visual_products_title_color' => array( 'label' => __( 'Cor do titulo', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__final-block-head strong', 'property' => 'color' ) ) ),
-                    'post_confirmation_visual_products_title_size' => array( 'label' => __( 'Tamanho do titulo (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '20', 'min' => 10, 'max' => 40, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__final-block-head strong', 'property' => 'font-size' ) ) ),
-                    'post_confirmation_visual_products_title_line_height' => array( 'label' => __( 'Line-height do titulo', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '1', 'min' => 1, 'max' => 3, 'css' => array( array( 'selector' => '.eop-post-flow__final-block-head strong', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_visual_products_title_size' => array( 'label' => __( 'Tamanho do titulo', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '20px', 'css' => array( array( 'selector' => '.eop-post-flow__final-block-head strong', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_visual_products_title_line_height' => array( 'label' => __( 'Line-height do titulo', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1', 'css' => array( array( 'selector' => '.eop-post-flow__final-block-head strong', 'property' => 'line-height' ) ) ),
                     'post_confirmation_visual_products_description_color' => array( 'label' => __( 'Cor da descricao', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#66768d', 'css' => array( array( 'selector' => '.eop-post-flow__final-block-head small', 'property' => 'color' ) ) ),
-                    'post_confirmation_visual_products_description_size' => array( 'label' => __( 'Tamanho da descricao (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '16', 'min' => 10, 'max' => 32, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__final-block-head small', 'property' => 'font-size' ) ) ),
-                    'post_confirmation_visual_products_description_line_height' => array( 'label' => __( 'Line-height da descricao', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '2', 'min' => 1, 'max' => 3, 'css' => array( array( 'selector' => '.eop-post-flow__final-block-head small', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_visual_products_description_size' => array( 'label' => __( 'Tamanho da descricao', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '16px', 'css' => array( array( 'selector' => '.eop-post-flow__final-block-head small', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_visual_products_description_line_height' => array( 'label' => __( 'Line-height da descricao', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '2', 'css' => array( array( 'selector' => '.eop-post-flow__final-block-head small', 'property' => 'line-height' ) ) ),
                     'post_confirmation_visual_products_heading_color' => array( 'label' => __( 'Cor do cabecalho da tabela', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#64748b', 'css' => array( array( 'selector' => '.eop-post-flow__final-products-head', 'property' => 'color' ) ) ),
-                    'post_confirmation_visual_products_heading_size' => array( 'label' => __( 'Tamanho do cabecalho (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '13', 'min' => 10, 'max' => 24, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__final-products-head', 'property' => 'font-size' ) ) ),
-                    'post_confirmation_visual_products_heading_line_height' => array( 'label' => __( 'Line-height do cabecalho', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '1', 'min' => 1, 'max' => 3, 'css' => array( array( 'selector' => '.eop-post-flow__final-products-head', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_visual_products_heading_size' => array( 'label' => __( 'Tamanho do cabecalho', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '13px', 'css' => array( array( 'selector' => '.eop-post-flow__final-products-head', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_visual_products_heading_line_height' => array( 'label' => __( 'Line-height do cabecalho', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1', 'css' => array( array( 'selector' => '.eop-post-flow__final-products-head', 'property' => 'line-height' ) ) ),
                     'post_confirmation_visual_products_font_family'  => array( 'label' => __( 'Fonte da secao', EOP_TEXT_DOMAIN ), 'type' => 'font', 'default' => 'Montserrat:400,700', 'css' => array( array( 'selector' => '.eop-post-flow__final-products-list, .eop-post-flow__final-block-head', 'property' => 'font-family' ) ) ),
                     'post_confirmation_visual_products_row_background_color' => array( 'label' => __( 'Fundo das linhas', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__final-product-row', 'property' => 'background' ) ) ),
                     'post_confirmation_visual_products_row_border_color' => array( 'label' => __( 'Cor da borda das linhas', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#dbe3f0', 'css' => array( array( 'selector' => '.eop-post-flow__final-product-row', 'property' => 'border-color' ) ) ),
-                    'post_confirmation_visual_products_row_border_radius' => array( 'label' => __( 'Radius das linhas (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '28', 'min' => 0, 'max' => 80, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__final-product-row', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_visual_products_row_border_radius' => array( 'label' => __( 'Radius das linhas', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '28px', 'css' => array( array( 'selector' => '.eop-post-flow__final-product-row', 'property' => 'border-radius' ) ) ),
                     'post_confirmation_visual_products_row_padding'  => array( 'label' => __( 'Padding das linhas', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '26px', 'css' => array( array( 'selector' => '.eop-post-flow__final-product-row', 'property' => 'padding' ) ) ),
                     'post_confirmation_visual_products_row_shadow'   => array( 'label' => __( 'Sombra das linhas', EOP_TEXT_DOMAIN ), 'type' => 'shadow', 'default' => 'none', 'css' => array( array( 'selector' => '.eop-post-flow__final-product-row', 'property' => 'box-shadow' ) ) ),
                     'post_confirmation_visual_products_name_color'   => array( 'label' => __( 'Cor do nome do produto', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__final-product-copy strong', 'property' => 'color' ) ) ),
-                    'post_confirmation_visual_products_name_size'   => array( 'label' => __( 'Tamanho do nome do produto (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '18', 'min' => 10, 'max' => 36, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__final-product-copy strong', 'property' => 'font-size' ) ) ),
-                    'post_confirmation_visual_products_name_line_height' => array( 'label' => __( 'Line-height do nome do produto', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '1', 'min' => 1, 'max' => 3, 'css' => array( array( 'selector' => '.eop-post-flow__final-product-copy strong', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_visual_products_name_size'   => array( 'label' => __( 'Tamanho do nome do produto', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '18px', 'css' => array( array( 'selector' => '.eop-post-flow__final-product-copy strong', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_visual_products_name_line_height' => array( 'label' => __( 'Line-height do nome do produto', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1', 'css' => array( array( 'selector' => '.eop-post-flow__final-product-copy strong', 'property' => 'line-height' ) ) ),
                     'post_confirmation_visual_products_sku_color'    => array( 'label' => __( 'Cor do SKU', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#66768d', 'css' => array( array( 'selector' => '.eop-post-flow__final-product-copy small', 'property' => 'color' ) ) ),
-                    'post_confirmation_visual_products_sku_size'    => array( 'label' => __( 'Tamanho do SKU (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '14', 'min' => 10, 'max' => 28, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__final-product-copy small', 'property' => 'font-size' ) ) ),
-                    'post_confirmation_visual_products_sku_line_height' => array( 'label' => __( 'Line-height do SKU', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '1', 'min' => 1, 'max' => 3, 'css' => array( array( 'selector' => '.eop-post-flow__final-product-copy small', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_visual_products_sku_size'    => array( 'label' => __( 'Tamanho do SKU', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '14px', 'css' => array( array( 'selector' => '.eop-post-flow__final-product-copy small', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_visual_products_sku_line_height' => array( 'label' => __( 'Line-height do SKU', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1', 'css' => array( array( 'selector' => '.eop-post-flow__final-product-copy small', 'property' => 'line-height' ) ) ),
                     'post_confirmation_visual_products_input_background_color' => array( 'label' => __( 'Fundo do input do novo nome', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__final-name-field input', 'property' => 'background' ) ) ),
                     'post_confirmation_visual_products_input_text_color' => array( 'label' => __( 'Cor do input do novo nome', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__final-name-field input', 'property' => 'color' ) ) ),
-                    'post_confirmation_visual_products_input_font_size' => array( 'label' => __( 'Tamanho do input do novo nome (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '16', 'min' => 10, 'max' => 32, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__final-name-field input', 'property' => 'font-size' ) ) ),
-                    'post_confirmation_visual_products_input_line_height' => array( 'label' => __( 'Line-height do input do novo nome', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '1', 'min' => 1, 'max' => 3, 'css' => array( array( 'selector' => '.eop-post-flow__final-name-field input', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_visual_products_input_font_size' => array( 'label' => __( 'Tamanho do input do novo nome', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '16px', 'css' => array( array( 'selector' => '.eop-post-flow__final-name-field input', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_visual_products_input_line_height' => array( 'label' => __( 'Line-height do input do novo nome', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1', 'css' => array( array( 'selector' => '.eop-post-flow__final-name-field input', 'property' => 'line-height' ) ) ),
                     'post_confirmation_visual_products_input_border_color' => array( 'label' => __( 'Borda do input do novo nome', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#c9d3e6', 'css' => array( array( 'selector' => '.eop-post-flow__final-name-field input', 'property' => 'border-color' ) ) ),
-                    'post_confirmation_visual_products_input_border_radius' => array( 'label' => __( 'Radius do input (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '8', 'min' => 0, 'max' => 40, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-post-flow__final-name-field input', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_visual_products_input_border_radius' => array( 'label' => __( 'Radius do input', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '8px', 'css' => array( array( 'selector' => '.eop-post-flow__final-name-field input', 'property' => 'border-radius' ) ) ),
                 ),
             ),
             array(
@@ -523,13 +610,13 @@ class EOP_Settings {
                     'post_confirmation_visual_button_background_color' => array( 'label' => __( 'Fundo do botao', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#00034b', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'background' ) ) ),
                     'post_confirmation_visual_button_text_color'       => array( 'label' => __( 'Cor do texto', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'color' ) ) ),
                     'post_confirmation_visual_button_font_family'      => array( 'label' => __( 'Fonte', EOP_TEXT_DOMAIN ), 'type' => 'font', 'default' => 'Montserrat:400,700', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'font-family' ) ) ),
-                    'post_confirmation_visual_button_font_size'        => array( 'label' => __( 'Tamanho da fonte (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '20', 'min' => 10, 'max' => 40, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'font-size' ) ) ),
-                    'post_confirmation_visual_button_line_height'      => array( 'label' => __( 'Line-height da fonte', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '1', 'min' => 1, 'max' => 3, 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'line-height' ) ) ),
+                    'post_confirmation_visual_button_font_size'        => array( 'label' => __( 'Tamanho da fonte', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '20px', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'font-size' ) ) ),
+                    'post_confirmation_visual_button_line_height'      => array( 'label' => __( 'Line-height da fonte', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '1', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'line-height' ) ) ),
                     'post_confirmation_visual_button_font_weight'      => array( 'label' => __( 'Peso da fonte', EOP_TEXT_DOMAIN ), 'type' => 'select', 'default' => '700', 'choices' => array( '400' => '400', '500' => '500', '600' => '600', '700' => '700', '800' => '800' ), 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'font-weight' ) ) ),
                     'post_confirmation_visual_button_padding'          => array( 'label' => __( 'Padding', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '16px 24px', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'padding' ) ) ),
                     'post_confirmation_visual_button_margin'           => array( 'label' => __( 'Margin', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '8px 0 0', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'margin' ) ) ),
-                    'post_confirmation_visual_button_border_radius'    => array( 'label' => __( 'Border radius (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '24', 'min' => 0, 'max' => 60, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'border-radius' ) ) ),
-                    'post_confirmation_visual_button_border_width'     => array( 'label' => __( 'Borda (px)', EOP_TEXT_DOMAIN ), 'type' => 'number', 'default' => '0', 'min' => 0, 'max' => 12, 'unit' => 'px', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'border-width' ) ) ),
+                    'post_confirmation_visual_button_border_radius'    => array( 'label' => __( 'Border radius', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '24px', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'border-radius' ) ) ),
+                    'post_confirmation_visual_button_border_width'     => array( 'label' => __( 'Borda', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '0px', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'border-width' ) ) ),
                     'post_confirmation_visual_button_border_style'     => array( 'label' => __( 'Estilo da borda', EOP_TEXT_DOMAIN ), 'type' => 'select', 'default' => 'solid', 'choices' => array( 'solid' => 'Solid', 'dashed' => 'Dashed', 'dotted' => 'Dotted', 'none' => 'None' ), 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'border-style' ) ) ),
                     'post_confirmation_visual_button_border_color'     => array( 'label' => __( 'Cor da borda', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#00034b', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'border-color' ) ) ),
                     'post_confirmation_visual_button_box_shadow'       => array( 'label' => __( 'Box shadow', EOP_TEXT_DOMAIN ), 'type' => 'shadow', 'default' => '0 16px 30px rgba(0, 3, 75, .20)', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'box-shadow' ) ) ),
@@ -547,6 +634,8 @@ class EOP_Settings {
                 return self::sanitize_color( $value, $default );
             case 'font':
                 return self::sanitize_font_family( $value, $default );
+            case 'size':
+                return self::sanitize_css_size_value( $value, $default );
             case 'number':
                 $min = isset( $definition['min'] ) ? (int) $definition['min'] : 0;
                 $max = isset( $definition['max'] ) ? (int) $definition['max'] : 9999;
@@ -594,6 +683,24 @@ class EOP_Settings {
         return $value;
     }
 
+    private static function sanitize_css_size_value( $value, $default = '16px' ) {
+        $value = is_string( $value ) ? trim( wp_strip_all_tags( $value ) ) : '';
+
+        if ( '' === $value ) {
+            return (string) $default;
+        }
+
+        if ( preg_match( '/^\d+(?:\.\d+)?$/', $value ) ) {
+            return $value . 'px';
+        }
+
+        if ( preg_match( '/[^0-9a-zA-Z#.%\s,\-()\/]/', $value ) ) {
+            return (string) $default;
+        }
+
+        return $value;
+    }
+
     private static function render_post_confirmation_contract_visual_editor( $settings ) {
         ?>
         <div class="eop-visual-editor">
@@ -617,35 +724,56 @@ class EOP_Settings {
                 <span class="eop-accordion__icon">-</span>
             </button>
             <div class="eop-accordion__body">
-                <div class="eop-settings-grid">
-                    <div class="eop-settings-field is-full">
-                        <label for="eop_post_confirmation_contract_title_visual"><?php esc_html_e( 'Titulo do contrato', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_post_confirmation_contract_title_visual" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[post_confirmation_contract_title]" value="<?php echo esc_attr( $settings['post_confirmation_contract_title'] ); ?>" />
-                    </div>
-                    <div class="eop-settings-field is-full">
-                        <label for="eop_post_confirmation_contract_document_description_visual"><?php esc_html_e( 'Descricao do documento principal', EOP_TEXT_DOMAIN ); ?></label>
-                        <textarea id="eop_post_confirmation_contract_document_description_visual" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[post_confirmation_contract_document_description]"><?php echo esc_textarea( $settings['post_confirmation_contract_document_description'] ); ?></textarea>
-                    </div>
-                    <div class="eop-settings-field is-full">
-                        <label for="eop_post_confirmation_contract_checkbox_label_visual"><?php esc_html_e( 'Texto do aceite', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_post_confirmation_contract_checkbox_label_visual" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[post_confirmation_contract_checkbox_label]" value="<?php echo esc_attr( $settings['post_confirmation_contract_checkbox_label'] ); ?>" />
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_post_confirmation_contract_button_label_visual"><?php esc_html_e( 'Botao principal', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_post_confirmation_contract_button_label_visual" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[post_confirmation_contract_button_label]" value="<?php echo esc_attr( $settings['post_confirmation_contract_button_label'] ); ?>" />
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_financial_title_visual"><?php esc_html_e( 'Titulo do resumo lateral', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_customer_experience_financial_title_visual" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_financial_title]" value="<?php echo esc_attr( $settings['customer_experience_financial_title'] ); ?>" />
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_total_label_visual"><?php esc_html_e( 'Label do valor aprovado', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_customer_experience_total_label_visual" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_total_label]" value="<?php echo esc_attr( $settings['customer_experience_total_label'] ); ?>" />
-                    </div>
-                    <div class="eop-settings-field is-full">
-                        <label for="eop_customer_experience_progress_note_visual"><?php esc_html_e( 'Texto final do resumo', EOP_TEXT_DOMAIN ); ?></label>
-                        <textarea id="eop_customer_experience_progress_note_visual" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_progress_note]"><?php echo esc_textarea( $settings['customer_experience_progress_note'] ); ?></textarea>
-                    </div>
+                <div class="eop-visual-groups">
+                    <section class="eop-visual-group">
+                        <header class="eop-visual-group__head">
+                            <strong><?php esc_html_e( 'Documento principal', EOP_TEXT_DOMAIN ); ?></strong>
+                        </header>
+                        <div class="eop-settings-grid">
+                            <div class="eop-settings-field is-full">
+                                <label for="eop_post_confirmation_contract_title_visual"><?php esc_html_e( 'Titulo do contrato', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_post_confirmation_contract_title_visual" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[post_confirmation_contract_title]" value="<?php echo esc_attr( $settings['post_confirmation_contract_title'] ); ?>" />
+                            </div>
+                            <div class="eop-settings-field is-full">
+                                <label for="eop_post_confirmation_contract_document_description_visual"><?php esc_html_e( 'Descricao do documento principal', EOP_TEXT_DOMAIN ); ?></label>
+                                <textarea id="eop_post_confirmation_contract_document_description_visual" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[post_confirmation_contract_document_description]"><?php echo esc_textarea( $settings['post_confirmation_contract_document_description'] ); ?></textarea>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="eop-visual-group">
+                        <header class="eop-visual-group__head">
+                            <strong><?php esc_html_e( 'Aceite', EOP_TEXT_DOMAIN ); ?></strong>
+                        </header>
+                        <div class="eop-settings-grid">
+                            <div class="eop-settings-field is-full">
+                                <label for="eop_post_confirmation_contract_checkbox_label_visual"><?php esc_html_e( 'Texto do aceite', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_post_confirmation_contract_checkbox_label_visual" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[post_confirmation_contract_checkbox_label]" value="<?php echo esc_attr( $settings['post_confirmation_contract_checkbox_label'] ); ?>" />
+                            </div>
+                            <div class="eop-settings-field">
+                                <label for="eop_post_confirmation_contract_button_label_visual"><?php esc_html_e( 'Botao principal', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_post_confirmation_contract_button_label_visual" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[post_confirmation_contract_button_label]" value="<?php echo esc_attr( $settings['post_confirmation_contract_button_label'] ); ?>" />
+                            </div>
+                        </div>
+                    </section>
+                    <section class="eop-visual-group">
+                        <header class="eop-visual-group__head">
+                            <strong><?php esc_html_e( 'Resumo lateral', EOP_TEXT_DOMAIN ); ?></strong>
+                        </header>
+                        <div class="eop-settings-grid">
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_financial_title_visual"><?php esc_html_e( 'Titulo do resumo lateral', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_customer_experience_financial_title_visual" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_financial_title]" value="<?php echo esc_attr( $settings['customer_experience_financial_title'] ); ?>" />
+                            </div>
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_total_label_visual"><?php esc_html_e( 'Label do valor aprovado', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_customer_experience_total_label_visual" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_total_label]" value="<?php echo esc_attr( $settings['customer_experience_total_label'] ); ?>" />
+                            </div>
+                            <div class="eop-settings-field is-full">
+                                <label for="eop_customer_experience_progress_note_visual"><?php esc_html_e( 'Texto final do resumo', EOP_TEXT_DOMAIN ); ?></label>
+                                <textarea id="eop_customer_experience_progress_note_visual" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_progress_note]"><?php echo esc_textarea( $settings['customer_experience_progress_note'] ); ?></textarea>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
         </div>
@@ -663,91 +791,105 @@ class EOP_Settings {
                 <span class="eop-accordion__icon">+</span>
             </button>
             <div class="eop-accordion__body" hidden>
-                <div class="eop-settings-grid">
-                    <div class="eop-settings-field is-full">
-                        <label for="eop_customer_experience_font_family_preview"><?php esc_html_e( 'Fonte da experiencia publica', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_customer_experience_font_family_preview" class="select_font eop-font-field" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_font_family]" value="<?php echo esc_attr( $settings['customer_experience_font_family'] ); ?>" />
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_background_mode_preview"><?php esc_html_e( 'Tipo do fundo da pagina', EOP_TEXT_DOMAIN ); ?></label>
-                        <select id="eop_customer_experience_background_mode_preview" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_background_mode]">
-                            <option value="solid"<?php selected( $settings['customer_experience_background_mode'], 'solid' ); ?>><?php esc_html_e( 'Cor unica', EOP_TEXT_DOMAIN ); ?></option>
-                            <option value="gradient"<?php selected( $settings['customer_experience_background_mode'], 'gradient' ); ?>><?php esc_html_e( 'Gradiente', EOP_TEXT_DOMAIN ); ?></option>
-                        </select>
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_title_size_preview"><?php esc_html_e( 'Tamanho do titulo principal (px)', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_customer_experience_title_size_preview" type="number" min="24" max="76" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_title_size]" value="<?php echo esc_attr( $settings['customer_experience_title_size'] ); ?>" />
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_text_size_preview"><?php esc_html_e( 'Tamanho do texto base (px)', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_customer_experience_text_size_preview" type="number" min="13" max="24" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_text_size]" value="<?php echo esc_attr( $settings['customer_experience_text_size'] ); ?>" />
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_background_color_preview"><?php esc_html_e( 'Fundo da pagina', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_customer_experience_background_color_preview" class="eop-color-field" type="text" data-default-color="#edf2fb" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_background_color]" value="<?php echo esc_attr( $settings['customer_experience_background_color'] ); ?>" />
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_background_secondary_color_preview"><?php esc_html_e( 'Segunda cor do fundo da pagina', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_customer_experience_background_secondary_color_preview" class="eop-color-field" type="text" data-default-color="#f7f9fc" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_background_secondary_color]" value="<?php echo esc_attr( $settings['customer_experience_background_secondary_color'] ); ?>" />
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_hero_background_mode_preview"><?php esc_html_e( 'Tipo do fundo do topo', EOP_TEXT_DOMAIN ); ?></label>
-                        <select id="eop_customer_experience_hero_background_mode_preview" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_hero_background_mode]">
-                            <option value="solid"<?php selected( $settings['customer_experience_hero_background_mode'], 'solid' ); ?>><?php esc_html_e( 'Cor unica', EOP_TEXT_DOMAIN ); ?></option>
-                            <option value="gradient"<?php selected( $settings['customer_experience_hero_background_mode'], 'gradient' ); ?>><?php esc_html_e( 'Gradiente', EOP_TEXT_DOMAIN ); ?></option>
-                        </select>
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_hero_background_color_preview"><?php esc_html_e( 'Fundo do topo', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_customer_experience_hero_background_color_preview" class="eop-color-field" type="text" data-default-color="#0f1b35" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_hero_background_color]" value="<?php echo esc_attr( $settings['customer_experience_hero_background_color'] ); ?>" />
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_hero_background_secondary_color_preview"><?php esc_html_e( 'Segunda cor do topo', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_customer_experience_hero_background_secondary_color_preview" class="eop-color-field" type="text" data-default-color="#243553" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_hero_background_secondary_color]" value="<?php echo esc_attr( $settings['customer_experience_hero_background_secondary_color'] ); ?>" />
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_panel_background_mode_preview"><?php esc_html_e( 'Tipo do fundo dos cards', EOP_TEXT_DOMAIN ); ?></label>
-                        <select id="eop_customer_experience_panel_background_mode_preview" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_panel_background_mode]">
-                            <option value="solid"<?php selected( $settings['customer_experience_panel_background_mode'], 'solid' ); ?>><?php esc_html_e( 'Cor unica', EOP_TEXT_DOMAIN ); ?></option>
-                            <option value="gradient"<?php selected( $settings['customer_experience_panel_background_mode'], 'gradient' ); ?>><?php esc_html_e( 'Gradiente', EOP_TEXT_DOMAIN ); ?></option>
-                        </select>
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_panel_background_color_preview"><?php esc_html_e( 'Fundo dos cards', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_customer_experience_panel_background_color_preview" class="eop-color-field" type="text" data-default-color="#ffffff" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_panel_background_color]" value="<?php echo esc_attr( $settings['customer_experience_panel_background_color'] ); ?>" />
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_panel_background_secondary_color_preview"><?php esc_html_e( 'Segunda cor dos cards', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_customer_experience_panel_background_secondary_color_preview" class="eop-color-field" type="text" data-default-color="#f7f9fc" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_panel_background_secondary_color]" value="<?php echo esc_attr( $settings['customer_experience_panel_background_secondary_color'] ); ?>" />
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_sidebar_background_mode_preview"><?php esc_html_e( 'Tipo do fundo lateral', EOP_TEXT_DOMAIN ); ?></label>
-                        <select id="eop_customer_experience_sidebar_background_mode_preview" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_sidebar_background_mode]">
-                            <option value="solid"<?php selected( $settings['customer_experience_sidebar_background_mode'], 'solid' ); ?>><?php esc_html_e( 'Cor unica', EOP_TEXT_DOMAIN ); ?></option>
-                            <option value="gradient"<?php selected( $settings['customer_experience_sidebar_background_mode'], 'gradient' ); ?>><?php esc_html_e( 'Gradiente', EOP_TEXT_DOMAIN ); ?></option>
-                        </select>
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_sidebar_background_color_preview"><?php esc_html_e( 'Fundo do resumo lateral', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_customer_experience_sidebar_background_color_preview" class="eop-color-field" type="text" data-default-color="#f6f8fc" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_sidebar_background_color]" value="<?php echo esc_attr( $settings['customer_experience_sidebar_background_color'] ); ?>" />
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_sidebar_background_secondary_color_preview"><?php esc_html_e( 'Segunda cor do fundo lateral', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_customer_experience_sidebar_background_secondary_color_preview" class="eop-color-field" type="text" data-default-color="#ffffff" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_sidebar_background_secondary_color]" value="<?php echo esc_attr( $settings['customer_experience_sidebar_background_secondary_color'] ); ?>" />
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_accent_color_preview"><?php esc_html_e( 'Cor de destaque', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_customer_experience_accent_color_preview" class="eop-color-field" type="text" data-default-color="#d78a2f" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_accent_color]" value="<?php echo esc_attr( $settings['customer_experience_accent_color'] ); ?>" />
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_text_color_preview"><?php esc_html_e( 'Texto principal', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_customer_experience_text_color_preview" class="eop-color-field" type="text" data-default-color="#16243a" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_text_color]" value="<?php echo esc_attr( $settings['customer_experience_text_color'] ); ?>" />
-                    </div>
-                    <div class="eop-settings-field">
-                        <label for="eop_customer_experience_muted_color_preview"><?php esc_html_e( 'Texto auxiliar', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_customer_experience_muted_color_preview" class="eop-color-field" type="text" data-default-color="#66768d" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_muted_color]" value="<?php echo esc_attr( $settings['customer_experience_muted_color'] ); ?>" />
-                    </div>
+                <div class="eop-visual-groups">
+                    <section class="eop-visual-group">
+                        <header class="eop-visual-group__head">
+                            <strong><?php esc_html_e( 'Tipografia base', EOP_TEXT_DOMAIN ); ?></strong>
+                        </header>
+                        <div class="eop-settings-grid">
+                            <div class="eop-settings-field is-full">
+                                <label for="eop_customer_experience_font_family_preview"><?php esc_html_e( 'Fonte da experiencia publica', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_customer_experience_font_family_preview" class="select_font eop-font-field" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_font_family]" value="<?php echo esc_attr( $settings['customer_experience_font_family'] ); ?>" />
+                            </div>
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_title_size_preview"><?php esc_html_e( 'Tamanho do titulo principal', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_customer_experience_title_size_preview" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_title_size]" value="<?php echo esc_attr( $settings['customer_experience_title_size'] ); ?>" />
+                            </div>
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_text_size_preview"><?php esc_html_e( 'Tamanho do texto base', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_customer_experience_text_size_preview" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_text_size]" value="<?php echo esc_attr( $settings['customer_experience_text_size'] ); ?>" />
+                            </div>
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_text_color_preview"><?php esc_html_e( 'Texto principal', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_customer_experience_text_color_preview" class="eop-color-field" type="text" data-default-color="#16243a" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_text_color]" value="<?php echo esc_attr( $settings['customer_experience_text_color'] ); ?>" />
+                            </div>
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_muted_color_preview"><?php esc_html_e( 'Texto auxiliar', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_customer_experience_muted_color_preview" class="eop-color-field" type="text" data-default-color="#66768d" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_muted_color]" value="<?php echo esc_attr( $settings['customer_experience_muted_color'] ); ?>" />
+                            </div>
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_accent_color_preview"><?php esc_html_e( 'Cor de destaque', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_customer_experience_accent_color_preview" class="eop-color-field" type="text" data-default-color="#d78a2f" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_accent_color]" value="<?php echo esc_attr( $settings['customer_experience_accent_color'] ); ?>" />
+                            </div>
+                        </div>
+                    </section>
+                    <section class="eop-visual-group">
+                        <header class="eop-visual-group__head">
+                            <strong><?php esc_html_e( 'Fundos e gradientes', EOP_TEXT_DOMAIN ); ?></strong>
+                        </header>
+                        <div class="eop-settings-grid">
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_background_mode_preview"><?php esc_html_e( 'Tipo do fundo da pagina', EOP_TEXT_DOMAIN ); ?></label>
+                                <select id="eop_customer_experience_background_mode_preview" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_background_mode]">
+                                    <option value="solid"<?php selected( $settings['customer_experience_background_mode'], 'solid' ); ?>><?php esc_html_e( 'Cor unica', EOP_TEXT_DOMAIN ); ?></option>
+                                    <option value="gradient"<?php selected( $settings['customer_experience_background_mode'], 'gradient' ); ?>><?php esc_html_e( 'Gradiente', EOP_TEXT_DOMAIN ); ?></option>
+                                </select>
+                            </div>
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_background_color_preview"><?php esc_html_e( 'Fundo da pagina', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_customer_experience_background_color_preview" class="eop-color-field" type="text" data-default-color="#edf2fb" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_background_color]" value="<?php echo esc_attr( $settings['customer_experience_background_color'] ); ?>" />
+                            </div>
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_background_secondary_color_preview"><?php esc_html_e( 'Segunda cor do fundo da pagina', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_customer_experience_background_secondary_color_preview" class="eop-color-field" type="text" data-default-color="#f7f9fc" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_background_secondary_color]" value="<?php echo esc_attr( $settings['customer_experience_background_secondary_color'] ); ?>" />
+                            </div>
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_hero_background_mode_preview"><?php esc_html_e( 'Tipo do fundo do topo', EOP_TEXT_DOMAIN ); ?></label>
+                                <select id="eop_customer_experience_hero_background_mode_preview" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_hero_background_mode]">
+                                    <option value="solid"<?php selected( $settings['customer_experience_hero_background_mode'], 'solid' ); ?>><?php esc_html_e( 'Cor unica', EOP_TEXT_DOMAIN ); ?></option>
+                                    <option value="gradient"<?php selected( $settings['customer_experience_hero_background_mode'], 'gradient' ); ?>><?php esc_html_e( 'Gradiente', EOP_TEXT_DOMAIN ); ?></option>
+                                </select>
+                            </div>
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_hero_background_color_preview"><?php esc_html_e( 'Fundo do topo', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_customer_experience_hero_background_color_preview" class="eop-color-field" type="text" data-default-color="#0f1b35" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_hero_background_color]" value="<?php echo esc_attr( $settings['customer_experience_hero_background_color'] ); ?>" />
+                            </div>
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_hero_background_secondary_color_preview"><?php esc_html_e( 'Segunda cor do topo', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_customer_experience_hero_background_secondary_color_preview" class="eop-color-field" type="text" data-default-color="#243553" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_hero_background_secondary_color]" value="<?php echo esc_attr( $settings['customer_experience_hero_background_secondary_color'] ); ?>" />
+                            </div>
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_panel_background_mode_preview"><?php esc_html_e( 'Tipo do fundo dos cards', EOP_TEXT_DOMAIN ); ?></label>
+                                <select id="eop_customer_experience_panel_background_mode_preview" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_panel_background_mode]">
+                                    <option value="solid"<?php selected( $settings['customer_experience_panel_background_mode'], 'solid' ); ?>><?php esc_html_e( 'Cor unica', EOP_TEXT_DOMAIN ); ?></option>
+                                    <option value="gradient"<?php selected( $settings['customer_experience_panel_background_mode'], 'gradient' ); ?>><?php esc_html_e( 'Gradiente', EOP_TEXT_DOMAIN ); ?></option>
+                                </select>
+                            </div>
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_panel_background_color_preview"><?php esc_html_e( 'Fundo dos cards', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_customer_experience_panel_background_color_preview" class="eop-color-field" type="text" data-default-color="#ffffff" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_panel_background_color]" value="<?php echo esc_attr( $settings['customer_experience_panel_background_color'] ); ?>" />
+                            </div>
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_panel_background_secondary_color_preview"><?php esc_html_e( 'Segunda cor dos cards', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_customer_experience_panel_background_secondary_color_preview" class="eop-color-field" type="text" data-default-color="#f7f9fc" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_panel_background_secondary_color]" value="<?php echo esc_attr( $settings['customer_experience_panel_background_secondary_color'] ); ?>" />
+                            </div>
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_sidebar_background_mode_preview"><?php esc_html_e( 'Tipo do fundo lateral', EOP_TEXT_DOMAIN ); ?></label>
+                                <select id="eop_customer_experience_sidebar_background_mode_preview" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_sidebar_background_mode]">
+                                    <option value="solid"<?php selected( $settings['customer_experience_sidebar_background_mode'], 'solid' ); ?>><?php esc_html_e( 'Cor unica', EOP_TEXT_DOMAIN ); ?></option>
+                                    <option value="gradient"<?php selected( $settings['customer_experience_sidebar_background_mode'], 'gradient' ); ?>><?php esc_html_e( 'Gradiente', EOP_TEXT_DOMAIN ); ?></option>
+                                </select>
+                            </div>
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_sidebar_background_color_preview"><?php esc_html_e( 'Fundo do resumo lateral', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_customer_experience_sidebar_background_color_preview" class="eop-color-field" type="text" data-default-color="#f6f8fc" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_sidebar_background_color]" value="<?php echo esc_attr( $settings['customer_experience_sidebar_background_color'] ); ?>" />
+                            </div>
+                            <div class="eop-settings-field">
+                                <label for="eop_customer_experience_sidebar_background_secondary_color_preview"><?php esc_html_e( 'Segunda cor do fundo lateral', EOP_TEXT_DOMAIN ); ?></label>
+                                <input id="eop_customer_experience_sidebar_background_secondary_color_preview" class="eop-color-field" type="text" data-default-color="#ffffff" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_sidebar_background_secondary_color]" value="<?php echo esc_attr( $settings['customer_experience_sidebar_background_secondary_color'] ); ?>" />
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
         </div>
@@ -833,12 +975,12 @@ class EOP_Settings {
                         <input id="eop_customer_experience_font_family_upload_products_preview" class="select_font eop-font-field" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_font_family]" value="<?php echo esc_attr( $settings['customer_experience_font_family'] ); ?>" />
                     </div>
                     <div class="eop-settings-field">
-                        <label for="eop_customer_experience_title_size_upload_products_preview"><?php esc_html_e( 'Tamanho do titulo principal (px)', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_customer_experience_title_size_upload_products_preview" type="number" min="24" max="76" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_title_size]" value="<?php echo esc_attr( $settings['customer_experience_title_size'] ); ?>" />
+                        <label for="eop_customer_experience_title_size_upload_products_preview"><?php esc_html_e( 'Tamanho do titulo principal', EOP_TEXT_DOMAIN ); ?></label>
+                        <input id="eop_customer_experience_title_size_upload_products_preview" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_title_size]" value="<?php echo esc_attr( $settings['customer_experience_title_size'] ); ?>" />
                     </div>
                     <div class="eop-settings-field">
-                        <label for="eop_customer_experience_text_size_upload_products_preview"><?php esc_html_e( 'Tamanho do texto base (px)', EOP_TEXT_DOMAIN ); ?></label>
-                        <input id="eop_customer_experience_text_size_upload_products_preview" type="number" min="13" max="24" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_text_size]" value="<?php echo esc_attr( $settings['customer_experience_text_size'] ); ?>" />
+                        <label for="eop_customer_experience_text_size_upload_products_preview"><?php esc_html_e( 'Tamanho do texto base', EOP_TEXT_DOMAIN ); ?></label>
+                        <input id="eop_customer_experience_text_size_upload_products_preview" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_text_size]" value="<?php echo esc_attr( $settings['customer_experience_text_size'] ); ?>" />
                     </div>
                     <div class="eop-settings-field">
                         <label for="eop_customer_experience_background_color_upload_products_preview"><?php esc_html_e( 'Fundo da pagina', EOP_TEXT_DOMAIN ); ?></label>
@@ -871,6 +1013,7 @@ class EOP_Settings {
     }
 
     private static function render_post_confirmation_upload_products_style_section( $section, $settings ) {
+        $field_groups = self::get_post_confirmation_visual_style_field_groups( $section );
         ?>
         <div class="eop-accordion eop-visual-accordion">
             <button type="button" class="eop-accordion__toggle" aria-expanded="false">
@@ -881,14 +1024,142 @@ class EOP_Settings {
                 <span class="eop-accordion__icon">+</span>
             </button>
             <div class="eop-accordion__body" hidden>
-                <div class="eop-settings-grid">
-                    <?php foreach ( $section['fields'] as $field_key => $field ) : ?>
-                        <?php self::render_post_confirmation_upload_products_style_field( $field_key, $field, $settings ); ?>
+                <div class="eop-visual-groups">
+                    <?php foreach ( $field_groups as $group ) : ?>
+                        <section class="eop-visual-group">
+                            <?php if ( ! empty( $group['label'] ) ) : ?>
+                                <header class="eop-visual-group__head">
+                                    <strong><?php echo esc_html( (string) $group['label'] ); ?></strong>
+                                </header>
+                            <?php endif; ?>
+                            <div class="eop-settings-grid">
+                                <?php foreach ( $group['fields'] as $field_key => $field ) : ?>
+                                    <?php self::render_post_confirmation_upload_products_style_field( $field_key, $field, $settings ); ?>
+                                <?php endforeach; ?>
+                            </div>
+                        </section>
                     <?php endforeach; ?>
                 </div>
             </div>
         </div>
         <?php
+    }
+
+    private static function get_post_confirmation_visual_style_field_groups( $section ) {
+        $groups = array();
+
+        foreach ( (array) ( $section['fields'] ?? array() ) as $field_key => $field ) {
+            $group_label = isset( $field['group'] ) ? (string) $field['group'] : self::infer_post_confirmation_visual_style_group( (string) ( $section['id'] ?? '' ), (string) $field_key );
+            $group_key   = '' !== $group_label ? sanitize_title( $group_label ) : 'default';
+
+            if ( ! isset( $groups[ $group_key ] ) ) {
+                $groups[ $group_key ] = array(
+                    'label'  => $group_label,
+                    'fields' => array(),
+                );
+            }
+
+            $groups[ $group_key ]['fields'][ $field_key ] = $field;
+        }
+
+        return array_values( $groups );
+    }
+
+    private static function infer_post_confirmation_visual_style_group( $section_id, $field_key ) {
+        $map = array(
+            'header' => array(
+                'Container'         => array( 'header_background_', 'header_padding', 'header_margin', 'header_border_', 'header_box_shadow', 'header_min_height' ),
+                'Cards internos'    => array( 'header_card_' ),
+                'Titulo'            => array( 'header_title_' ),
+                'Descricao'         => array( 'header_meta_' ),
+                'Tipografia geral'  => array( 'header_font_family' ),
+            ),
+            'contract_header' => array(
+                'Container'         => array( 'header_background_', 'header_padding', 'header_margin', 'header_border_', 'header_box_shadow', 'header_min_height' ),
+                'Cards internos'    => array( 'header_card_' ),
+                'Titulo'            => array( 'header_title_' ),
+                'Descricao'         => array( 'header_meta_' ),
+                'Tipografia geral'  => array( 'header_font_family' ),
+            ),
+            'breadcrumbs' => array(
+                'Container'         => array( 'breadcrumb_gap' ),
+                'Tipografia'        => array( 'breadcrumb_font_' ),
+                'Item padrao'       => array( 'breadcrumb_padding', 'breadcrumb_border_', 'breadcrumb_background_', 'breadcrumb_text_' ),
+                'Item atual'        => array( 'breadcrumb_current_background_', 'breadcrumb_current_text_' ),
+                'Item concluido'    => array( 'breadcrumb_completed_background_', 'breadcrumb_completed_text_' ),
+                'Numero'            => array( 'breadcrumb_index_', 'breadcrumb_current_index_' ),
+            ),
+            'contract_breadcrumbs' => array(
+                'Container'         => array( 'breadcrumb_gap' ),
+                'Tipografia'        => array( 'breadcrumb_font_' ),
+                'Item padrao'       => array( 'breadcrumb_padding', 'breadcrumb_border_', 'breadcrumb_background_', 'breadcrumb_text_' ),
+                'Item atual'        => array( 'breadcrumb_current_background_', 'breadcrumb_current_text_' ),
+                'Item concluido'    => array( 'breadcrumb_completed_background_', 'breadcrumb_completed_text_' ),
+                'Numero'            => array( 'breadcrumb_index_', 'breadcrumb_current_index_' ),
+            ),
+            'contract_reader' => array(
+                'Container'         => array( 'reader_background_', 'reader_padding', 'reader_margin', 'reader_border_', 'reader_box_shadow' ),
+                'Titulo'            => array( 'reader_title_' ),
+                'Descricao'         => array( 'reader_description_' ),
+                'Moldura'           => array( 'reader_frame_' ),
+                'Conteudo HTML'     => array( 'reader_content_' ),
+                'Tipografia geral'  => array( 'reader_font_family' ),
+            ),
+            'contract_cards' => array(
+                'Cards adicionais'  => array( 'support_card_' ),
+                'Aceite'            => array( 'acceptance_' ),
+                'Texto de aceite'   => array( 'checkbox_' ),
+                'Paineis laterais'  => array( 'sidebar_' ),
+                'Resumo lateral'    => array( 'summary_' ),
+            ),
+            'contract_buttons' => array(
+                'Botao principal'   => array( 'primary_button_' ),
+                'Botao secundario'  => array( 'secondary_button_' ),
+            ),
+            'intro' => array(
+                'Container'         => array( 'intro_background_', 'intro_padding', 'intro_margin', 'intro_border_', 'intro_box_shadow', 'intro_font_family' ),
+                'Etiqueta superior' => array( 'intro_eyebrow_' ),
+                'Titulo'            => array( 'intro_title_' ),
+                'Descricao'         => array( 'intro_text_' ),
+            ),
+            'upload' => array(
+                'Container'         => array( 'upload_background_', 'upload_padding', 'upload_margin', 'upload_border_', 'upload_box_shadow' ),
+                'Label do arquivo'  => array( 'upload_label_' ),
+                'Campo de upload'   => array( 'upload_input_' ),
+                'Anexo salvo'       => array( 'upload_meta_' ),
+            ),
+            'products' => array(
+                'Titulo'               => array( 'products_title_' ),
+                'Descricao'            => array( 'products_description_' ),
+                'Cabecalho da tabela'  => array( 'products_heading_' ),
+                'Tipografia geral'     => array( 'products_font_family' ),
+                'Linha do produto'     => array( 'products_row_' ),
+                'Nome do produto'      => array( 'products_name_' ),
+                'SKU'                  => array( 'products_sku_' ),
+                'Input do novo nome'   => array( 'products_input_' ),
+            ),
+            'button' => array(
+                'Botao'       => array( 'button_background_' ),
+                'Tipografia'  => array( 'button_text_', 'button_font_' ),
+                'Espacamento' => array( 'button_padding', 'button_margin' ),
+                'Borda'       => array( 'button_border_' ),
+                'Sombra'      => array( 'button_box_shadow' ),
+            ),
+        );
+
+        if ( empty( $map[ $section_id ] ) ) {
+            return '';
+        }
+
+        foreach ( $map[ $section_id ] as $label => $patterns ) {
+            foreach ( $patterns as $pattern ) {
+                if ( false !== strpos( $field_key, $pattern ) ) {
+                    return __( $label, EOP_TEXT_DOMAIN );
+                }
+            }
+        }
+
+        return '';
     }
 
     private static function render_post_confirmation_upload_products_style_field( $field_key, $field, $settings ) {
@@ -1972,35 +2243,27 @@ class EOP_Settings {
                         <?php endif; ?>
 
                         <?php if ( $should_render_confirmation_preview ) : ?>
-                        <section class="eop-settings-card eop-contract-preview-settings">
-                            <h2><?php esc_html_e( 'Visual da pagina contratual', EOP_TEXT_DOMAIN ); ?></h2>
-                            <p><?php esc_html_e( 'Ajuste o visual da etapa de aceite e veja como a pagina publica vai ficar antes de publicar.', EOP_TEXT_DOMAIN ); ?></p>
-                            <?php self::render_post_confirmation_contract_visual_editor( $settings ); ?>
-                        </section>
+                            <section class="eop-settings-card eop-contract-preview-settings">
+                                <h2><?php esc_html_e( 'Visual da pagina contratual', EOP_TEXT_DOMAIN ); ?></h2>
+                                <p><?php esc_html_e( 'Ajuste o visual da etapa de aceite e veja como a pagina publica vai ficar antes de publicar.', EOP_TEXT_DOMAIN ); ?></p>
+                                <?php self::render_post_confirmation_contract_visual_editor( $settings ); ?>
+                            </section>
 
-                        <section class="eop-settings-card eop-contract-preview-card">
-                            <h2><?php esc_html_e( 'Preview da etapa contratual', EOP_TEXT_DOMAIN ); ?></h2>
-                            <p><?php esc_html_e( 'Leitura visual da pagina publica com o documento principal, o aceite e o resumo lateral.', EOP_TEXT_DOMAIN ); ?></p>
                             <?php if ( class_exists( 'EOP_Post_Confirmation_Flow' ) && method_exists( 'EOP_Post_Confirmation_Flow', 'render_admin_contract_preview_markup' ) ) : ?>
                                 <?php echo EOP_Post_Confirmation_Flow::render_admin_contract_preview_markup( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                             <?php endif; ?>
-                        </section>
                         <?php endif; ?>
 
                         <?php if ( $should_render_confirmation_upload_products_preview ) : ?>
-                        <section class="eop-settings-card eop-contract-preview-settings">
-                            <h2><?php esc_html_e( 'Visual da pagina de upload e produtos', EOP_TEXT_DOMAIN ); ?></h2>
-                            <p><?php esc_html_e( 'Ajuste os textos e o visual da etapa final em que o cliente envia o arquivo e personaliza os produtos.', EOP_TEXT_DOMAIN ); ?></p>
-                            <?php self::render_post_confirmation_upload_products_visual_editor( $settings ); ?>
-                        </section>
+                            <section class="eop-settings-card eop-contract-preview-settings">
+                                <h2><?php esc_html_e( 'Visual da pagina de upload e produtos', EOP_TEXT_DOMAIN ); ?></h2>
+                                <p><?php esc_html_e( 'Ajuste os textos e o visual da etapa final em que o cliente envia o arquivo e personaliza os produtos.', EOP_TEXT_DOMAIN ); ?></p>
+                                <?php self::render_post_confirmation_upload_products_visual_editor( $settings ); ?>
+                            </section>
 
-                        <section class="eop-settings-card eop-contract-preview-card">
-                            <h2><?php esc_html_e( 'Preview da etapa de upload e produtos', EOP_TEXT_DOMAIN ); ?></h2>
-                            <p><?php esc_html_e( 'Leitura visual da pagina publica com upload do arquivo, anexo salvo e personalizacao dos produtos.', EOP_TEXT_DOMAIN ); ?></p>
                             <?php if ( class_exists( 'EOP_Post_Confirmation_Flow' ) && method_exists( 'EOP_Post_Confirmation_Flow', 'render_admin_upload_products_preview_markup' ) ) : ?>
                                 <?php echo EOP_Post_Confirmation_Flow::render_admin_upload_products_preview_markup( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                             <?php endif; ?>
-                        </section>
                         <?php endif; ?>
 
                         <?php if ( self::should_render_admin_section( $section, 'order-link-style' ) ) : ?>
@@ -2094,12 +2357,12 @@ class EOP_Settings {
                                     <input id="eop_proposal_max_width" type="number" min="720" max="1600" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[proposal_max_width]" value="<?php echo esc_attr( $settings['proposal_max_width'] ); ?>" />
                                 </div>
                                 <div class="eop-settings-field">
-                                    <label for="eop_proposal_title_size"><?php esc_html_e( 'Tamanho do titulo (px)', EOP_TEXT_DOMAIN ); ?></label>
-                                    <input id="eop_proposal_title_size" type="number" min="22" max="72" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[proposal_title_size]" value="<?php echo esc_attr( $settings['proposal_title_size'] ); ?>" />
+                                    <label for="eop_proposal_title_size"><?php esc_html_e( 'Tamanho do titulo', EOP_TEXT_DOMAIN ); ?></label>
+                                    <input id="eop_proposal_title_size" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[proposal_title_size]" value="<?php echo esc_attr( $settings['proposal_title_size'] ); ?>" />
                                 </div>
                                 <div class="eop-settings-field">
-                                    <label for="eop_proposal_text_size"><?php esc_html_e( 'Tamanho do texto base (px)', EOP_TEXT_DOMAIN ); ?></label>
-                                    <input id="eop_proposal_text_size" type="number" min="12" max="24" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[proposal_text_size]" value="<?php echo esc_attr( $settings['proposal_text_size'] ); ?>" />
+                                    <label for="eop_proposal_text_size"><?php esc_html_e( 'Tamanho do texto base', EOP_TEXT_DOMAIN ); ?></label>
+                                    <input id="eop_proposal_text_size" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[proposal_text_size]" value="<?php echo esc_attr( $settings['proposal_text_size'] ); ?>" />
                                 </div>
                             </div>
                         </section>
@@ -2115,12 +2378,12 @@ class EOP_Settings {
                                     <input id="eop_customer_experience_font_family" class="select_font eop-font-field" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_font_family]" value="<?php echo esc_attr( $settings['customer_experience_font_family'] ); ?>" />
                                 </div>
                                 <div class="eop-settings-field">
-                                    <label for="eop_customer_experience_title_size"><?php esc_html_e( 'Tamanho do titulo principal (px)', EOP_TEXT_DOMAIN ); ?></label>
-                                    <input id="eop_customer_experience_title_size" type="number" min="24" max="76" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_title_size]" value="<?php echo esc_attr( $settings['customer_experience_title_size'] ); ?>" />
+                                    <label for="eop_customer_experience_title_size"><?php esc_html_e( 'Tamanho do titulo principal', EOP_TEXT_DOMAIN ); ?></label>
+                                    <input id="eop_customer_experience_title_size" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_title_size]" value="<?php echo esc_attr( $settings['customer_experience_title_size'] ); ?>" />
                                 </div>
                                 <div class="eop-settings-field">
-                                    <label for="eop_customer_experience_text_size"><?php esc_html_e( 'Tamanho do texto base (px)', EOP_TEXT_DOMAIN ); ?></label>
-                                    <input id="eop_customer_experience_text_size" type="number" min="13" max="24" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_text_size]" value="<?php echo esc_attr( $settings['customer_experience_text_size'] ); ?>" />
+                                    <label for="eop_customer_experience_text_size"><?php esc_html_e( 'Tamanho do texto base', EOP_TEXT_DOMAIN ); ?></label>
+                                    <input id="eop_customer_experience_text_size" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_text_size]" value="<?php echo esc_attr( $settings['customer_experience_text_size'] ); ?>" />
                                 </div>
                                 <div class="eop-settings-field">
                                     <label for="eop_customer_experience_background_color"><?php esc_html_e( 'Fundo da pagina', EOP_TEXT_DOMAIN ); ?></label>

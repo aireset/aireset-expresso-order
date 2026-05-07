@@ -1278,6 +1278,7 @@ class EOP_Post_Confirmation_Flow {
 		if ( 'awaiting_confirmation' === $requested_stage ) {
 			$order->update_meta_data( '_eop_proposal_confirmed', 'no' );
 			$order->delete_meta_data( self::META_MANUAL_STAGE );
+			$state = self::rewind_state_to_stage( $order, $state, 'awaiting_confirmation' );
 			$state['completed_at'] = '';
 		} else {
 			$order->update_meta_data( '_eop_proposal_confirmed', 'yes' );
@@ -1286,6 +1287,7 @@ class EOP_Post_Confirmation_Flow {
 				$order->delete_meta_data( self::META_MANUAL_STAGE );
 			} else {
 				$order->update_meta_data( self::META_MANUAL_STAGE, $requested_stage );
+				$state = self::rewind_state_to_stage( $order, $state, $requested_stage );
 			}
 
 			if ( 'completed' !== $requested_stage ) {
@@ -1316,6 +1318,59 @@ class EOP_Post_Confirmation_Flow {
 				self::get_stage_label( $stage )
 			),
 		);
+	}
+
+	private static function rewind_state_to_stage( WC_Order $order, $state, $target_stage ) {
+		$state        = is_array( $state ) ? $state : self::get_state( $order );
+		$target_stage = self::normalize_stage_control_value( $target_stage );
+
+		if ( '' === $target_stage && 'awaiting_confirmation' !== $target_stage ) {
+			return $state;
+		}
+
+		if ( in_array( $target_stage, array( 'awaiting_confirmation', 'payment', 'contract' ), true ) ) {
+			$state['contract'] = array(
+				'accepted'      => false,
+				'accepted_name' => '',
+				'accepted_at'   => '',
+				'accepted_ip'   => '',
+				'contract_text' => '',
+			);
+		}
+
+		if ( in_array( $target_stage, array( 'awaiting_confirmation', 'payment', 'contract', 'upload' ), true ) ) {
+			$state['attachment'] = array(
+				'id'          => 0,
+				'filename'    => '',
+				'uploaded_at' => '',
+			);
+
+			$state['final_pdf'] = array(
+				'attachment_id' => 0,
+				'filename'      => '',
+				'generated_at'  => '',
+				'state_hash'    => '',
+			);
+
+			$state['completed_at'] = '';
+		}
+
+		if ( in_array( $target_stage, array( 'awaiting_confirmation', 'payment', 'contract', 'upload' ), true ) ) {
+			$state['products'] = array();
+
+			foreach ( $order->get_items( 'line_item' ) as $item ) {
+				if ( ! $item instanceof WC_Order_Item_Product ) {
+					continue;
+				}
+
+				$item->delete_meta_data( '_eop_custom_product_name' );
+				$item->delete_meta_data( '_eop_original_product_snapshot' );
+				$item->delete_meta_data( '_eop_custom_name_locked' );
+				$item->save();
+			}
+		}
+
+		return $state;
 	}
 
 	public static function render_thankyou_continue( $order_id ) {
@@ -1438,6 +1493,7 @@ class EOP_Post_Confirmation_Flow {
 		$stage_controls      = is_array( $flow['stage_controls'] ?? null ) ? $flow['stage_controls'] : array();
 		$stage_options       = is_array( $stage_controls['options'] ?? null ) ? $stage_controls['options'] : self::get_stage_control_options();
 		$selected_stage      = isset( $stage_controls['selected'] ) ? (string) $stage_controls['selected'] : self::get_stage_control_value( $order );
+		$status_cards        = self::get_admin_flow_status_cards( $summary, $contract );
 		$redirect_to         = wp_get_referer();
 
 		if ( '' === $redirect_to ) {
@@ -1476,26 +1532,15 @@ class EOP_Post_Confirmation_Flow {
 			<?php endif; ?>
 
 			<div class="eop-post-flow-card__stats">
-				<div class="eop-post-flow-stat">
-					<span><?php esc_html_e( 'Dados do pedido', EOP_TEXT_DOMAIN ); ?></span>
-					<strong><?php echo esc_html( (string) ( absint( $summary['order_data_filled'] ?? 0 ) . '/' . absint( $summary['order_data_total'] ?? 0 ) ) ); ?></strong>
-				</div>
-				<div class="eop-post-flow-stat">
-					<span><?php esc_html_e( 'Documentos para assinatura', EOP_TEXT_DOMAIN ); ?></span>
-					<strong><?php echo esc_html( (string) ( absint( $summary['signature_documents_ready'] ?? 0 ) . '/' . absint( $summary['signature_documents_total'] ?? 0 ) ) ); ?></strong>
-				</div>
-				<div class="eop-post-flow-stat">
-					<span><?php esc_html_e( 'Anexo', EOP_TEXT_DOMAIN ); ?></span>
-					<strong><?php echo esc_html( ! empty( $summary['attachment_uploaded'] ) ? __( 'Enviado', EOP_TEXT_DOMAIN ) : __( 'Pendente', EOP_TEXT_DOMAIN ) ); ?></strong>
-				</div>
-				<div class="eop-post-flow-stat">
-					<span><?php esc_html_e( 'PDF final', EOP_TEXT_DOMAIN ); ?></span>
-					<strong><?php echo esc_html( ! empty( $summary['final_pdf_ready'] ) ? __( 'Pronto', EOP_TEXT_DOMAIN ) : __( 'Pendente', EOP_TEXT_DOMAIN ) ); ?></strong>
-				</div>
-				<div class="eop-post-flow-stat">
-					<span><?php esc_html_e( 'Produtos', EOP_TEXT_DOMAIN ); ?></span>
-					<strong><?php echo esc_html( (string) ( absint( $summary['products_completed'] ?? 0 ) . '/' . absint( $summary['products_editable'] ?? 0 ) ) ); ?></strong>
-				</div>
+				<?php foreach ( $status_cards as $card ) : ?>
+					<div class="eop-post-flow-stat eop-post-flow-stat--<?php echo esc_attr( (string) ( $card['tone'] ?? 'neutral' ) ); ?>">
+						<span><?php echo esc_html( (string) ( $card['label'] ?? '' ) ); ?></span>
+						<strong><?php echo esc_html( (string) ( $card['value'] ?? '' ) ); ?></strong>
+						<?php if ( ! empty( $card['detail'] ) ) : ?>
+							<small><?php echo esc_html( (string) $card['detail'] ); ?></small>
+						<?php endif; ?>
+					</div>
+				<?php endforeach; ?>
 			</div>
 
 			<div class="eop-post-flow-card__section">
@@ -2473,30 +2518,44 @@ class EOP_Post_Confirmation_Flow {
 
 		if ( ! empty( $state['contract']['accepted_at'] ) ) {
 			$order->update_meta_data( '_eop_post_confirmation_contract_accepted_at', $state['contract']['accepted_at'] );
+		} else {
+			$order->delete_meta_data( '_eop_post_confirmation_contract_accepted_at' );
 		}
 
 		if ( ! empty( $state['contract']['accepted_name'] ) ) {
 			$order->update_meta_data( '_eop_post_confirmation_contract_accepted_name', $state['contract']['accepted_name'] );
+		} else {
+			$order->delete_meta_data( '_eop_post_confirmation_contract_accepted_name' );
 		}
 
 		if ( ! empty( $state['contract']['accepted_ip'] ) ) {
 			$order->update_meta_data( '_eop_post_confirmation_contract_accepted_ip', $state['contract']['accepted_ip'] );
+		} else {
+			$order->delete_meta_data( '_eop_post_confirmation_contract_accepted_ip' );
 		}
 
 		if ( ! empty( $state['contract']['contract_text'] ) ) {
 			$order->update_meta_data( '_eop_post_confirmation_contract_text', wp_kses_post( $state['contract']['contract_text'] ) );
+		} else {
+			$order->delete_meta_data( '_eop_post_confirmation_contract_text' );
 		}
 
 		if ( ! empty( $state['attachment']['id'] ) ) {
 			$order->update_meta_data( '_eop_post_confirmation_attachment_id', absint( $state['attachment']['id'] ) );
+		} else {
+			$order->delete_meta_data( '_eop_post_confirmation_attachment_id' );
 		}
 
 		if ( ! empty( $state['final_pdf']['attachment_id'] ) ) {
 			$order->update_meta_data( '_eop_post_confirmation_final_pdf_attachment_id', absint( $state['final_pdf']['attachment_id'] ) );
+		} else {
+			$order->delete_meta_data( '_eop_post_confirmation_final_pdf_attachment_id' );
 		}
 
 		if ( ! empty( $state['final_pdf']['generated_at'] ) ) {
 			$order->update_meta_data( '_eop_post_confirmation_final_pdf_generated_at', sanitize_text_field( (string) $state['final_pdf']['generated_at'] ) );
+		} else {
+			$order->delete_meta_data( '_eop_post_confirmation_final_pdf_generated_at' );
 		}
 
 		$order->update_meta_data(
@@ -3608,7 +3667,7 @@ class EOP_Post_Confirmation_Flow {
 		);
 	}
 
-	public static function render_admin_contract_preview_markup( $settings = array() ) {
+	public static function get_admin_contract_preview_srcdoc( $settings = array() ) {
 		$settings = is_array( $settings ) ? wp_parse_args( $settings, EOP_Settings::get_defaults() ) : EOP_Settings::get_all();
 		$preview  = self::get_admin_contract_preview_payload( $settings );
 		$primary_document = is_array( $preview['primary_document'] ?? null ) ? $preview['primary_document'] : array();
@@ -3653,10 +3712,60 @@ class EOP_Post_Confirmation_Flow {
 				'sub_value'  => '-R$ 95,73',
 			),
 		);
+		$steps = array(
+			array(
+				'key'    => 'contract',
+				'label'  => self::get_stage_label( 'contract' ),
+				'status' => 'current',
+			),
+			array(
+				'key'    => 'upload',
+				'label'  => self::get_stage_label( 'upload' ),
+				'status' => 'upcoming',
+			),
+			array(
+				'key'    => 'completed',
+				'label'  => self::get_stage_label( 'completed' ),
+				'status' => 'upcoming',
+			),
+		);
 
 		ob_start();
-		self::render_post_flow_styles( $settings );
 		?>
+<!doctype html>
+<html>
+<head>
+	<meta charset="<?php echo esc_attr( get_bloginfo( 'charset' ) ); ?>">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="<?php echo esc_url( EOP_PLUGIN_URL . 'assets/css/frontend.css?ver=' . EOP_VERSION ); ?>">
+	<style>
+		html,
+		body {
+			margin: 0;
+			padding: 0;
+			background: transparent;
+		}
+
+		*,
+		*::before,
+		*::after {
+			box-sizing: border-box;
+		}
+
+		img {
+			max-width: 100%;
+			height: auto;
+		}
+
+		.eop-final-flow-preview {
+			padding: 18px;
+			background: #f5f7ff;
+		}
+	</style>
+	<?php self::render_post_flow_styles( $settings ); ?>
+</head>
+<body>
+	<div class="eop-final-flow-preview">
 		<div class="eop-post-flow eop-post-flow--stage-contract eop-post-flow--admin-preview">
 			<div class="eop-post-flow__contract-header">
 				<div class="eop-post-flow__contract-header-main">
@@ -3672,6 +3781,7 @@ class EOP_Post_Confirmation_Flow {
 						<span><?php echo esc_html( sprintf( __( 'Pedido #%d', EOP_TEXT_DOMAIN ), 5238 ) ); ?></span>
 					</div>
 				</div>
+				<?php self::render_stage_breadcrumb( $steps, 'contract' ); ?>
 			</div>
 			<div class="eop-post-flow__layout">
 				<div class="eop-post-flow__main">
@@ -3717,9 +3827,42 @@ class EOP_Post_Confirmation_Flow {
 				</aside>
 			</div>
 		</div>
+	</div>
+</body>
+</html>
 		<?php
 
-		return ob_get_clean();
+		return (string) ob_get_clean();
+	}
+
+	public static function render_admin_contract_preview_markup( $settings = array() ) {
+		$srcdoc = self::get_admin_contract_preview_srcdoc( $settings );
+
+		ob_start();
+		?>
+		<div class="eop-proposal-preview-card" data-eop-proposal-preview-card data-preview-viewport="desktop">
+			<div class="eop-proposal-preview-card__copy">
+				<div class="eop-proposal-preview-card__eyebrow"><?php esc_html_e( 'Preview ao vivo', EOP_TEXT_DOMAIN ); ?></div>
+				<h3><?php esc_html_e( 'Veja a pagina publica antes de salvar', EOP_TEXT_DOMAIN ); ?></h3>
+				<p><?php esc_html_e( 'Este preview usa o mesmo renderer do fluxo do cliente, agora isolado em iframe e com dados de exemplo.', EOP_TEXT_DOMAIN ); ?></p>
+				<div class="eop-proposal-preview-card__status is-ready" aria-live="polite">
+					<span class="eop-proposal-preview-card__status-dot" aria-hidden="true"></span>
+					<span class="eop-proposal-preview-card__status-text"><?php esc_html_e( 'Preview pronto em Desktop.', EOP_TEXT_DOMAIN ); ?></span>
+				</div>
+				<div class="eop-proposal-preview-card__tools">
+					<button type="button" class="button eop-proposal-preview-viewport is-active" data-preview-viewport="desktop" aria-pressed="true"><?php esc_html_e( 'Desktop', EOP_TEXT_DOMAIN ); ?></button>
+					<button type="button" class="button eop-proposal-preview-viewport" data-preview-viewport="mobile" aria-pressed="false"><?php esc_html_e( 'Mobile', EOP_TEXT_DOMAIN ); ?></button>
+				</div>
+			</div>
+			<div class="eop-proposal-preview-card__stage">
+				<div class="eop-proposal-preview-card__shell">
+					<iframe class="eop-proposal-preview-render" title="<?php esc_attr_e( 'Preview da pagina do cliente', EOP_TEXT_DOMAIN ); ?>" srcdoc="<?php echo esc_attr( $srcdoc ); ?>"></iframe>
+				</div>
+			</div>
+		</div>
+		<?php
+
+		return (string) ob_get_clean();
 	}
 
 	private static function render_post_flow_styles( $settings = array() ) {
@@ -3752,14 +3895,16 @@ class EOP_Post_Confirmation_Flow {
 			'135deg'
 		);
 		$button_radius        = max( 14, min( 24, absint( $settings['border_radius'] ?? 18 ) ) );
-		$title_size           = max( 24, min( 76, absint( $settings['customer_experience_title_size'] ?? 46 ) ) );
-		$text_size            = max( 13, min( 24, absint( $settings['customer_experience_text_size'] ?? 16 ) ) );
+		$title_size           = self::format_css_size_value( $settings['customer_experience_title_size'] ?? '46px', '46px' );
+		$text_size            = self::format_css_size_value( $settings['customer_experience_text_size'] ?? '16px', '16px' );
+		$title_size_numeric   = self::extract_css_size_numeric( $title_size, 46 );
+		$text_size_numeric    = self::extract_css_size_numeric( $text_size, 16 );
 		$font_family          = self::format_font_family_css_value( $settings['customer_experience_font_family'] ?? '' );
-		$document_title_size  = max( 18, min( 32, (int) round( $title_size * 0.43 ) ) );
-		$document_note_size   = max( 12, min( 18, $text_size - 1 ) );
-		$summary_label_size   = max( 12, min( 16, $text_size - 3 ) );
-		$summary_value_size   = max( 15, min( 22, $text_size ) );
-		$summary_note_size    = max( 12, min( 16, $text_size - 4 ) );
+		$document_title_size  = max( 18, min( 32, (int) round( $title_size_numeric * 0.43 ) ) );
+		$document_note_size   = max( 12, min( 18, $text_size_numeric - 1 ) );
+		$summary_label_size   = max( 12, min( 16, $text_size_numeric - 3 ) );
+		$summary_value_size   = max( 15, min( 22, $text_size_numeric ) );
+		$summary_note_size    = max( 12, min( 16, $text_size_numeric - 4 ) );
 		$accent_soft          = self::build_alpha_color( $experience_accent, 0.12, 'rgba(215,138,47,.12)' );
 		$accent_border        = self::build_alpha_color( $experience_accent, 0.20, 'rgba(215,138,47,.2)' );
 		$accent_shadow        = self::build_alpha_color( $experience_accent, 0.20, 'rgba(215,138,47,.2)' );
@@ -3781,8 +3926,8 @@ class EOP_Post_Confirmation_Flow {
 				--eop-post-flow-side-bg: <?php echo esc_html( $experience_side ); ?>;
 				--eop-post-flow-hero-bg: <?php echo esc_html( $experience_hero ); ?>;
 				--eop-post-flow-font-family: <?php echo esc_html( $font_family ); ?>;
-				--eop-post-flow-title-size: <?php echo esc_html( $title_size ); ?>px;
-				--eop-post-flow-text-size: <?php echo esc_html( $text_size ); ?>px;
+				--eop-post-flow-title-size: <?php echo esc_html( $title_size ); ?>;
+				--eop-post-flow-text-size: <?php echo esc_html( $text_size ); ?>;
 				--eop-post-flow-button-radius: <?php echo esc_html( $button_radius ); ?>px;
 				--eop-post-flow-document-title-size: <?php echo esc_html( $document_title_size ); ?>px;
 				--eop-post-flow-document-note-size: <?php echo esc_html( $document_note_size ); ?>px;
@@ -3793,6 +3938,54 @@ class EOP_Post_Confirmation_Flow {
 			<?php echo self::get_post_flow_custom_style_rules( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 		</style>
 		<?php
+	}
+
+	private static function get_admin_flow_status_cards( $summary, $contract ) {
+		$summary                = is_array( $summary ) ? $summary : array();
+		$contract               = is_array( $contract ) ? $contract : array();
+		$order_data_total       = absint( $summary['order_data_total'] ?? 0 );
+		$order_data_filled      = absint( $summary['order_data_filled'] ?? 0 );
+		$attachment_required    = ! empty( $summary['attachment_required'] );
+		$products_editable      = absint( $summary['products_editable'] ?? 0 );
+		$products_completed     = absint( $summary['products_completed'] ?? 0 );
+		$order_data_confirmed   = $order_data_total > 0 && $order_data_filled >= $order_data_total;
+		$attachment_confirmed   = ! empty( $summary['attachment_uploaded'] );
+		$attachment_optional    = ! $attachment_required;
+		$products_confirmed     = $products_editable > 0 && $products_completed >= $products_editable;
+		$products_optional      = 0 === $products_editable;
+
+		return array(
+			array(
+				'label'  => __( 'Contrato', EOP_TEXT_DOMAIN ),
+				'value'  => ! empty( $contract['accepted'] ) ? __( 'Confirmado', EOP_TEXT_DOMAIN ) : __( 'Pendente', EOP_TEXT_DOMAIN ),
+				'detail' => ! empty( $contract['accepted_at'] ) ? (string) $contract['accepted_at'] : __( 'Aceite contratual', EOP_TEXT_DOMAIN ),
+				'tone'   => ! empty( $contract['accepted'] ) ? 'success' : 'warning',
+			),
+			array(
+				'label'  => __( 'Campos', EOP_TEXT_DOMAIN ),
+				'value'  => $order_data_confirmed ? __( 'Confirmado', EOP_TEXT_DOMAIN ) : __( 'Pendente', EOP_TEXT_DOMAIN ),
+				'detail' => $order_data_filled . '/' . $order_data_total,
+				'tone'   => $order_data_confirmed ? 'success' : 'info',
+			),
+			array(
+				'label'  => __( 'Anexo', EOP_TEXT_DOMAIN ),
+				'value'  => $attachment_confirmed ? __( 'Confirmado', EOP_TEXT_DOMAIN ) : ( $attachment_optional ? __( 'Opcional', EOP_TEXT_DOMAIN ) : __( 'Pendente', EOP_TEXT_DOMAIN ) ),
+				'detail' => $attachment_confirmed ? __( 'Arquivo registrado', EOP_TEXT_DOMAIN ) : ( $attachment_optional ? __( 'Nao obrigatorio', EOP_TEXT_DOMAIN ) : __( 'Aguardando envio', EOP_TEXT_DOMAIN ) ),
+				'tone'   => $attachment_confirmed ? 'success' : ( $attachment_optional ? 'neutral' : 'warning' ),
+			),
+			array(
+				'label'  => __( 'PDF final', EOP_TEXT_DOMAIN ),
+				'value'  => ! empty( $summary['final_pdf_ready'] ) ? __( 'Confirmado', EOP_TEXT_DOMAIN ) : __( 'Pendente', EOP_TEXT_DOMAIN ),
+				'detail' => ! empty( $summary['final_pdf_ready'] ) ? __( 'Gerado e salvo', EOP_TEXT_DOMAIN ) : __( 'Aguardando consolidacao', EOP_TEXT_DOMAIN ),
+				'tone'   => ! empty( $summary['final_pdf_ready'] ) ? 'success' : 'warning',
+			),
+			array(
+				'label'  => __( 'Produtos', EOP_TEXT_DOMAIN ),
+				'value'  => $products_confirmed ? __( 'Confirmado', EOP_TEXT_DOMAIN ) : ( $products_optional ? __( 'Opcional', EOP_TEXT_DOMAIN ) : __( 'Pendente', EOP_TEXT_DOMAIN ) ),
+				'detail' => $products_completed . '/' . $products_editable,
+				'tone'   => $products_confirmed ? 'success' : ( $products_optional ? 'neutral' : 'info' ),
+			),
+		);
 	}
 
 	private static function get_post_flow_custom_style_rules( $settings ) {
@@ -3847,16 +4040,43 @@ class EOP_Post_Confirmation_Flow {
 				continue;
 			}
 
-			$output .= $selector . '{';
+			$output .= self::normalize_post_flow_custom_selector( $selector ) . '{';
 
 			foreach ( $declarations as $property => $value ) {
-				$output .= $property . ':' . $value . ';';
+				$output .= $property . ':' . $value . ' !important;';
 			}
 
 			$output .= '}';
 		}
 
 		return $output;
+	}
+
+	private static function normalize_post_flow_custom_selector( $selector ) {
+		$selector = trim( (string) $selector );
+
+		if ( '' === $selector ) {
+			return '';
+		}
+
+		$parts      = array_filter( array_map( 'trim', explode( ',', $selector ) ) );
+		$normalized = array();
+
+		foreach ( $parts as $part ) {
+			if ( 0 === strpos( $part, '.eop-post-flow ' ) || 0 === strpos( $part, '.eop-post-flow.' ) ) {
+				$normalized[] = $part;
+				continue;
+			}
+
+			if ( 0 === strpos( $part, '.eop-post-flow--' ) ) {
+				$normalized[] = '.eop-post-flow' . $part;
+				continue;
+			}
+
+			$normalized[] = '.eop-post-flow ' . $part;
+		}
+
+		return implode( ', ', $normalized );
 	}
 
 	private static function format_post_flow_custom_style_value( $value, $field ) {
@@ -3871,12 +4091,42 @@ class EOP_Post_Confirmation_Flow {
 			return self::format_font_family_css_value( $value );
 		}
 
+		if ( 'size' === $type ) {
+			return self::format_css_size_value( $value, (string) $value );
+		}
+
 		if ( 'number' === $type ) {
 			$unit = (string) ( $field['unit'] ?? '' );
 			return '' !== $unit ? absint( $value ) . $unit : (string) absint( $value );
 		}
 
 		return preg_replace( '/[^a-zA-Z0-9#.%\s,\-():"_\/]/', '', $value );
+	}
+
+	private static function format_css_size_value( $value, $fallback = '16px' ) {
+		$value = is_string( $value ) ? trim( $value ) : '';
+
+		if ( '' === $value ) {
+			return (string) $fallback;
+		}
+
+		if ( preg_match( '/^\d+(?:\.\d+)?$/', $value ) ) {
+			return $value . 'px';
+		}
+
+		$normalized = preg_replace( '/[^0-9a-zA-Z#.%\s,\-()\/]/', '', $value );
+
+		return '' !== trim( (string) $normalized ) ? trim( (string) $normalized ) : (string) $fallback;
+	}
+
+	private static function extract_css_size_numeric( $value, $fallback = 16 ) {
+		$value = is_string( $value ) ? trim( $value ) : '';
+
+		if ( preg_match( '/^\s*(\d+(?:\.\d+)?)(px)?\s*$/i', $value, $matches ) ) {
+			return (float) $matches[1];
+		}
+
+		return (float) $fallback;
 	}
 
 	private static function format_font_family_css_value( $font_family ) {

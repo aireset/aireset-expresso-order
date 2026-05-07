@@ -2,6 +2,10 @@
 
 Todas as alteracoes relevantes do plugin `Aireset Expresso Order` devem ser registradas aqui.
 
+## 1.1.89 - 2026-05-07
+
+- a pagina contratual do fluxo complementar foi consolidada com editor visual mais granular no admin, preview publico mais fiel ao renderer real e ajustes de estilo/estrutura no frontend, no shell admin e na preparacao dos dados do contrato
+
 ## 1.1.88 - 2026-05-07
 
 - a tela `Visual da pagina contratual` ganhou editor em accordions com textos e estilos separados por parte da pagina: header, breadcrumbs, leitor do documento, cards de apoio/aceite, resumo lateral e botoes

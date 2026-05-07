@@ -205,7 +205,7 @@ class EOP_Public_Proposal {
         <?php endif; ?>
         <style>
             body{background:<?php echo esc_attr( $experience_bg ); ?>}
-            .eop-proposal-wrap{max-width:<?php echo esc_attr( $max_width ); ?>px;margin:32px auto;padding:0 16px 46px;font-family:<?php echo esc_attr( $experience_font_css ); ?>;font-size:<?php echo esc_attr( $base_font_size ); ?>px;color:<?php echo esc_attr( $experience_text ); ?>}
+            .eop-proposal-wrap{max-width:<?php echo esc_attr( $max_width ); ?>px;margin:32px auto;padding:0 16px 46px;font-family:<?php echo esc_attr( $experience_font_css ); ?>;font-size:<?php echo esc_attr( $base_font_size ); ?>;color:<?php echo esc_attr( $experience_text ); ?>}
             .eop-proposal-card{display:grid;gap:24px}
             .eop-proposal-hero{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:24px;padding:34px;border-radius:<?php echo esc_attr( max( 28, (int) $settings['border_radius'] + 8 ) ); ?>px;background:<?php echo esc_attr( $experience_hero_bg ); ?>;box-shadow:0 28px 68px rgba(15,27,53,.24)}
             .eop-proposal-hero::before{content:"";position:absolute;inset:auto -10% -25% auto;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,<?php echo esc_attr( self::with_alpha( $experience_accent, '0.28' ) ); ?>,transparent 70%)}
@@ -220,7 +220,7 @@ class EOP_Public_Proposal {
             .eop-proposal-status{background:<?php echo esc_attr( self::with_alpha( $experience_panel_bg, '0.18' ) ); ?>;color:<?php echo esc_attr( $experience_text ); ?>;border:1px solid <?php echo esc_attr( self::with_alpha( $settings['border_color'], '0.18' ) ); ?>}
             .eop-proposal-stage{background:<?php echo esc_attr( self::with_alpha( $experience_accent, '0.16' ) ); ?>;color:<?php echo esc_attr( $experience_text ); ?>;border:1px solid <?php echo esc_attr( self::with_alpha( $experience_accent, '0.28' ) ); ?>}
             .eop-proposal-eyebrow{display:block;color:<?php echo esc_attr( $experience_muted ); ?>;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}
-            .eop-proposal-title{margin:0;font-size:<?php echo esc_attr( $title_font_size ); ?>px;line-height:.98;letter-spacing:-.05em;color:<?php echo esc_attr( $experience_text ); ?>}
+            .eop-proposal-title{margin:0;font-size:<?php echo esc_attr( $title_font_size ); ?>;line-height:.98;letter-spacing:-.05em;color:<?php echo esc_attr( $experience_text ); ?>}
             .eop-proposal-text{margin:0;max-width:58ch;color:<?php echo esc_attr( $experience_muted ); ?>;font-size:16px;line-height:1.7}
             .eop-proposal-hero__aside{padding:24px;border-radius:28px;background:<?php echo esc_attr( self::with_alpha( $experience_side_bg, '0.9' ) ); ?>;border:1px solid <?php echo esc_attr( self::with_alpha( $settings['border_color'], '0.18' ) ); ?>;backdrop-filter:blur(10px)}
             .eop-proposal-hero__aside-label{color:<?php echo esc_attr( $experience_muted ); ?>;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
@@ -275,7 +275,7 @@ class EOP_Public_Proposal {
             .eop-proposal-wrap.is-flow-focus{max-width:<?php echo esc_attr( min( $max_width, 1040 ) ); ?>px;padding-bottom:34px}
             .eop-proposal-wrap.is-flow-focus .eop-proposal-card{gap:0}
             @media (max-width: 980px){.eop-proposal-hero,.eop-proposal-overview{grid-template-columns:1fr}.eop-proposal-overview__side{position:static}.eop-proposal-actions .eop-proposal-button{width:auto}}
-            @media (max-width: 720px){.eop-proposal-wrap{font-size:15px;padding:0 10px 30px}.eop-proposal-hero,.eop-proposal-section,.eop-proposal-summary-card{padding:20px;border-radius:24px}.eop-proposal-brandline{flex-direction:column}.eop-proposal-hero__meta{grid-template-columns:1fr}.eop-proposal-title{font-size:<?php echo esc_attr( max( 28, $title_font_size - 10 ) ); ?>px}.eop-proposal-item{grid-template-columns:1fr}.eop-proposal-item__media{width:88px;height:88px}.eop-proposal-item__summary{justify-items:start;text-align:left}.eop-proposal-item__meta{gap:8px}.eop-proposal-total{gap:10px}.eop-proposal-total__value strong{font-size:14px}}
+            @media (max-width: 720px){.eop-proposal-wrap{font-size:15px;padding:0 10px 30px}.eop-proposal-hero,.eop-proposal-section,.eop-proposal-summary-card{padding:20px;border-radius:24px}.eop-proposal-brandline{flex-direction:column}.eop-proposal-hero__meta{grid-template-columns:1fr}.eop-proposal-title{font-size:<?php echo esc_attr( self::responsive_preview_size( $title_font_size, '28px', -10 ) ); ?>}.eop-proposal-item{grid-template-columns:1fr}.eop-proposal-item__media{width:88px;height:88px}.eop-proposal-item__summary{justify-items:start;text-align:left}.eop-proposal-item__meta{gap:8px}.eop-proposal-total{gap:10px}.eop-proposal-total__value strong{font-size:14px}}
         </style>
         <div class="eop-proposal-wrap<?php echo $confirmed ? ' is-confirmed' : ''; ?><?php echo $is_flow_focus ? ' is-flow-focus' : ''; ?>">
             <div class="eop-proposal-card">
@@ -558,6 +558,16 @@ class EOP_Public_Proposal {
         <?php
 
         return (string) ob_get_clean();
+    }
+
+    private static function responsive_preview_size( $value, $fallback = '28px', $px_delta = 0 ) {
+        $value = is_string( $value ) ? trim( $value ) : '';
+
+        if ( preg_match( '/^\s*(\d+(?:\.\d+)?)px\s*$/i', $value, $matches ) ) {
+            return max( 0, (float) $matches[1] + (float) $px_delta ) . 'px';
+        }
+
+        return $fallback;
     }
 
     public static function get_admin_preview_srcdoc( $settings = array() ) {
@@ -1134,7 +1144,7 @@ class EOP_Public_Proposal {
             class="eop-proposal-wrap eop-proposal-wrap--preview"
             data-eop-proposal-preview-root
             style="<?php echo esc_attr( sprintf(
-                '--eop-preview-page-bg:%1$s;--eop-preview-hero-bg:%2$s;--eop-preview-panel-bg:%3$s;--eop-preview-side-bg:%4$s;--eop-preview-accent:%5$s;--eop-preview-text:%6$s;--eop-preview-muted:%7$s;--eop-preview-radius:%8$dpx;--eop-preview-font-family:%9$s;--eop-preview-max-width:%10$dpx;--eop-preview-title-size:%11$dpx;--eop-preview-text-size:%12$dpx;--eop-preview-brand-bg:%13$s;--eop-preview-panel-soft:%14$s;--eop-preview-border-soft:%15$s;--eop-preview-accent-soft:%16$s;--eop-preview-accent-border:%17$s;--eop-preview-accent-glow:%18$s;--eop-preview-accent-shadow:%19$s;',
+                '--eop-preview-page-bg:%1$s;--eop-preview-hero-bg:%2$s;--eop-preview-panel-bg:%3$s;--eop-preview-side-bg:%4$s;--eop-preview-accent:%5$s;--eop-preview-text:%6$s;--eop-preview-muted:%7$s;--eop-preview-radius:%8$dpx;--eop-preview-font-family:%9$s;--eop-preview-max-width:%10$dpx;--eop-preview-title-size:%11$s;--eop-preview-text-size:%12$s;--eop-preview-brand-bg:%13$s;--eop-preview-panel-soft:%14$s;--eop-preview-border-soft:%15$s;--eop-preview-accent-soft:%16$s;--eop-preview-accent-border:%17$s;--eop-preview-accent-glow:%18$s;--eop-preview-accent-shadow:%19$s;',
                 $page_bg,
                 $hero_bg,
                 $panel_bg,
@@ -1145,8 +1155,8 @@ class EOP_Public_Proposal {
                 $radius,
                 $font_css,
                 absint( $max_width ),
-                absint( $title_font_size ),
-                absint( $base_font_size ),
+                $title_font_size,
+                $base_font_size,
                 self::with_alpha( $panel_bg, '0.12' ),
                 self::with_alpha( $panel_bg, '0.18' ),
                 self::with_alpha( $settings['border_color'], '0.18' ),
@@ -1334,11 +1344,30 @@ class EOP_Public_Proposal {
         $font_css   = method_exists( 'EOP_Settings', 'get_font_css_family' ) ? EOP_Settings::get_font_css_family( $font_value ) : "'Segoe UI', sans-serif";
         $font_url   = method_exists( 'EOP_Settings', 'get_font_stylesheet_url' ) ? EOP_Settings::get_font_stylesheet_url( $font_value ) : '';
 
+        $normalize_size = static function ( $value, $fallback ) {
+            $value = is_string( $value ) ? trim( $value ) : '';
+
+            if ( '' === $value ) {
+                return (string) $fallback;
+            }
+
+            if ( preg_match( '/^\d+(?:\.\d+)?$/', $value ) ) {
+                return $value . 'px';
+            }
+
+            $normalized = preg_replace( '/[^0-9a-zA-Z#.%\s,\-()\/]/', '', $value );
+
+            return '' !== trim( (string) $normalized ) ? trim( (string) $normalized ) : (string) $fallback;
+        };
+
+        $base_font_size  = $normalize_size( $resolve( 'customer_experience_text_size', 'proposal_text_size', '16px' ), '16px' );
+        $title_font_size = $normalize_size( $resolve( 'customer_experience_title_size', 'proposal_title_size', '40px' ), '40px' );
+
         return array(
             'font_css'               => $font_css,
             'font_url'               => $font_url,
-            'base_font_size'         => max( 13, absint( $resolve( 'customer_experience_text_size', 'proposal_text_size', '16' ) ) ),
-            'title_font_size'        => max( 24, absint( $resolve( 'customer_experience_title_size', 'proposal_title_size', '40' ) ) ),
+            'base_font_size'         => $base_font_size,
+            'title_font_size'        => $title_font_size,
             'max_width'              => max( 720, absint( $settings['proposal_max_width'] ?? 1120 ) ),
             'background_css'         => self::build_background_css(
                 $resolve( 'customer_experience_background_mode', '', 'solid' ) === 'gradient' ? 'gradient' : 'solid',

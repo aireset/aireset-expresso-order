@@ -1,6 +1,6 @@
 .eop-settings-page {
   max-width: 1280px;
-  margin: 24px 0 0;
+  margin: 0;
 }
 .eop-settings-page,
 .eop-settings-page * {
@@ -238,6 +238,29 @@ body.eop-settings-screen .error {
 .eop-visual-editor {
   display: grid;
   gap: 14px;
+}
+
+.eop-visual-groups {
+  display: grid;
+  gap: 16px;
+}
+
+.eop-visual-group {
+  padding: 16px;
+  border: 1px solid #e7edff;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+}
+.eop-visual-group__head {
+  margin-bottom: 14px;
+}
+.eop-visual-group__head strong {
+  display: block;
+  color: #10265f;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .eop-visual-accordion {

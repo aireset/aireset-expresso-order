@@ -2,6 +2,10 @@
 
 Todas as alteracoes relevantes do plugin `Aireset Expresso Order` devem ser registradas aqui.
 
+## 1.1.87 - 2026-05-07
+
+- a tela `Visual da pagina de upload e produtos` ganhou editor em accordions com textos e estilos separados por parte da pagina: header, breadcrumbs, bloco de titulo, upload, produtos e botao principal
+
 ## 1.1.86 - 2026-05-07
 
 - adicionada a view `Visual da pagina de upload e produtos` no fluxo complementar, com controles para textos da etapa final e preview do upload/personalizacao

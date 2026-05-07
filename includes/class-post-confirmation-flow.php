@@ -1026,8 +1026,10 @@ class EOP_Post_Confirmation_Flow {
 			: __( 'Conclua a etapa atual para o fluxo continuar sem precisar voltar para esta proposta depois.', EOP_TEXT_DOMAIN );
 		$final_intro_title       = 'upload' === $stage ? trim( (string) ( $settings['post_confirmation_upload_title'] ?? '' ) ) : trim( (string) ( $settings['post_confirmation_products_title'] ?? '' ) );
 		$final_intro_description = 'upload' === $stage ? trim( (string) ( $settings['post_confirmation_upload_description'] ?? '' ) ) : trim( (string) ( $settings['post_confirmation_products_description'] ?? '' ) );
+		$final_intro_eyebrow    = trim( (string) ( $settings['post_confirmation_final_intro_eyebrow'] ?? '' ) );
 		$final_intro_title       = '' !== $final_intro_title ? $final_intro_title : __( 'Personalize os produtos do pedido', EOP_TEXT_DOMAIN );
 		$final_intro_description = '' !== $final_intro_description ? $final_intro_description : __( 'Envie o anexo do cliente e informe o novo nome de cada item liberado.', EOP_TEXT_DOMAIN );
+		$final_intro_eyebrow    = '' !== $final_intro_eyebrow ? $final_intro_eyebrow : __( 'Etapa final do pedido', EOP_TEXT_DOMAIN );
 		$wrapper_classes = array(
 			'eop-post-flow',
 			'eop-post-flow--stage-' . $stage,
@@ -1071,7 +1073,7 @@ class EOP_Post_Confirmation_Flow {
 
 					<?php if ( $is_final_step_stage ) : ?>
 						<div class="eop-post-flow__final-intro">
-							<span class="eop-post-flow__final-intro-eyebrow"><?php esc_html_e( 'Etapa final do pedido', EOP_TEXT_DOMAIN ); ?></span>
+							<span class="eop-post-flow__final-intro-eyebrow"><?php echo esc_html( $final_intro_eyebrow ); ?></span>
 							<h2 class="eop-post-flow__final-intro-title"><?php echo esc_html( $final_intro_title ); ?></h2>
 							<p class="eop-post-flow__final-intro-text"><?php echo esc_html( $final_intro_description ); ?></p>
 						</div>
@@ -2071,6 +2073,8 @@ class EOP_Post_Confirmation_Flow {
 		$brand_name = class_exists( 'EOP_PDF_Settings' ) ? (string) EOP_PDF_Settings::get( 'shop_name', get_bloginfo( 'name' ) ) : get_bloginfo( 'name' );
 		$brand_name = '' !== trim( $brand_name ) ? $brand_name : get_bloginfo( 'name' );
 		$logo_url   = ! empty( $settings['brand_logo_url'] ) ? esc_url_raw( (string) $settings['brand_logo_url'] ) : '';
+		$final_intro_eyebrow = trim( (string) ( $settings['post_confirmation_final_intro_eyebrow'] ?? '' ) );
+		$final_intro_eyebrow = '' !== $final_intro_eyebrow ? $final_intro_eyebrow : __( 'Etapa final do pedido', EOP_TEXT_DOMAIN );
 
 		if ( '' === $logo_url && class_exists( 'EOP_PDF_Settings' ) ) {
 			$logo_url = esc_url_raw( (string) EOP_PDF_Settings::get( 'shop_logo_url', '' ) );
@@ -2170,13 +2174,13 @@ class EOP_Post_Confirmation_Flow {
 				</div>
 				<?php self::render_stage_breadcrumb( $steps, 'upload' ); ?>
 			</div>
-			<div class="eop-post-flow__layout">
-				<div class="eop-post-flow__main">
-					<div class="eop-post-flow__final-intro">
-						<span class="eop-post-flow__final-intro-eyebrow"><?php esc_html_e( 'Etapa final do pedido', EOP_TEXT_DOMAIN ); ?></span>
-						<h2 class="eop-post-flow__final-intro-title"><?php echo esc_html( $settings['post_confirmation_upload_title'] ); ?></h2>
-						<p class="eop-post-flow__final-intro-text"><?php echo esc_html( $settings['post_confirmation_upload_description'] ); ?></p>
-					</div>
+					<div class="eop-post-flow__layout">
+						<div class="eop-post-flow__main">
+							<div class="eop-post-flow__final-intro">
+								<span class="eop-post-flow__final-intro-eyebrow"><?php echo esc_html( $final_intro_eyebrow ); ?></span>
+								<h2 class="eop-post-flow__final-intro-title"><?php echo esc_html( $settings['post_confirmation_upload_title'] ); ?></h2>
+								<p class="eop-post-flow__final-intro-text"><?php echo esc_html( $settings['post_confirmation_upload_description'] ); ?></p>
+							</div>
 					<div class="eop-post-flow__final-step-card">
 						<form method="post" enctype="multipart/form-data" class="eop-post-flow__form eop-post-flow__form--final-step">
 							<?php echo $markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
@@ -3786,8 +3790,90 @@ class EOP_Post_Confirmation_Flow {
 				--eop-post-flow-summary-value-size: <?php echo esc_html( $summary_value_size ); ?>px;
 				--eop-post-flow-summary-note-size: <?php echo esc_html( $summary_note_size ); ?>px;
 			}
+			<?php echo self::get_post_flow_custom_style_rules( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 		</style>
 		<?php
+	}
+
+	private static function get_post_flow_custom_style_rules( $settings ) {
+		if ( ! class_exists( 'EOP_Settings' ) || ! method_exists( 'EOP_Settings', 'get_post_confirmation_upload_products_style_sections' ) ) {
+			return '';
+		}
+
+		$sections = EOP_Settings::get_post_confirmation_upload_products_style_sections();
+		$rules    = array();
+
+		foreach ( $sections as $section ) {
+			foreach ( (array) ( $section['fields'] ?? array() ) as $field_key => $field ) {
+				if ( empty( $field['css'] ) ) {
+					continue;
+				}
+
+				$value = $settings[ $field_key ] ?? ( $field['default'] ?? '' );
+				$value = self::format_post_flow_custom_style_value( $value, $field );
+
+				if ( '' === $value ) {
+					continue;
+				}
+
+				foreach ( (array) $field['css'] as $css_map ) {
+					$selector = trim( (string) ( $css_map['selector'] ?? '' ) );
+					$property = trim( (string) ( $css_map['property'] ?? '' ) );
+
+					if ( '' === $selector || '' === $property ) {
+						continue;
+					}
+
+					if ( ! isset( $rules[ $selector ] ) ) {
+						$rules[ $selector ] = array();
+					}
+
+					$rules[ $selector ][ $property ] = $value;
+				}
+			}
+		}
+
+		if ( empty( $rules ) ) {
+			return '';
+		}
+
+		$output = '';
+
+		foreach ( $rules as $selector => $declarations ) {
+			if ( empty( $declarations ) ) {
+				continue;
+			}
+
+			$output .= $selector . '{';
+
+			foreach ( $declarations as $property => $value ) {
+				$output .= $property . ':' . $value . ';';
+			}
+
+			$output .= '}';
+		}
+
+		return $output;
+	}
+
+	private static function format_post_flow_custom_style_value( $value, $field ) {
+		$type  = (string) ( $field['type'] ?? 'text' );
+		$value = is_string( $value ) ? trim( $value ) : (string) $value;
+
+		if ( '' === $value ) {
+			return '';
+		}
+
+		if ( 'font' === $type ) {
+			return self::format_font_family_css_value( $value );
+		}
+
+		if ( 'number' === $type ) {
+			$unit = (string) ( $field['unit'] ?? '' );
+			return '' !== $unit ? absint( $value ) . $unit : (string) absint( $value );
+		}
+
+		return preg_replace( '/[^a-zA-Z0-9#.%\s,\-():"_\/]/', '', $value );
 	}
 
 	private static function format_font_family_css_value( $font_family ) {

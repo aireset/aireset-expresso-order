@@ -4,7 +4,7 @@ Plugin WordPress para operacao comercial com WooCommerce, focado em criacao rapi
 
 ## Versao atual
 
-`1.1.86`
+`1.1.87`
 
 ## Principais recursos
 

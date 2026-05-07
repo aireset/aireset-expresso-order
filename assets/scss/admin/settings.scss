@@ -278,6 +278,69 @@ body.eop-settings-screen {
   line-height: 1.5;
 }
 
+.eop-visual-editor {
+  display: grid;
+  gap: 14px;
+}
+
+.eop-visual-accordion {
+  overflow: hidden;
+  border: 1px solid #dfe6ff;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 14px 28px rgba(0, 3, 75, 0.04);
+
+  .eop-accordion__toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 18px 20px;
+    border: 0;
+    background: linear-gradient(180deg, #f9fbff 0%, #f2f6ff 100%);
+    color: #0f1b35;
+    text-align: left;
+    cursor: pointer;
+
+    > span:first-child {
+      display: grid;
+      gap: 4px;
+    }
+
+    strong {
+      font-size: 15px;
+      line-height: 1.3;
+    }
+
+    small {
+      color: #66768d;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+  }
+
+  .eop-accordion__icon {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid #d7def7;
+    color: #17327c;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .eop-accordion__body {
+    padding: 18px 20px 20px;
+    border-top: 1px solid #e6ecff;
+  }
+}
+
 .eop-settings-binary-source {
   display: none !important;
 }

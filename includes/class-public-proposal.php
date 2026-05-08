@@ -200,6 +200,50 @@ class EOP_Public_Proposal {
         $financial_eyebrow = self::normalize_customer_experience_copy( $financial_eyebrow, 'Fechamento', '' );
         $financial_title   = self::normalize_customer_experience_copy( $financial_title, 'Resumo financeiro', 'Resumo' );
 
+        return self::render_proposal_page_via_shared_renderer(
+            compact(
+                'order',
+                'totals',
+                'settings',
+                'theme',
+                'logo_url',
+                'confirmed',
+                'line_items',
+                'button_label',
+                'pay_label',
+                'confirm_state',
+                'payment_url',
+                'pdf_url',
+                'flow_enabled',
+                'current_flow_label',
+                'is_flow_focus',
+                'item_columns',
+                'item_labels',
+                'total_rows',
+                'show_sku',
+                'show_email',
+                'show_phone',
+                'show_notes',
+                'customer_name',
+                'experience_font_url',
+                'customer_note',
+                'experience_eyebrow',
+                'experience_title',
+                'experience_desc',
+                'total_label',
+                'total_note',
+                'items_eyebrow',
+                'items_title',
+                'summary_eyebrow',
+                'summary_title',
+                'financial_eyebrow',
+                'financial_title',
+                'actions_eyebrow',
+                'actions_title',
+                'show_line_total'
+            )
+        );
+
         ob_start();
         ?>
         <?php if ( ! wp_style_is( 'eop-frontend', 'enqueued' ) && ! wp_style_is( 'eop-frontend', 'done' ) ) : ?>
@@ -603,6 +647,8 @@ class EOP_Public_Proposal {
      * @return string
      */
     public static function get_admin_preview_srcdoc( $settings = array() ) {
+        return self::build_admin_preview_srcdoc_from_shared_renderer( $settings );
+
         $markup = self::render_admin_preview_markup( $settings );
 
         ob_start();
@@ -1180,6 +1226,28 @@ class EOP_Public_Proposal {
         $total_value = function_exists( 'wc_price' ) ? wc_price( 1499.9 ) : 'R$ 1.499,90';
         $discount_value = function_exists( 'wc_price' ) ? wc_price( 120 ) : 'R$ 120,00';
 
+        return self::render_admin_preview_markup_via_shared_renderer(
+            compact(
+                'settings',
+                'theme',
+                'logo_url',
+                'title',
+                'description',
+                'items_eyebrow',
+                'items_title',
+                'summary_eyebrow',
+                'summary_title',
+                'financial_eyebrow',
+                'financial_title',
+                'actions_eyebrow',
+                'actions_title',
+                'total_label',
+                'total_note',
+                'total_value',
+                'discount_value'
+            )
+        );
+
         ob_start();
         ?>
         <div
@@ -1361,6 +1429,441 @@ class EOP_Public_Proposal {
         </div>
         <?php
 
+        return (string) ob_get_clean();
+    }
+
+    private static function render_proposal_page_via_shared_renderer( $args ) {
+        $style_vars = self::get_shared_proposal_style_vars( $args['settings'], $args['theme'] );
+
+        $proposal_items = array();
+
+        foreach ( $args['line_items'] as $line_item ) {
+            $item      = $line_item['item'];
+            $product   = $line_item['product'];
+            $image_url = $product ? wp_get_attachment_image_url( $product->get_image_id(), 'medium' ) : '';
+
+            if ( ! $image_url ) {
+                $image_url = wc_placeholder_img_src( 'medium' );
+            }
+
+            $pills = array();
+
+            foreach ( $args['item_columns'] as $column ) {
+                if ( 'quantity' === $column['key'] ) {
+                    $pills[] = array( 'text' => sprintf( '%1$s: %2$s', $column['label'], $line_item['quantity'] ) );
+                } elseif ( 'unit_price' === $column['key'] ) {
+                    $pills[] = array( 'text' => sprintf( '%1$s: %2$s', $column['label'], wp_strip_all_tags( wc_price( $line_item['unit_price'] ) ) ) );
+                } elseif ( 'discount' === $column['key'] ) {
+                    $pills[] = array(
+                        'text'     => $column['label'] . ': ' . number_format_i18n( $line_item['discount_percent'], abs( $line_item['discount_percent'] - round( $line_item['discount_percent'] ) ) < 0.01 ? 0 : 2 ) . '%',
+                        'sub_text' => wp_strip_all_tags( wc_price( $line_item['discount_per_unit'] ) ) . ' / ' . __( 'un.', EOP_TEXT_DOMAIN ),
+                        'discount' => true,
+                    );
+                } elseif ( 'discounted_unit_price' === $column['key'] ) {
+                    $pills[] = array( 'text' => sprintf( '%1$s: %2$s', $column['label'], wp_strip_all_tags( wc_price( $line_item['discounted_unit_price'] ) ) ) );
+                }
+            }
+
+            if ( $args['show_sku'] && $product && $product->get_sku() ) {
+                $pills[] = array( 'text' => sprintf( __( 'SKU: %s', EOP_TEXT_DOMAIN ), $product->get_sku() ) );
+            }
+
+            $proposal_items[] = array(
+                'media_type'         => 'image',
+                'media_value'        => $image_url,
+                'media_alt'          => $item->get_name(),
+                'name'               => $item->get_name(),
+                'pills'              => $pills,
+                'summary_label'      => $args['show_line_total'] ? ( $args['item_labels']['line_total'] ?? __( 'Total', EOP_TEXT_DOMAIN ) ) : '',
+                'summary_value_html' => $args['show_line_total'] ? wc_price( $line_item['line_total'] ) : '',
+            );
+        }
+
+        $summary_rows = array(
+            array( 'label' => __( 'Pedido', EOP_TEXT_DOMAIN ), 'value' => '#' . $args['order']->get_id() ),
+            array( 'label' => __( 'Cliente', EOP_TEXT_DOMAIN ), 'value' => $args['customer_name'] ),
+        );
+
+        if ( $args['show_email'] && $args['order']->get_billing_email() ) {
+            $summary_rows[] = array( 'label' => __( 'E-mail', EOP_TEXT_DOMAIN ), 'value' => $args['order']->get_billing_email() );
+        }
+
+        if ( $args['show_phone'] && $args['order']->get_billing_phone() ) {
+            $summary_rows[] = array( 'label' => __( 'Telefone', EOP_TEXT_DOMAIN ), 'value' => $args['order']->get_billing_phone() );
+        }
+
+        $sidebar_cards = array(
+            array(
+                'type'    => 'meta',
+                'eyebrow' => '' !== $args['summary_eyebrow'] ? $args['summary_eyebrow'] : __( 'Contexto do pedido', EOP_TEXT_DOMAIN ),
+                'title'   => $args['summary_title'] ?: __( 'Contexto do pedido', EOP_TEXT_DOMAIN ),
+                'rows'    => $summary_rows,
+            ),
+        );
+
+        if ( ! empty( $args['total_rows'] ) ) {
+            $sidebar_cards[] = array(
+                'type'    => 'totals',
+                'eyebrow' => $args['financial_eyebrow'],
+                'title'   => $args['financial_title'] ?: __( 'Resumo', EOP_TEXT_DOMAIN ),
+                'rows'    => $args['total_rows'],
+            );
+        }
+
+        if ( ! $args['confirmed'] ) {
+            $actions = array(
+                array(
+                    'type'  => 'form_submit',
+                    'label' => $args['button_label'],
+                    'token' => $args['order']->get_meta( '_eop_public_token', true ),
+                ),
+            );
+
+            if ( $args['pdf_url'] ) {
+                $actions[] = array(
+                    'type'     => 'link',
+                    'label'    => __( 'Baixar PDF', EOP_TEXT_DOMAIN ),
+                    'url'      => $args['pdf_url'],
+                    'download' => $args['order']->get_id() . '.pdf',
+                );
+            }
+
+            $sidebar_cards[] = array(
+                'type'    => 'actions',
+                'eyebrow' => '' !== $args['actions_eyebrow'] ? $args['actions_eyebrow'] : __( 'Confirmacao da proposta', EOP_TEXT_DOMAIN ),
+                'title'   => $args['actions_title'] ?: __( 'Confirmacao da proposta', EOP_TEXT_DOMAIN ),
+                'actions' => $actions,
+            );
+        } elseif ( ! $args['flow_enabled'] && ( $args['payment_url'] || $args['pdf_url'] ) ) {
+            $actions = array();
+
+            if ( $args['payment_url'] ) {
+                $actions[] = array( 'type' => 'link', 'label' => $args['pay_label'], 'url' => $args['payment_url'] );
+            }
+
+            if ( $args['pdf_url'] ) {
+                $actions[] = array(
+                    'type'     => 'link',
+                    'label'    => __( 'Baixar PDF', EOP_TEXT_DOMAIN ),
+                    'url'      => $args['pdf_url'],
+                    'download' => $args['order']->get_id() . '.pdf',
+                );
+            }
+
+            $sidebar_cards[] = array(
+                'type'    => 'actions',
+                'eyebrow' => '' !== $args['actions_eyebrow'] ? $args['actions_eyebrow'] : __( 'Acoes rapidas', EOP_TEXT_DOMAIN ),
+                'title'   => $args['actions_title'] ?: __( 'Acoes rapidas', EOP_TEXT_DOMAIN ),
+                'actions' => $actions,
+            );
+        }
+
+        $main_notices = array();
+
+        if ( $args['show_notes'] && '' !== $args['customer_note'] ) {
+            $main_notices[] = array( 'type' => 'notes', 'label' => __( 'Observacoes', EOP_TEXT_DOMAIN ), 'text' => $args['customer_note'] );
+        }
+
+        if ( '1' === $args['confirm_state'] ) {
+            $main_notices[] = array( 'type' => 'success', 'text' => __( 'Proposta confirmada com sucesso.', EOP_TEXT_DOMAIN ) );
+        }
+
+        $layout_context = array(
+            'wrap_classes'    => array_filter( array( $args['confirmed'] ? 'is-confirmed' : '', $args['is_flow_focus'] ? 'is-flow-focus' : '' ) ),
+            'style_vars'      => $style_vars,
+            'logo_url'        => $args['logo_url'],
+            'hero_status'     => $args['confirmed'] ? __( 'Proposta confirmada', EOP_TEXT_DOMAIN ) : __( 'Aguardando confirmacao', EOP_TEXT_DOMAIN ),
+            'hero_stage'      => $args['current_flow_label'] ? sprintf( __( 'Etapa atual: %s', EOP_TEXT_DOMAIN ), $args['current_flow_label'] ) : '',
+            'eyebrow'         => $args['experience_eyebrow'],
+            'title'           => $args['experience_title'],
+            'description'     => $args['experience_desc'],
+            'total_label'     => '' !== $args['total_label'] ? $args['total_label'] : __( 'Total aprovado', EOP_TEXT_DOMAIN ),
+            'total_value_html'=> wc_price( $args['totals']['total'] ?? $args['order']->get_total() ),
+            'total_note'      => '' !== $args['total_note'] ? $args['total_note'] : __( 'Revise os itens e conclua a etapa atual para liberar o restante da jornada.', EOP_TEXT_DOMAIN ),
+            'hero_meta_items' => array(
+                array( 'label' => __( 'Pedido', EOP_TEXT_DOMAIN ), 'value' => '#' . $args['order']->get_id() ),
+                array( 'label' => __( 'Cliente', EOP_TEXT_DOMAIN ), 'value' => $args['customer_name'] ),
+            ),
+            'items_eyebrow'   => $args['items_eyebrow'],
+            'items_title'     => $args['items_title'] ?: __( 'Itens', EOP_TEXT_DOMAIN ),
+            'items'           => $proposal_items,
+            'main_notices'    => $main_notices,
+            'sidebar_cards'   => $sidebar_cards,
+            'after_markup'    => ( $args['confirmed'] && $args['flow_enabled'] ) ? EOP_Post_Confirmation_Flow::render_frontend_stage( $args['order'], $args['line_items'], $args['pdf_url'] ) : '',
+        );
+
+        ob_start();
+        if ( ! wp_style_is( 'eop-frontend', 'enqueued' ) && ! wp_style_is( 'eop-frontend', 'done' ) ) {
+            echo '<link rel="stylesheet" href="' . esc_url( EOP_PLUGIN_URL . 'assets/css/frontend.css?ver=' . EOP_VERSION ) . '">';
+        }
+        if ( $args['experience_font_url'] ) {
+            echo '<link rel="stylesheet" href="' . esc_url( $args['experience_font_url'] ) . '">';
+        }
+        echo '<style>body{background:' . esc_attr( $style_vars['page_bg'] ) . '}' . self::get_shared_proposal_stylesheet() . '</style>';
+
+        if ( $args['is_flow_focus'] ) {
+            echo self::render_shared_proposal_markup(
+                array(
+                    'wrap_classes' => array( 'is-flow-focus' ),
+                    'style_vars'   => $style_vars,
+                    'before_markup' => EOP_Post_Confirmation_Flow::render_frontend_stage( $args['order'], $args['line_items'], $args['pdf_url'] ),
+                )
+            ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        } else {
+            echo self::render_shared_proposal_markup( $layout_context ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        }
+
+        return (string) ob_get_clean();
+    }
+
+    private static function render_admin_preview_markup_via_shared_renderer( $args ) {
+        $style_vars = self::get_shared_proposal_style_vars( $args['settings'], $args['theme'] );
+
+        return self::render_shared_proposal_markup(
+            array(
+                'wrap_classes'    => array( 'eop-proposal-wrap--preview' ),
+                'style_vars'      => $style_vars,
+                'logo_url'        => $args['logo_url'],
+                'hero_status'     => __( 'Preview ao vivo', EOP_TEXT_DOMAIN ),
+                'hero_stage'      => __( 'Layout real', EOP_TEXT_DOMAIN ),
+                'eyebrow'         => '' !== $args['theme']['eyebrow'] ? $args['theme']['eyebrow'] : __( 'Experiencia do cliente', EOP_TEXT_DOMAIN ),
+                'title'           => $args['title'],
+                'description'     => $args['description'],
+                'total_label'     => $args['total_label'],
+                'total_value_html'=> $args['total_value'],
+                'total_note'      => $args['total_note'],
+                'hero_meta_items' => array(
+                    array( 'label' => __( 'Pedido', EOP_TEXT_DOMAIN ), 'value' => '#2026-048' ),
+                    array( 'label' => __( 'Cliente', EOP_TEXT_DOMAIN ), 'value' => __( 'Maria Oliveira', EOP_TEXT_DOMAIN ) ),
+                ),
+                'items_eyebrow'   => $args['items_eyebrow'],
+                'items_title'     => $args['items_title'],
+                'items'           => array(
+                    array(
+                        'media_type'         => 'text',
+                        'media_value'        => '01',
+                        'name'               => __( 'Kit Nutricao Intensa', EOP_TEXT_DOMAIN ),
+                        'pills'              => array(
+                            array( 'text' => __( 'SKU A-102', EOP_TEXT_DOMAIN ) ),
+                            array( 'text' => __( '2 unidades', EOP_TEXT_DOMAIN ) ),
+                        ),
+                        'summary_label'      => __( 'Subtotal', EOP_TEXT_DOMAIN ),
+                        'summary_value_html' => $args['total_value'],
+                    ),
+                    array(
+                        'media_type'         => 'text',
+                        'media_value'        => '02',
+                        'name'               => __( 'Serum Reparador', EOP_TEXT_DOMAIN ),
+                        'pills'              => array(
+                            array( 'text' => __( 'Brinde de campanha', EOP_TEXT_DOMAIN ) ),
+                            array( 'text' => __( 'Amostra', EOP_TEXT_DOMAIN ) ),
+                        ),
+                        'summary_label'      => __( 'Desconto', EOP_TEXT_DOMAIN ),
+                        'summary_value_html' => '- ' . $args['discount_value'],
+                    ),
+                ),
+                'sidebar_cards'   => array(
+                    array(
+                        'type'    => 'meta',
+                        'eyebrow' => $args['summary_eyebrow'],
+                        'title'   => $args['summary_title'],
+                        'rows'    => array(
+                            array( 'label' => __( 'Status', EOP_TEXT_DOMAIN ), 'value' => __( 'Aguardando confirmacao', EOP_TEXT_DOMAIN ) ),
+                            array( 'label' => __( 'Prazo', EOP_TEXT_DOMAIN ), 'value' => __( 'Entrega em ate 3 dias uteis', EOP_TEXT_DOMAIN ) ),
+                        ),
+                    ),
+                    array(
+                        'type'    => 'totals',
+                        'eyebrow' => $args['financial_eyebrow'],
+                        'title'   => $args['financial_title'],
+                        'rows'    => array(
+                            array( 'label' => __( 'Subtotal', EOP_TEXT_DOMAIN ), 'main_value' => wp_strip_all_tags( $args['total_value'] ), 'sub_value' => __( 'Valor base dos itens', EOP_TEXT_DOMAIN ), 'class' => '' ),
+                            array( 'label' => __( 'Desconto', EOP_TEXT_DOMAIN ), 'main_value' => '- ' . wp_strip_all_tags( $args['discount_value'] ), 'sub_value' => __( 'Campanha aplicada', EOP_TEXT_DOMAIN ), 'class' => '' ),
+                            array( 'label' => __( 'Total', EOP_TEXT_DOMAIN ), 'main_value' => wp_strip_all_tags( $args['total_value'] ), 'sub_value' => __( 'Valor final exibido ao cliente', EOP_TEXT_DOMAIN ), 'class' => 'is-grand' ),
+                        ),
+                    ),
+                    array(
+                        'type'    => 'actions',
+                        'eyebrow' => $args['actions_eyebrow'],
+                        'title'   => $args['actions_title'],
+                        'actions' => array(
+                            array( 'type' => 'button', 'label' => $args['settings']['proposal_button_label'] ),
+                            array( 'type' => 'button', 'label' => $args['settings']['proposal_pay_button_label'], 'secondary' => true ),
+                        ),
+                        'note'    => __( 'Este bloco simula a jornada publica com a mesma hierarquia visual usada pelo cliente.', EOP_TEXT_DOMAIN ),
+                    ),
+                ),
+            )
+        );
+    }
+
+    private static function build_admin_preview_srcdoc_from_shared_renderer( $settings ) {
+        $markup = self::render_admin_preview_markup( $settings );
+        ob_start();
+        ?>
+<!doctype html>
+<html <?php language_attributes(); ?>>
+<head>
+    <meta charset="<?php bloginfo( 'charset' ); ?>">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        html,body{margin:0;padding:0;background:#f4f7ff}
+        body{font-family:'Segoe UI',sans-serif}
+        .eop-proposal-preview-frame{padding:22px;background:#f4f7ff}
+        <?php echo self::get_shared_proposal_stylesheet(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+        @media (max-width:720px){.eop-proposal-preview-frame{padding:12px}}
+    </style>
+</head>
+<body>
+    <div class="eop-proposal-preview-frame">
+        <?php echo $markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+    </div>
+</body>
+</html>
+        <?php
+        return (string) ob_get_clean();
+    }
+
+    private static function get_shared_proposal_style_vars( $settings, $theme ) {
+        $hero_text_color      = self::get_contrast_text_color( $theme['hero_base_color'], '#16243a', '#ffffff' );
+        $hero_muted_color     = self::with_alpha( $hero_text_color, '#ffffff' === strtolower( $hero_text_color ) ? '0.78' : '0.70' );
+        $hero_chip_background = '#ffffff' === strtolower( $hero_text_color ) ? 'rgba(255, 255, 255, 0.16)' : 'rgba(15, 27, 53, 0.08)';
+        $hero_chip_text       = $hero_text_color;
+        $pill_text_color      = self::get_contrast_text_color( $theme['accent_color'], '#16243a', '#ffffff' );
+
+        return array(
+            'page_bg'                 => $theme['background_css'],
+            'hero_bg'                 => $theme['hero_background_css'],
+            'panel_bg'                => $theme['panel_background_css'],
+            'side_bg'                 => $theme['sidebar_background_css'],
+            'accent'                  => $theme['accent_color'],
+            'text'                    => $theme['text_color'],
+            'muted'                   => $theme['muted_color'],
+            'radius'                  => absint( $settings['border_radius'] ),
+            'font_css'                => $theme['font_css'],
+            'max_width'               => absint( $theme['max_width'] ),
+            'title_font_size'         => $theme['title_font_size'],
+            'base_font_size'          => $theme['base_font_size'],
+            'brand_bg'                => self::with_alpha( $theme['panel_background_css'], '0.12' ),
+            'panel_soft'              => self::with_alpha( $theme['panel_background_css'], '0.18' ),
+            'border_soft'             => self::with_alpha( $settings['border_color'], '0.18' ),
+            'accent_soft'             => self::with_alpha( $theme['accent_color'], '0.12' ),
+            'accent_border'           => self::with_alpha( $theme['accent_color'], '0.28' ),
+            'accent_glow'             => self::with_alpha( $theme['accent_color'], '0.28' ),
+            'accent_shadow'           => self::with_alpha( $theme['accent_color'], '0.20' ),
+            'hero_text'               => $hero_text_color,
+            'hero_muted'              => $hero_muted_color,
+            'hero_chip_bg'            => $hero_chip_background,
+            'hero_chip_text'          => $hero_chip_text,
+            'pill_text'               => $pill_text_color,
+            'flow_focus_max_width'    => min( absint( $theme['max_width'] ), 1040 ),
+            'title_font_size_mobile'  => self::responsive_preview_size( $theme['title_font_size'], '28px', -10 ),
+        );
+    }
+
+    private static function build_shared_proposal_inline_style( $style_vars ) {
+        return sprintf(
+            '--eop-preview-page-bg:%1$s;--eop-preview-hero-bg:%2$s;--eop-preview-panel-bg:%3$s;--eop-preview-side-bg:%4$s;--eop-preview-accent:%5$s;--eop-preview-text:%6$s;--eop-preview-muted:%7$s;--eop-preview-radius:%8$dpx;--eop-preview-font-family:%9$s;--eop-preview-max-width:%10$dpx;--eop-preview-title-size:%11$s;--eop-preview-text-size:%12$s;--eop-preview-brand-bg:%13$s;--eop-preview-panel-soft:%14$s;--eop-preview-border-soft:%15$s;--eop-preview-accent-soft:%16$s;--eop-preview-accent-border:%17$s;--eop-preview-accent-glow:%18$s;--eop-preview-accent-shadow:%19$s;--eop-preview-hero-text:%20$s;--eop-preview-hero-muted:%21$s;--eop-preview-hero-chip-bg:%22$s;--eop-preview-hero-chip-text:%23$s;--eop-preview-pill-text:%24$s;--eop-preview-flow-focus-max-width:%25$dpx;--eop-preview-title-size-mobile:%26$s;',
+            $style_vars['page_bg'],
+            $style_vars['hero_bg'],
+            $style_vars['panel_bg'],
+            $style_vars['side_bg'],
+            $style_vars['accent'],
+            $style_vars['text'],
+            $style_vars['muted'],
+            $style_vars['radius'],
+            $style_vars['font_css'],
+            $style_vars['max_width'],
+            $style_vars['title_font_size'],
+            $style_vars['base_font_size'],
+            $style_vars['brand_bg'],
+            $style_vars['panel_soft'],
+            $style_vars['border_soft'],
+            $style_vars['accent_soft'],
+            $style_vars['accent_border'],
+            $style_vars['accent_glow'],
+            $style_vars['accent_shadow'],
+            $style_vars['hero_text'],
+            $style_vars['hero_muted'],
+            $style_vars['hero_chip_bg'],
+            $style_vars['hero_chip_text'],
+            $style_vars['pill_text'],
+            $style_vars['flow_focus_max_width'],
+            $style_vars['title_font_size_mobile']
+        );
+    }
+
+    private static function get_shared_proposal_stylesheet() {
+        return '.eop-proposal-wrap{max-width:var(--eop-preview-max-width,1120px);margin:32px auto;padding:0 16px 46px;font-family:var(--eop-preview-font-family,\'Segoe UI\',sans-serif);font-size:var(--eop-preview-text-size,16px);color:var(--eop-preview-text,#16243a)}.eop-proposal-card{display:grid;gap:24px}.eop-proposal-hero{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:24px;padding:34px;border-radius:calc(var(--eop-preview-radius,18px) + 10px);background:var(--eop-preview-hero-bg,#0f1b35);box-shadow:0 28px 68px rgba(15,27,53,.24)}.eop-proposal-hero::before{content:\"\";position:absolute;inset:auto -10% -30% auto;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,var(--eop-preview-accent-glow,rgba(215,138,47,.28)),transparent 70%)}.eop-proposal-hero > *{position:relative;z-index:1}.eop-proposal-hero__main,.eop-proposal-hero__aside{display:grid;gap:18px;align-content:start}.eop-proposal-brandline{display:flex;align-items:flex-start;gap:18px}.eop-proposal-brand{display:flex;align-items:center;justify-content:center;min-width:110px;min-height:90px;padding:16px 18px;border-radius:26px;background:var(--eop-preview-brand-bg,rgba(255,255,255,.12));border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));backdrop-filter:blur(10px)}.eop-proposal-brand img,.eop-proposal-logo{display:block;max-width:210px;max-height:60px;object-fit:contain}.eop-proposal-brand__fallback{color:var(--eop-preview-hero-text,#fff);font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center}.eop-proposal-hero__copy{display:grid;gap:12px;max-width:640px}.eop-proposal-hero__top{display:flex;flex-wrap:wrap;gap:10px}.eop-proposal-status,.eop-proposal-stage{display:inline-flex;align-items:center;min-height:38px;padding:0 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.eop-proposal-status{background:var(--eop-preview-hero-chip-bg,rgba(255,255,255,.16));color:var(--eop-preview-hero-chip-text,#fff);border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18))}.eop-proposal-stage{background:var(--eop-preview-accent-soft,rgba(215,138,47,.22));color:var(--eop-preview-hero-chip-text,#fff);border:1px solid var(--eop-preview-accent-border,rgba(215,138,47,.28))}.eop-proposal-eyebrow{display:block;color:var(--eop-preview-hero-muted,rgba(255,255,255,.78));font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}.eop-proposal-title{margin:0;font-size:var(--eop-preview-title-size,46px);line-height:.98;letter-spacing:-.05em;color:var(--eop-preview-hero-text,#fff)}.eop-proposal-text{margin:0;max-width:58ch;color:var(--eop-preview-hero-muted,rgba(255,255,255,.78));font-size:var(--eop-preview-text-size,16px);line-height:1.7}.eop-proposal-hero__aside{padding:24px;border-radius:28px;background:var(--eop-preview-side-bg,#f6f8fc);border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));backdrop-filter:blur(10px)}.eop-proposal-hero__aside-label{color:var(--eop-preview-muted,#66768d);display:block;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}.eop-proposal-hero__aside strong{font-size:44px;line-height:.95;letter-spacing:-.06em;color:var(--eop-preview-text,#16243a)}.eop-proposal-hero__aside p{margin:0;color:var(--eop-preview-text,#16243a);line-height:1.65}.eop-proposal-hero__meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:4px}.eop-proposal-hero__meta-item{padding:14px 16px;border-radius:20px;background:var(--eop-preview-panel-bg,#fff);border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18))}.eop-proposal-hero__meta-item span{display:block;color:var(--eop-preview-muted,#66768d);font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}.eop-proposal-hero__meta-item strong{display:block;margin-top:7px;font-size:18px;line-height:1.2;color:var(--eop-preview-text,#16243a)}.eop-proposal-overview{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:24px;align-items:start}.eop-proposal-overview__main,.eop-proposal-overview__side{display:grid;gap:18px}.eop-proposal-overview__side{position:sticky;top:18px}.eop-proposal-section,.eop-proposal-summary-card{padding:24px;border-radius:28px;border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));box-shadow:0 18px 38px rgba(15,27,53,.08)}.eop-proposal-section{background:var(--eop-preview-panel-bg,#fff)}.eop-proposal-summary-card{background:var(--eop-preview-side-bg,#f6f8fc)}.eop-proposal-section__head{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:18px}.eop-proposal-section__eyebrow,.eop-proposal-summary-card__eyebrow{display:block;margin-bottom:6px;color:var(--eop-preview-muted,#66768d);font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}.eop-proposal-section__head h2,.eop-proposal-summary-card h2{margin:0;font-size:26px;line-height:1.06;letter-spacing:-.04em;color:var(--eop-preview-text,#16243a)}.eop-proposal-meta{display:grid;gap:12px}.eop-proposal-meta p{display:grid;gap:6px;margin:0;padding:14px 16px;border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));border-radius:18px;background:var(--eop-preview-panel-bg,#fff)}.eop-proposal-meta strong{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--eop-preview-muted,#66768d)}.eop-proposal-items{display:grid;gap:14px}.eop-proposal-item{display:grid;grid-template-columns:108px minmax(0,1fr) auto;gap:18px;align-items:center;padding:18px;border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));border-radius:24px;background:var(--eop-preview-panel-bg,#fff)}.eop-proposal-item__media{width:108px;height:108px;border-radius:24px;overflow:hidden;background:var(--eop-preview-side-bg,#f6f8fc);border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:var(--eop-preview-muted,#66768d)}.eop-proposal-item__media img{display:block;width:100%;height:100%;object-fit:cover}.eop-proposal-item__body{min-width:0}.eop-proposal-item__name{margin:0 0 8px;font-size:23px;line-height:1.18;color:var(--eop-preview-text,#16243a)}.eop-proposal-item__meta{display:flex;flex-wrap:wrap;gap:8px 12px;color:var(--eop-preview-muted,#66768d);font-size:14px}.eop-proposal-item__pill{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;background:var(--eop-preview-accent-soft,rgba(215,138,47,.12));color:var(--eop-preview-pill-text,#1a2550);font-weight:700;line-height:1.2;white-space:nowrap;max-width:100%}.eop-proposal-item__pill--discount{display:grid;gap:2px;align-items:flex-start;padding:9px 12px;white-space:normal;border-radius:18px}.eop-proposal-item__pill-main{font-size:13px;line-height:1.2}.eop-proposal-item__pill-sub{font-size:12px;line-height:1.25;color:var(--eop-preview-muted,#66768d)}.eop-proposal-item__summary{display:grid;gap:6px;min-width:150px;justify-items:end;text-align:right}.eop-proposal-item__summary span{font-size:13px;color:var(--eop-preview-muted,#66768d);text-transform:uppercase;letter-spacing:.08em;font-weight:700}.eop-proposal-item__summary strong{font-size:30px;line-height:1;color:var(--eop-preview-text,#16243a)}.eop-proposal-notes{padding:18px;border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));border-radius:22px;background:var(--eop-preview-panel-bg,#fff)}.eop-proposal-notes span{display:block;margin-bottom:8px;color:var(--eop-preview-muted,#66768d);font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}.eop-proposal-notes p{margin:0;color:var(--eop-preview-text,#16243a)}.eop-proposal-totals{display:grid;gap:2px}.eop-proposal-total{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:9px 0;color:var(--eop-preview-text,#16243a)}.eop-proposal-total.is-grand{font-size:20px;font-weight:800;border-top:2px solid var(--eop-preview-accent,#d78a2f);margin-top:8px;padding-top:12px}.eop-proposal-total__value{display:grid;justify-items:end;gap:2px;text-align:right}.eop-proposal-total__value strong{font-size:15px;line-height:1.1;color:var(--eop-preview-text,#16243a)}.eop-proposal-total__value small{font-size:12px;line-height:1.25;color:var(--eop-preview-muted,#66768d)}.eop-proposal-button{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 22px;border:none;border-radius:var(--eop-preview-radius,18px);background:var(--eop-preview-accent,#d78a2f);color:#fff;text-decoration:none;font-weight:700;cursor:pointer;box-shadow:0 16px 30px var(--eop-preview-accent-shadow,rgba(215,138,47,.2))}.eop-proposal-button--secondary{background:var(--eop-preview-side-bg,#f6f8fc);color:var(--eop-preview-text,#16243a);box-shadow:none;border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18))}.eop-proposal-actions{display:flex;flex-wrap:wrap;gap:12px}.eop-proposal-actions form{display:flex;width:100%}.eop-proposal-actions .eop-proposal-button{width:100%}.eop-proposal-note{margin:0;padding:14px 16px;border-radius:18px;background:#ecfdf5;border:1px solid #bbf7d0;color:#166534}.eop-proposal-wrap.is-flow-focus{max-width:var(--eop-preview-flow-focus-max-width,1040px);padding-bottom:34px}.eop-proposal-wrap.is-flow-focus .eop-proposal-card{gap:0}@media (max-width:980px){.eop-proposal-hero,.eop-proposal-overview{grid-template-columns:1fr}.eop-proposal-overview__side{position:static}.eop-proposal-actions .eop-proposal-button{width:auto}}@media (max-width:720px){.eop-proposal-wrap{font-size:15px;padding:0 10px 30px}.eop-proposal-hero,.eop-proposal-section,.eop-proposal-summary-card{padding:20px;border-radius:24px}.eop-proposal-brandline{flex-direction:column}.eop-proposal-hero__meta{grid-template-columns:1fr}.eop-proposal-title{font-size:var(--eop-preview-title-size-mobile,28px)}.eop-proposal-item{grid-template-columns:1fr}.eop-proposal-item__media{width:86px;height:86px}.eop-proposal-item__summary{justify-items:start;text-align:left}.eop-proposal-total{gap:10px}.eop-proposal-total__value strong{font-size:14px}}';
+    }
+
+    private static function render_shared_proposal_markup( $context ) {
+        $wrap_classes = isset( $context['wrap_classes'] ) && is_array( $context['wrap_classes'] ) ? $context['wrap_classes'] : array();
+        $style_attr   = self::build_shared_proposal_inline_style( $context['style_vars'] ?? array() );
+
+        ob_start();
+        ?>
+        <div class="eop-proposal-wrap <?php echo esc_attr( trim( implode( ' ', $wrap_classes ) ) ); ?>" style="<?php echo esc_attr( $style_attr ); ?>">
+            <div class="eop-proposal-card">
+                <?php if ( ! empty( $context['before_markup'] ) ) : ?>
+                    <?php echo $context['before_markup']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                <?php else : ?>
+                    <div class="eop-proposal-hero">
+                        <div class="eop-proposal-hero__main">
+                            <div class="eop-proposal-brandline">
+                                <div class="eop-proposal-brand<?php echo empty( $context['logo_url'] ) ? ' is-empty' : ''; ?>">
+                                    <?php if ( ! empty( $context['logo_url'] ) ) : ?>
+                                        <img class="eop-proposal-logo" src="<?php echo esc_url( $context['logo_url'] ); ?>" alt="">
+                                    <?php else : ?>
+                                        <span class="eop-proposal-brand__fallback"><?php esc_html_e( 'Marca da loja', EOP_TEXT_DOMAIN ); ?></span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="eop-proposal-hero__copy">
+                                    <div class="eop-proposal-hero__top">
+                                        <?php if ( ! empty( $context['hero_status'] ) ) : ?><div class="eop-proposal-status"><?php echo esc_html( $context['hero_status'] ); ?></div><?php endif; ?>
+                                        <?php if ( ! empty( $context['hero_stage'] ) ) : ?><div class="eop-proposal-stage"><?php echo esc_html( $context['hero_stage'] ); ?></div><?php endif; ?>
+                                    </div>
+                                    <?php if ( ! empty( $context['eyebrow'] ) ) : ?><span class="eop-proposal-eyebrow"><?php echo esc_html( $context['eyebrow'] ); ?></span><?php endif; ?>
+                                    <h1 class="eop-proposal-title"><?php echo esc_html( $context['title'] ?? '' ); ?></h1>
+                                    <p class="eop-proposal-text"><?php echo esc_html( $context['description'] ?? '' ); ?></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="eop-proposal-hero__aside">
+                            <span class="eop-proposal-hero__aside-label"><?php echo esc_html( $context['total_label'] ?? '' ); ?></span>
+                            <strong><?php echo wp_kses_post( $context['total_value_html'] ?? '' ); ?></strong>
+                            <p><?php echo esc_html( $context['total_note'] ?? '' ); ?></p>
+                            <?php if ( ! empty( $context['hero_meta_items'] ) ) : ?><div class="eop-proposal-hero__meta"><?php foreach ( $context['hero_meta_items'] as $meta_item ) : ?><div class="eop-proposal-hero__meta-item"><span><?php echo esc_html( $meta_item['label'] ?? '' ); ?></span><strong><?php echo esc_html( $meta_item['value'] ?? '' ); ?></strong></div><?php endforeach; ?></div><?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="eop-proposal-overview">
+                        <div class="eop-proposal-overview__main">
+                            <section class="eop-proposal-section">
+                                <div class="eop-proposal-section__head"><div><?php if ( ! empty( $context['items_eyebrow'] ) ) : ?><span class="eop-proposal-section__eyebrow"><?php echo esc_html( $context['items_eyebrow'] ); ?></span><?php endif; ?><h2><?php echo esc_html( $context['items_title'] ?? '' ); ?></h2></div></div>
+                                <div class="eop-proposal-items">
+                                    <?php foreach ( ( $context['items'] ?? array() ) as $item ) : ?>
+                                        <article class="eop-proposal-item">
+                                            <div class="eop-proposal-item__media"><?php if ( 'image' === ( $item['media_type'] ?? '' ) ) : ?><img src="<?php echo esc_url( $item['media_value'] ?? '' ); ?>" alt="<?php echo esc_attr( $item['media_alt'] ?? '' ); ?>"><?php else : ?><?php echo esc_html( $item['media_value'] ?? '' ); ?><?php endif; ?></div>
+                                            <div class="eop-proposal-item__body">
+                                                <h3 class="eop-proposal-item__name"><?php echo esc_html( $item['name'] ?? '' ); ?></h3>
+                                                <?php if ( ! empty( $item['pills'] ) ) : ?><div class="eop-proposal-item__meta"><?php foreach ( $item['pills'] as $pill ) : ?><?php if ( ! empty( $pill['discount'] ) ) : ?><div class="eop-proposal-item__pill eop-proposal-item__pill--discount"><strong class="eop-proposal-item__pill-main"><?php echo esc_html( $pill['text'] ?? '' ); ?></strong><?php if ( ! empty( $pill['sub_text'] ) ) : ?><small class="eop-proposal-item__pill-sub"><?php echo esc_html( $pill['sub_text'] ); ?></small><?php endif; ?></div><?php else : ?><span class="eop-proposal-item__pill"><?php echo esc_html( $pill['text'] ?? '' ); ?></span><?php endif; ?><?php endforeach; ?></div><?php endif; ?>
+                                            </div>
+                                            <?php if ( ! empty( $item['summary_label'] ) || ! empty( $item['summary_value_html'] ) ) : ?><div class="eop-proposal-item__summary"><span><?php echo esc_html( $item['summary_label'] ?? '' ); ?></span><strong><?php echo wp_kses_post( $item['summary_value_html'] ?? '' ); ?></strong></div><?php endif; ?>
+                                        </article>
+                                    <?php endforeach; ?>
+                                </div>
+                            </section>
+                            <?php foreach ( ( $context['main_notices'] ?? array() ) as $notice ) : ?><?php if ( 'notes' === ( $notice['type'] ?? '' ) ) : ?><section class="eop-proposal-section"><div class="eop-proposal-notes"><span><?php echo esc_html( $notice['label'] ?? '' ); ?></span><p><?php echo esc_html( $notice['text'] ?? '' ); ?></p></div></section><?php elseif ( 'success' === ( $notice['type'] ?? '' ) ) : ?><p class="eop-proposal-note"><?php echo esc_html( $notice['text'] ?? '' ); ?></p><?php endif; ?><?php endforeach; ?>
+                        </div>
+                        <aside class="eop-proposal-overview__side">
+                            <?php foreach ( ( $context['sidebar_cards'] ?? array() ) as $card ) : ?><section class="eop-proposal-summary-card"><?php if ( ! empty( $card['eyebrow'] ) ) : ?><span class="eop-proposal-summary-card__eyebrow"><?php echo esc_html( $card['eyebrow'] ); ?></span><?php endif; ?><h2><?php echo esc_html( $card['title'] ?? '' ); ?></h2><?php if ( 'meta' === ( $card['type'] ?? '' ) ) : ?><div class="eop-proposal-meta" style="margin-top:16px"><?php foreach ( ( $card['rows'] ?? array() ) as $row ) : ?><p><strong><?php echo esc_html( $row['label'] ?? '' ); ?></strong><span><?php echo esc_html( $row['value'] ?? '' ); ?></span></p><?php endforeach; ?></div><?php elseif ( 'totals' === ( $card['type'] ?? '' ) ) : ?><div class="eop-proposal-totals" style="margin-top:16px"><?php foreach ( ( $card['rows'] ?? array() ) as $row ) : ?><div class="eop-proposal-total <?php echo esc_attr( $row['class'] ?? '' ); ?>"><span><?php echo esc_html( $row['label'] ?? '' ); ?></span><?php if ( ! empty( $row['main_value'] ) ) : ?><div class="eop-proposal-total__value"><strong><?php echo esc_html( $row['main_value'] ); ?></strong><?php if ( ! empty( $row['sub_value'] ) ) : ?><small><?php echo esc_html( $row['sub_value'] ); ?></small><?php endif; ?></div><?php else : ?><span><?php echo wp_kses_post( $row['value'] ?? '' ); ?></span><?php endif; ?></div><?php endforeach; ?></div><?php elseif ( 'actions' === ( $card['type'] ?? '' ) ) : ?><div class="eop-proposal-actions" style="margin-top:16px"><?php foreach ( ( $card['actions'] ?? array() ) as $action ) : ?><?php if ( 'form_submit' === ( $action['type'] ?? '' ) ) : ?><form method="post"><?php wp_nonce_field( 'eop_confirm_proposal', 'eop_confirm_proposal_nonce' ); ?><input type="hidden" name="eop_proposal_token" value="<?php echo esc_attr( $action['token'] ?? '' ); ?>" /><button type="submit" class="eop-proposal-button<?php echo ! empty( $action['secondary'] ) ? ' eop-proposal-button--secondary' : ''; ?>"><?php echo esc_html( $action['label'] ?? '' ); ?></button></form><?php elseif ( 'link' === ( $action['type'] ?? '' ) ) : ?><a class="eop-proposal-button<?php echo ! empty( $action['secondary'] ) ? ' eop-proposal-button--secondary' : ''; ?>" href="<?php echo esc_url( $action['url'] ?? '' ); ?>"<?php echo ! empty( $action['download'] ) ? ' download="' . esc_attr( $action['download'] ) . '"' : ''; ?>><?php echo esc_html( $action['label'] ?? '' ); ?></a><?php else : ?><button type="button" class="eop-proposal-button<?php echo ! empty( $action['secondary'] ) ? ' eop-proposal-button--secondary' : ''; ?>"><?php echo esc_html( $action['label'] ?? '' ); ?></button><?php endif; ?><?php endforeach; ?></div><?php if ( ! empty( $card['note'] ) ) : ?><p class="eop-proposal-note" style="margin-top:16px"><?php echo esc_html( $card['note'] ); ?></p><?php endif; ?><?php endif; ?></section><?php endforeach; ?>
+                        </aside>
+                    </div>
+                <?php endif; ?>
+                <?php if ( ! empty( $context['after_markup'] ) ) : ?><?php echo $context['after_markup']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><?php endif; ?>
+            </div>
+        </div>
+        <?php
         return (string) ob_get_clean();
     }
 

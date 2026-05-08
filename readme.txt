@@ -33,6 +33,9 @@ Basta ter o WooCommerce ativo e o plugin instalado; as configuracoes de pedido e
 
 == Upgrade Notice ==
 
+= 1.1.92 =
+* Ajustes na renderizacao publica da proposta e refinamento do resumo administrativo com novo renderer compartilhado.
+
 = 1.1.91 =
 * Ajustes no fluxo de proposta pública e suporte a novos templates de configurações de confirmação.
 

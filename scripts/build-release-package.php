@@ -36,6 +36,7 @@ $excludedFiles = [
     '.gitignore',
     'ADMIN_UI_BRAND.md',
     'AGENT.md',
+    'ARCHITECTURE_MODERNIZATION_ROADMAP.md',
     'CHANGELOG.md',
     'package.json',
     'README.md',

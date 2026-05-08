@@ -2,6 +2,10 @@
 
 Todas as alteracoes relevantes do plugin `Aireset Expresso Order` devem ser registradas aqui.
 
+## 1.1.92 - 2026-05-07
+
+- ajustes na renderização pública da proposta e refinamento do resumo administrativo com novo renderer compartilhado
+
 ## 1.1.91 - 2026-05-07
 
 - ajustes na proposta pública e inclusão de novos templates de configuração para confirmação de pedidos e documentos

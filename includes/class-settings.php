@@ -86,7 +86,7 @@ class EOP_Settings {
             $defaults[ 'post_confirmation_document_' . $slot . '_placeholder' ] = '';
         }
 
-        return array_merge(
+        $defaults = array_merge(
             $defaults,
             array(
                 'enable_post_confirmation_flow'             => 'no',
@@ -102,7 +102,7 @@ class EOP_Settings {
                 'post_confirmation_require_attachment'      => 'yes',
                 'post_confirmation_upload_title'            => __( 'Envie o arquivo solicitado', EOP_TEXT_DOMAIN ),
                 'post_confirmation_upload_description'      => __( 'Aceitamos arquivos JPG, PNG ou PDF.', EOP_TEXT_DOMAIN ),
-                'post_confirmation_final_intro_eyebrow'    => __( 'Etapa final do pedido', EOP_TEXT_DOMAIN ),
+                'post_confirmation_final_intro_eyebrow'     => __( 'Etapa final do pedido', EOP_TEXT_DOMAIN ),
                 'post_confirmation_upload_field_label'      => __( 'Arquivo', EOP_TEXT_DOMAIN ),
                 'post_confirmation_upload_button_label'     => __( 'Enviar arquivo', EOP_TEXT_DOMAIN ),
                 'post_confirmation_products_title'          => __( 'Personalize os nomes dos produtos', EOP_TEXT_DOMAIN ),
@@ -115,6 +115,14 @@ class EOP_Settings {
         );
 
         foreach ( array_merge( self::get_post_confirmation_contract_style_sections(), self::get_post_confirmation_upload_products_style_sections() ) as $section ) {
+            foreach ( $section['fields'] as $field_key => $field ) {
+                if ( array_key_exists( 'default', $field ) ) {
+                    $defaults[ $field_key ] = $field['default'];
+                }
+            }
+        }
+
+        foreach ( self::get_order_link_visual_sections() as $section ) {
             foreach ( $section['fields'] as $field_key => $field ) {
                 if ( array_key_exists( 'default', $field ) ) {
                     $defaults[ $field_key ] = $field['default'];
@@ -244,6 +252,15 @@ class EOP_Settings {
         foreach ( array_merge( self::get_post_confirmation_contract_style_sections(), self::get_post_confirmation_upload_products_style_sections() ) as $section ) {
             foreach ( $section['fields'] as $field_key => $field ) {
                 $sanitized[ $field_key ] = self::sanitize_post_confirmation_visual_field(
+                    $input[ $field_key ] ?? ( $defaults[ $field_key ] ?? '' ),
+                    $field
+                );
+            }
+        }
+
+        foreach ( self::get_order_link_visual_sections() as $section ) {
+            foreach ( $section['fields'] as $field_key => $field ) {
+                $sanitized[ $field_key ] = self::sanitize_order_link_visual_field(
                     $input[ $field_key ] ?? ( $defaults[ $field_key ] ?? '' ),
                     $field
                 );
@@ -655,6 +672,36 @@ class EOP_Settings {
         }
     }
 
+    private static function sanitize_order_link_visual_field( $value, $definition ) {
+        $type    = (string) ( $definition['type'] ?? 'text' );
+        $default = $definition['default'] ?? '';
+
+        switch ( $type ) {
+            case 'color':
+                return self::sanitize_color( $value, $default );
+            case 'font':
+                return self::sanitize_font_family( $value, $default );
+            case 'size':
+                return self::sanitize_css_size_value( $value, $default );
+            case 'number':
+                $min = isset( $definition['min'] ) ? (int) $definition['min'] : 0;
+                $max = isset( $definition['max'] ) ? (int) $definition['max'] : 9999;
+                return (string) max( $min, min( $max, absint( $value ) ) );
+            case 'select':
+                $choices = array_keys( (array) ( $definition['choices'] ?? array() ) );
+                $value   = (string) $value;
+                return in_array( $value, $choices, true ) ? $value : (string) $default;
+            case 'box':
+                return self::sanitize_css_box_value( $value, $default );
+            case 'shadow':
+                return self::sanitize_css_shadow_value( $value, $default );
+            case 'textarea':
+                return sanitize_textarea_field( $value );
+            default:
+                return sanitize_text_field( $value );
+        }
+    }
+
     private static function sanitize_css_box_value( $value, $default = '0' ) {
         $value = is_string( $value ) ? trim( wp_strip_all_tags( $value ) ) : '';
 
@@ -952,13 +999,51 @@ class EOP_Settings {
         return array(
             array(
                 'label'       => __( 'Conteudo da pagina publica', EOP_TEXT_DOMAIN ),
-                'description' => __( 'Edite os textos principais do link do pedido e dos botoes mostrados ao cliente.', EOP_TEXT_DOMAIN ),
+                'description' => __( 'Edite os textos principais da experiencia publica, dos cards laterais e dos botoes mostrados ao cliente.', EOP_TEXT_DOMAIN ),
                 'expanded'    => true,
                 'fields'      => array(
-                    'proposal_title'            => array( 'label' => __( 'Titulo da proposta', EOP_TEXT_DOMAIN ), 'type' => 'text', 'full' => true, 'group' => __( 'Titulo', EOP_TEXT_DOMAIN ) ),
-                    'proposal_description'      => array( 'label' => __( 'Descricao da proposta', EOP_TEXT_DOMAIN ), 'type' => 'textarea', 'full' => true, 'group' => __( 'Descricao', EOP_TEXT_DOMAIN ) ),
-                    'proposal_button_label'     => array( 'label' => __( 'Texto do botao da proposta', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Botoes', EOP_TEXT_DOMAIN ) ),
-                    'proposal_pay_button_label' => array( 'label' => __( 'Texto do botao de pagamento', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Botoes', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_eyebrow'         => array( 'label' => __( 'Etiqueta superior', EOP_TEXT_DOMAIN ), 'type' => 'text', 'full' => true, 'group' => __( 'Hero principal', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_title'           => array( 'label' => __( 'Titulo principal', EOP_TEXT_DOMAIN ), 'type' => 'text', 'full' => true, 'group' => __( 'Hero principal', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_description'     => array( 'label' => __( 'Descricao principal', EOP_TEXT_DOMAIN ), 'type' => 'textarea', 'full' => true, 'group' => __( 'Hero principal', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_total_label'     => array( 'label' => __( 'Label do resumo em destaque', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Hero lateral', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_total_note'      => array( 'label' => __( 'Texto de apoio do resumo', EOP_TEXT_DOMAIN ), 'type' => 'textarea', 'full' => true, 'group' => __( 'Hero lateral', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_items_eyebrow'   => array( 'label' => __( 'Etiqueta da lista de itens', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Lista de itens', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_items_title'     => array( 'label' => __( 'Titulo da lista de itens', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Lista de itens', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_summary_eyebrow' => array( 'label' => __( 'Etiqueta do card de contexto', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Cards laterais', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_summary_title'   => array( 'label' => __( 'Titulo do card de contexto', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Cards laterais', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_financial_eyebrow' => array( 'label' => __( 'Etiqueta do card financeiro', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Cards laterais', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_financial_title' => array( 'label' => __( 'Titulo do card financeiro', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Cards laterais', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_actions_eyebrow' => array( 'label' => __( 'Etiqueta do card de acoes', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Cards laterais', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_actions_title'   => array( 'label' => __( 'Titulo do card de acoes', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Cards laterais', EOP_TEXT_DOMAIN ) ),
+                    'proposal_button_label'               => array( 'label' => __( 'Texto do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Botoes', EOP_TEXT_DOMAIN ) ),
+                    'proposal_pay_button_label'           => array( 'label' => __( 'Texto do botao secundario', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Botoes', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_alert_note'      => array( 'label' => __( 'Texto do alerta/observacao', EOP_TEXT_DOMAIN ), 'type' => 'textarea', 'full' => true, 'group' => __( 'Alertas', EOP_TEXT_DOMAIN ), 'default' => __( 'Este bloco simula a jornada publica com a mesma hierarquia visual usada pelo cliente.', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_success_message' => array( 'label' => __( 'Mensagem de sucesso', EOP_TEXT_DOMAIN ), 'type' => 'text', 'full' => true, 'group' => __( 'Alertas', EOP_TEXT_DOMAIN ), 'default' => __( 'Proposta confirmada com sucesso.', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_notes_label'     => array( 'label' => __( 'Label das observacoes', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Alertas', EOP_TEXT_DOMAIN ), 'default' => __( 'Observacoes', EOP_TEXT_DOMAIN ) ),
+                ),
+            ),
+            array(
+                'label'       => __( 'Textos operacionais', EOP_TEXT_DOMAIN ),
+                'description' => __( 'Ajuste labels de status, resumo financeiro e textos demonstrativos que aparecem no preview e na pagina publica.', EOP_TEXT_DOMAIN ),
+                'expanded'    => false,
+                'fields'      => array(
+                    'customer_experience_preview_status_label'      => array( 'label' => __( 'Texto do selo 1 no preview', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Preview', EOP_TEXT_DOMAIN ), 'default' => __( 'Preview ao vivo', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_preview_stage_label'       => array( 'label' => __( 'Texto do selo 2 no preview', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Preview', EOP_TEXT_DOMAIN ), 'default' => __( 'Layout real', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_pending_status_text'       => array( 'label' => __( 'Status pendente', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Status reais', EOP_TEXT_DOMAIN ), 'default' => __( 'Aguardando confirmacao', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_confirmed_status_text'     => array( 'label' => __( 'Status confirmado', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Status reais', EOP_TEXT_DOMAIN ), 'default' => __( 'Proposta confirmada', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_stage_prefix'              => array( 'label' => __( 'Prefixo da etapa atual', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Status reais', EOP_TEXT_DOMAIN ), 'default' => __( 'Etapa atual:', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_order_label'               => array( 'label' => __( 'Label do pedido', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Resumo e meta', EOP_TEXT_DOMAIN ), 'default' => __( 'Pedido', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_customer_label'            => array( 'label' => __( 'Label do cliente', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Resumo e meta', EOP_TEXT_DOMAIN ), 'default' => __( 'Cliente', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_meta_status_label'         => array( 'label' => __( 'Label de status no card de contexto', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Resumo e meta', EOP_TEXT_DOMAIN ), 'default' => __( 'Status', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_meta_status_value_preview' => array( 'label' => __( 'Status demonstrativo do preview', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Resumo e meta', EOP_TEXT_DOMAIN ), 'default' => __( 'Aguardando confirmacao', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_meta_deadline_label'       => array( 'label' => __( 'Label de prazo no preview', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Resumo e meta', EOP_TEXT_DOMAIN ), 'default' => __( 'Prazo', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_meta_deadline_value_preview' => array( 'label' => __( 'Prazo demonstrativo do preview', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Resumo e meta', EOP_TEXT_DOMAIN ), 'default' => __( 'Entrega em ate 3 dias uteis', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_subtotal_label'            => array( 'label' => __( 'Label de subtotal', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Resumo financeiro', EOP_TEXT_DOMAIN ), 'default' => __( 'Subtotal', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_subtotal_note'             => array( 'label' => __( 'Texto auxiliar do subtotal', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Resumo financeiro', EOP_TEXT_DOMAIN ), 'default' => __( 'Valor base dos itens', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_discount_label'            => array( 'label' => __( 'Label de desconto', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Resumo financeiro', EOP_TEXT_DOMAIN ), 'default' => __( 'Desconto', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_discount_note'             => array( 'label' => __( 'Texto auxiliar do desconto', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Resumo financeiro', EOP_TEXT_DOMAIN ), 'default' => __( 'Campanha aplicada', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_total_row_label'           => array( 'label' => __( 'Label do total final', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Resumo financeiro', EOP_TEXT_DOMAIN ), 'default' => __( 'Total', EOP_TEXT_DOMAIN ) ),
+                    'customer_experience_total_row_note'            => array( 'label' => __( 'Texto auxiliar do total final', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Resumo financeiro', EOP_TEXT_DOMAIN ), 'default' => __( 'Valor final exibido ao cliente', EOP_TEXT_DOMAIN ) ),
                 ),
             ),
             array(
@@ -980,17 +1065,53 @@ class EOP_Settings {
                 ),
             ),
             array(
-                'label'       => __( 'Pagina publica do cliente', EOP_TEXT_DOMAIN ),
-                'description' => __( 'Controle as cores, a largura e a tipografia base do preview exibido para o cliente.', EOP_TEXT_DOMAIN ),
+                'label'       => __( 'Tipografia, botoes e alertas', EOP_TEXT_DOMAIN ),
+                'description' => __( 'Controle melhor contraste, tamanhos, pesos e o visual dos botoes e caixas de alerta.', EOP_TEXT_DOMAIN ),
                 'expanded'    => false,
                 'fields'      => array(
-                    'proposal_background_color' => array( 'label' => __( 'Fundo da pagina', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#f5f7ff', 'group' => __( 'Container', EOP_TEXT_DOMAIN ) ),
-                    'proposal_card_color'       => array( 'label' => __( 'Fundo do card', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'group' => __( 'Container', EOP_TEXT_DOMAIN ) ),
-                    'proposal_max_width'        => array( 'label' => __( 'Largura maxima da proposta', EOP_TEXT_DOMAIN ), 'type' => 'number', 'min' => 720, 'max' => 1600, 'group' => __( 'Container', EOP_TEXT_DOMAIN ) ),
-                    'proposal_text_color'       => array( 'label' => __( 'Texto principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#172033', 'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ) ),
-                    'proposal_muted_color'      => array( 'label' => __( 'Texto auxiliar', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#5b6474', 'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ) ),
-                    'proposal_title_size'       => array( 'label' => __( 'Tamanho do titulo', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ) ),
-                    'proposal_text_size'        => array( 'label' => __( 'Tamanho do texto base', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ) ),
+                    'proposal_background_color'                      => array( 'label' => __( 'Fundo da pagina', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#f5f7ff', 'group' => __( 'Container', EOP_TEXT_DOMAIN ) ),
+                    'proposal_card_color'                            => array( 'label' => __( 'Fundo do card base', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'group' => __( 'Container', EOP_TEXT_DOMAIN ) ),
+                    'proposal_max_width'                             => array( 'label' => __( 'Largura maxima da proposta', EOP_TEXT_DOMAIN ), 'type' => 'number', 'min' => 720, 'max' => 1600, 'group' => __( 'Container', EOP_TEXT_DOMAIN ) ),
+                    'proposal_text_color'                            => array( 'label' => __( 'Texto principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#172033', 'group' => __( 'Tipografia base', EOP_TEXT_DOMAIN ) ),
+                    'proposal_muted_color'                           => array( 'label' => __( 'Texto auxiliar', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#5b6474', 'group' => __( 'Tipografia base', EOP_TEXT_DOMAIN ) ),
+                    'proposal_title_size'                            => array( 'label' => __( 'Tamanho do titulo da proposta', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Tipografia base', EOP_TEXT_DOMAIN ), 'default' => '40px' ),
+                    'proposal_text_size'                             => array( 'label' => __( 'Tamanho do texto base', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Tipografia base', EOP_TEXT_DOMAIN ), 'default' => '16px' ),
+                    'customer_experience_hero_text_color'            => array( 'label' => __( 'Cor do texto no hero escuro', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Contraste do hero', EOP_TEXT_DOMAIN ), 'default' => '#ffffff' ),
+                    'customer_experience_hero_muted_color'           => array( 'label' => __( 'Cor auxiliar no hero escuro', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Contraste do hero', EOP_TEXT_DOMAIN ), 'default' => 'rgba(255,255,255,0.78)' ),
+                    'customer_experience_chip_font_size'             => array( 'label' => __( 'Tamanho dos selos do topo', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Contraste do hero', EOP_TEXT_DOMAIN ), 'default' => '12px' ),
+                    'customer_experience_chip_font_weight'           => array( 'label' => __( 'Peso dos selos do topo', EOP_TEXT_DOMAIN ), 'type' => 'select', 'group' => __( 'Contraste do hero', EOP_TEXT_DOMAIN ), 'default' => '800', 'choices' => array( '600' => '600', '700' => '700', '800' => '800', '900' => '900' ) ),
+                    'customer_experience_eyebrow_size'               => array( 'label' => __( 'Tamanho da etiqueta superior', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Hero principal', EOP_TEXT_DOMAIN ), 'default' => '11px' ),
+                    'customer_experience_title_size'                 => array( 'label' => __( 'Tamanho do titulo principal', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Hero principal', EOP_TEXT_DOMAIN ), 'default' => '46px' ),
+                    'customer_experience_title_line_height'          => array( 'label' => __( 'Line-height do titulo principal', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Hero principal', EOP_TEXT_DOMAIN ), 'default' => '0.98' ),
+                    'customer_experience_title_font_weight'          => array( 'label' => __( 'Peso do titulo principal', EOP_TEXT_DOMAIN ), 'type' => 'select', 'group' => __( 'Hero principal', EOP_TEXT_DOMAIN ), 'default' => '800', 'choices' => array( '600' => '600', '700' => '700', '800' => '800', '900' => '900' ) ),
+                    'customer_experience_text_line_height'           => array( 'label' => __( 'Line-height do texto base', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Hero principal', EOP_TEXT_DOMAIN ), 'default' => '1.7' ),
+                    'customer_experience_section_title_size'         => array( 'label' => __( 'Tamanho dos titulos dos blocos', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Blocos e cards', EOP_TEXT_DOMAIN ), 'default' => '26px' ),
+                    'customer_experience_section_title_font_weight'  => array( 'label' => __( 'Peso dos titulos dos blocos', EOP_TEXT_DOMAIN ), 'type' => 'select', 'group' => __( 'Blocos e cards', EOP_TEXT_DOMAIN ), 'default' => '800', 'choices' => array( '600' => '600', '700' => '700', '800' => '800', '900' => '900' ) ),
+                    'customer_experience_item_title_size'            => array( 'label' => __( 'Tamanho do titulo dos itens', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Blocos e cards', EOP_TEXT_DOMAIN ), 'default' => '23px' ),
+                    'customer_experience_item_title_font_weight'     => array( 'label' => __( 'Peso do titulo dos itens', EOP_TEXT_DOMAIN ), 'type' => 'select', 'group' => __( 'Blocos e cards', EOP_TEXT_DOMAIN ), 'default' => '700', 'choices' => array( '600' => '600', '700' => '700', '800' => '800', '900' => '900' ) ),
+                    'customer_experience_primary_button_background_color' => array( 'label' => __( 'Fundo do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Botao principal', EOP_TEXT_DOMAIN ), 'default' => '#d78a2f' ),
+                    'customer_experience_primary_button_text_color'  => array( 'label' => __( 'Texto do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Botao principal', EOP_TEXT_DOMAIN ), 'default' => '#ffffff' ),
+                    'customer_experience_button_font_size'           => array( 'label' => __( 'Tamanho da fonte do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Botao principal', EOP_TEXT_DOMAIN ), 'default' => '16px' ),
+                    'customer_experience_button_line_height'         => array( 'label' => __( 'Line-height do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Botao principal', EOP_TEXT_DOMAIN ), 'default' => '1' ),
+                    'customer_experience_button_font_weight'         => array( 'label' => __( 'Peso do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'select', 'group' => __( 'Botao principal', EOP_TEXT_DOMAIN ), 'default' => '700', 'choices' => array( '500' => '500', '600' => '600', '700' => '700', '800' => '800' ) ),
+                    'customer_experience_button_padding'             => array( 'label' => __( 'Padding do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'box', 'group' => __( 'Botao principal', EOP_TEXT_DOMAIN ), 'default' => '0 22px' ),
+                    'customer_experience_button_radius'              => array( 'label' => __( 'Radius do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'size', 'group' => __( 'Botao principal', EOP_TEXT_DOMAIN ), 'default' => '18px' ),
+                    'customer_experience_button_shadow'              => array( 'label' => __( 'Sombra do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'shadow', 'group' => __( 'Botao principal', EOP_TEXT_DOMAIN ), 'default' => '0 16px 30px rgba(215, 138, 47, .20)' ),
+                    'customer_experience_secondary_button_background_color' => array( 'label' => __( 'Fundo do botao secundario', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Botao secundario', EOP_TEXT_DOMAIN ), 'default' => '#f6f8fc' ),
+                    'customer_experience_secondary_button_text_color' => array( 'label' => __( 'Texto do botao secundario', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Botao secundario', EOP_TEXT_DOMAIN ), 'default' => '#16243a' ),
+                    'customer_experience_secondary_button_border_color' => array( 'label' => __( 'Borda do botao secundario', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Botao secundario', EOP_TEXT_DOMAIN ), 'default' => '#dbe3f0' ),
+                    'customer_experience_secondary_button_font_size' => array( 'label' => __( 'Tamanho da fonte do botao secundario', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Botao secundario', EOP_TEXT_DOMAIN ), 'default' => '16px' ),
+                    'customer_experience_secondary_button_line_height' => array( 'label' => __( 'Line-height do botao secundario', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Botao secundario', EOP_TEXT_DOMAIN ), 'default' => '1' ),
+                    'customer_experience_secondary_button_font_weight' => array( 'label' => __( 'Peso do botao secundario', EOP_TEXT_DOMAIN ), 'type' => 'select', 'group' => __( 'Botao secundario', EOP_TEXT_DOMAIN ), 'default' => '700', 'choices' => array( '500' => '500', '600' => '600', '700' => '700', '800' => '800' ) ),
+                    'customer_experience_secondary_button_padding'   => array( 'label' => __( 'Padding do botao secundario', EOP_TEXT_DOMAIN ), 'type' => 'box', 'group' => __( 'Botao secundario', EOP_TEXT_DOMAIN ), 'default' => '0 22px' ),
+                    'customer_experience_secondary_button_radius'    => array( 'label' => __( 'Radius do botao secundario', EOP_TEXT_DOMAIN ), 'type' => 'size', 'group' => __( 'Botao secundario', EOP_TEXT_DOMAIN ), 'default' => '18px' ),
+                    'customer_experience_alert_background_color'     => array( 'label' => __( 'Fundo do alerta', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Alerta visual', EOP_TEXT_DOMAIN ), 'default' => '#ecfdf5' ),
+                    'customer_experience_alert_border_color'         => array( 'label' => __( 'Borda do alerta', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Alerta visual', EOP_TEXT_DOMAIN ), 'default' => '#bbf7d0' ),
+                    'customer_experience_alert_text_color'           => array( 'label' => __( 'Texto do alerta', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Alerta visual', EOP_TEXT_DOMAIN ), 'default' => '#166534' ),
+                    'customer_experience_alert_font_size'            => array( 'label' => __( 'Tamanho da fonte do alerta', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Alerta visual', EOP_TEXT_DOMAIN ), 'default' => '15px' ),
+                    'customer_experience_alert_line_height'          => array( 'label' => __( 'Line-height do alerta', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Alerta visual', EOP_TEXT_DOMAIN ), 'default' => '1.6' ),
+                    'customer_experience_alert_radius'               => array( 'label' => __( 'Radius do alerta', EOP_TEXT_DOMAIN ), 'type' => 'size', 'group' => __( 'Alerta visual', EOP_TEXT_DOMAIN ), 'default' => '18px' ),
+                    'customer_experience_alert_padding'              => array( 'label' => __( 'Padding do alerta', EOP_TEXT_DOMAIN ), 'type' => 'box', 'group' => __( 'Alerta visual', EOP_TEXT_DOMAIN ), 'default' => '14px 16px' ),
                 ),
             ),
         );
@@ -1139,6 +1260,12 @@ class EOP_Settings {
                 <input id="<?php echo esc_attr( $input_id ); ?>" class="select_font eop-font-field" type="text" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[<?php echo esc_attr( $field_key ); ?>]" value="<?php echo esc_attr( (string) $value ); ?>" />
             <?php elseif ( 'textarea' === $field_type ) : ?>
                 <textarea id="<?php echo esc_attr( $input_id ); ?>" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[<?php echo esc_attr( $field_key ); ?>]"><?php echo esc_textarea( (string) $value ); ?></textarea>
+            <?php elseif ( 'select' === $field_type ) : ?>
+                <select id="<?php echo esc_attr( $input_id ); ?>" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[<?php echo esc_attr( $field_key ); ?>]">
+                    <?php foreach ( (array) ( $field['choices'] ?? array() ) as $choice_value => $choice_label ) : ?>
+                        <option value="<?php echo esc_attr( (string) $choice_value ); ?>"<?php selected( (string) $value, (string) $choice_value ); ?>><?php echo esc_html( (string) $choice_label ); ?></option>
+                    <?php endforeach; ?>
+                </select>
             <?php elseif ( 'number' === $field_type ) : ?>
                 <input id="<?php echo esc_attr( $input_id ); ?>" type="number" min="<?php echo esc_attr( (string) ( $field['min'] ?? 0 ) ); ?>" max="<?php echo esc_attr( (string) ( $field['max'] ?? 9999 ) ); ?>" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[<?php echo esc_attr( $field_key ); ?>]" value="<?php echo esc_attr( (string) $value ); ?>" />
             <?php else : ?>

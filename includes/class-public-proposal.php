@@ -243,336 +243,6 @@ class EOP_Public_Proposal {
                 'show_line_total'
             )
         );
-
-        ob_start();
-        ?>
-        <?php if ( ! wp_style_is( 'eop-frontend', 'enqueued' ) && ! wp_style_is( 'eop-frontend', 'done' ) ) : ?>
-            <link rel="stylesheet" href="<?php echo esc_url( EOP_PLUGIN_URL . 'assets/css/frontend.css?ver=' . EOP_VERSION ); ?>">
-        <?php endif; ?>
-        <?php if ( $experience_font_url ) : ?>
-            <link rel="stylesheet" href="<?php echo esc_url( $experience_font_url ); ?>">
-        <?php endif; ?>
-        <style>
-            body{background:<?php echo esc_attr( $experience_bg ); ?>}
-            .eop-proposal-wrap{max-width:<?php echo esc_attr( $max_width ); ?>px;margin:32px auto;padding:0 16px 46px;font-family:<?php echo esc_attr( $experience_font_css ); ?>;font-size:<?php echo esc_attr( $base_font_size ); ?>;color:<?php echo esc_attr( $experience_text ); ?>}
-            .eop-proposal-card{display:grid;gap:24px}
-            .eop-proposal-hero{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:24px;padding:34px;border-radius:<?php echo esc_attr( max( 28, (int) $settings['border_radius'] + 8 ) ); ?>px;background:<?php echo esc_attr( $experience_hero_bg ); ?>;box-shadow:0 28px 68px rgba(15,27,53,.24)}
-            .eop-proposal-hero::before{content:"";position:absolute;inset:auto -10% -25% auto;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,<?php echo esc_attr( self::with_alpha( $experience_accent, '0.28' ) ); ?>,transparent 70%)}
-            .eop-proposal-hero > *{position:relative;z-index:1}
-            .eop-proposal-hero__main,.eop-proposal-hero__aside{display:grid;gap:18px;align-content:start}
-            .eop-proposal-brandline{display:flex;align-items:flex-start;gap:18px}
-            .eop-proposal-brand{display:flex;align-items:center;justify-content:center;min-width:110px;min-height:90px;padding:16px 18px;border-radius:26px;background:<?php echo esc_attr( self::with_alpha( $experience_panel_bg, '0.12' ) ); ?>;border:1px solid <?php echo esc_attr( self::with_alpha( $settings['border_color'], '0.18' ) ); ?>;backdrop-filter:blur(10px)}
-            .eop-proposal-logo{max-height:60px;max-width:210px}
-            .eop-proposal-brand__fallback{color:<?php echo esc_attr( $hero_text_color ); ?>;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center}
-            .eop-proposal-hero__copy{display:grid;gap:12px;max-width:640px}
-            .eop-proposal-hero__top{display:flex;flex-wrap:wrap;gap:10px}
-            .eop-proposal-status,.eop-proposal-stage{display:inline-flex;align-items:center;min-height:38px;padding:0 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-            .eop-proposal-status{background:<?php echo esc_attr( $hero_chip_background ); ?>;color:<?php echo esc_attr( $hero_chip_text ); ?>;border:1px solid <?php echo esc_attr( self::with_alpha( $settings['border_color'], '0.18' ) ); ?>}
-            .eop-proposal-stage{background:<?php echo esc_attr( self::with_alpha( $experience_accent, '0.16' ) ); ?>;color:<?php echo esc_attr( $hero_chip_text ); ?>;border:1px solid <?php echo esc_attr( self::with_alpha( $experience_accent, '0.28' ) ); ?>}
-            .eop-proposal-eyebrow{display:block;color:<?php echo esc_attr( $hero_muted_color ); ?>;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}
-            .eop-proposal-title{margin:0;font-size:<?php echo esc_attr( $title_font_size ); ?>;line-height:.98;letter-spacing:-.05em;color:<?php echo esc_attr( $hero_text_color ); ?>}
-            .eop-proposal-text{margin:0;max-width:58ch;color:<?php echo esc_attr( $hero_muted_color ); ?>;font-size:16px;line-height:1.7}
-            .eop-proposal-hero__aside{padding:24px;border-radius:28px;background:<?php echo esc_attr( self::with_alpha( $experience_side_bg, '0.9' ) ); ?>;border:1px solid <?php echo esc_attr( self::with_alpha( $settings['border_color'], '0.18' ) ); ?>;backdrop-filter:blur(10px)}
-            .eop-proposal-hero__aside-label{color:<?php echo esc_attr( $experience_muted ); ?>;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
-            .eop-proposal-hero__aside strong{font-size:44px;line-height:.95;letter-spacing:-.06em;color:<?php echo esc_attr( $experience_text ); ?>}
-            .eop-proposal-hero__aside p{margin:0;color:<?php echo esc_attr( $experience_text ); ?>;line-height:1.65}
-            .eop-proposal-hero__meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:4px}
-            .eop-proposal-hero__meta-item{padding:14px 16px;border-radius:20px;background:<?php echo esc_attr( self::with_alpha( $experience_panel_bg, '0.84' ) ); ?>;border:1px solid <?php echo esc_attr( self::with_alpha( $settings['border_color'], '0.18' ) ); ?>}
-            .eop-proposal-hero__meta-item span{display:block;color:<?php echo esc_attr( $experience_muted ); ?>;font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}
-            .eop-proposal-hero__meta-item strong{display:block;margin-top:7px;font-size:18px;line-height:1.2;color:<?php echo esc_attr( $experience_text ); ?>}
-            .eop-proposal-overview{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:24px;align-items:start}
-            .eop-proposal-overview__main,.eop-proposal-overview__side{display:grid;gap:18px}
-            .eop-proposal-overview__side{position:sticky;top:18px}
-            .eop-proposal-section,.eop-proposal-summary-card{padding:24px;border-radius:28px;border:1px solid rgba(15,27,53,.08);box-shadow:0 18px 38px rgba(15,27,53,.08)}
-            .eop-proposal-section{background:<?php echo esc_attr( $experience_panel_bg ); ?>;border-color:<?php echo esc_attr( self::with_alpha( $settings['border_color'], '0.22' ) ); ?>}
-            .eop-proposal-summary-card{background:<?php echo esc_attr( $experience_side_bg ); ?>;border-color:<?php echo esc_attr( self::with_alpha( $settings['border_color'], '0.22' ) ); ?>}
-            .eop-proposal-section__head{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:18px}
-            .eop-proposal-section__eyebrow{display:block;margin-bottom:6px;color:<?php echo esc_attr( $experience_muted ); ?>;font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}
-            .eop-proposal-section__head h2,.eop-proposal-summary-card h2{margin:0;font-size:26px;line-height:1.06;letter-spacing:-.04em;color:<?php echo esc_attr( $experience_text ); ?>}
-            .eop-proposal-summary-card__eyebrow{display:block;margin-bottom:8px;color:<?php echo esc_attr( $experience_muted ); ?>;font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}
-            .eop-proposal-meta{display:grid;gap:12px}
-            .eop-proposal-meta p{display:grid;gap:6px;margin:0;padding:14px 16px;border:1px solid <?php echo esc_attr( self::with_alpha( $settings['border_color'], '0.18' ) ); ?>;border-radius:18px;background:<?php echo esc_attr( self::with_alpha( $experience_panel_bg, '0.82' ) ); ?>}
-            .eop-proposal-meta strong{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:<?php echo esc_attr( $experience_muted ); ?>}
-            .eop-proposal-items{display:grid;gap:14px}
-            .eop-proposal-item{display:grid;grid-template-columns:108px minmax(0,1fr) auto;gap:18px;align-items:center;padding:18px;border:1px solid <?php echo esc_attr( self::with_alpha( $settings['border_color'], '0.18' ) ); ?>;border-radius:24px;background:<?php echo esc_attr( self::with_alpha( $experience_panel_bg, '0.96' ) ); ?>}
-            .eop-proposal-item__media{width:108px;height:108px;border-radius:24px;overflow:hidden;background:<?php echo esc_attr( self::with_alpha( $experience_side_bg, '0.96' ) ); ?>;border:1px solid <?php echo esc_attr( self::with_alpha( $settings['border_color'], '0.18' ) ); ?>;display:flex;align-items:center;justify-content:center}
-            .eop-proposal-item__media img{display:block;width:100%;height:100%;object-fit:cover}
-            .eop-proposal-item__body{min-width:0}
-            .eop-proposal-item__name{margin:0 0 8px;font-size:23px;line-height:1.18;color:<?php echo esc_attr( $experience_text ); ?>}
-            .eop-proposal-item__meta{display:flex;flex-wrap:wrap;gap:8px 12px;color:<?php echo esc_attr( $experience_muted ); ?>;font-size:14px}
-            .eop-proposal-item__pill{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;background:<?php echo esc_attr( self::with_alpha( $experience_accent, '0.12' ) ); ?>;color:<?php echo esc_attr( $pill_text_color ); ?>;font-weight:700;line-height:1.2;white-space:nowrap;max-width:100%}
-            .eop-proposal-item__pill--discount{display:grid;gap:2px;align-items:flex-start;padding:9px 12px;white-space:normal;border-radius:18px}
-            .eop-proposal-item__pill-main{font-size:13px;line-height:1.2}
-            .eop-proposal-item__pill-sub{font-size:12px;line-height:1.25;color:<?php echo esc_attr( $experience_muted ); ?>}
-            .eop-proposal-item__summary{display:grid;gap:6px;min-width:150px;justify-items:end;text-align:right}
-            .eop-proposal-item__summary span{font-size:13px;color:<?php echo esc_attr( $experience_muted ); ?>;text-transform:uppercase;letter-spacing:.08em;font-weight:700}
-            .eop-proposal-item__summary strong{font-size:30px;line-height:1;color:<?php echo esc_attr( $experience_text ); ?>}
-            .eop-proposal-notes{padding:18px;border:1px solid <?php echo esc_attr( self::with_alpha( $settings['border_color'], '0.18' ) ); ?>;border-radius:22px;background:<?php echo esc_attr( self::with_alpha( $experience_panel_bg, '0.82' ) ); ?>}
-            .eop-proposal-notes span{display:block;margin-bottom:8px;color:<?php echo esc_attr( $experience_muted ); ?>;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
-            .eop-proposal-notes p{margin:0;color:<?php echo esc_attr( $experience_text ); ?>}
-            .eop-proposal-totals{display:grid;gap:2px}
-            .eop-proposal-total{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:9px 0;color:<?php echo esc_attr( $experience_text ); ?>}
-            .eop-proposal-total.is-grand{font-size:20px;font-weight:800;border-top:2px solid <?php echo esc_attr( $experience_accent ); ?>;margin-top:8px;padding-top:12px}
-            .eop-proposal-total__value{display:grid;justify-items:end;gap:2px;text-align:right}
-            .eop-proposal-total__value strong{font-size:15px;line-height:1.1;color:<?php echo esc_attr( $experience_text ); ?>}
-            .eop-proposal-total__value small{font-size:12px;line-height:1.25;color:<?php echo esc_attr( $experience_muted ); ?>}
-            .eop-proposal-button{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 22px;border:none;border-radius:<?php echo esc_attr( $settings['border_radius'] ); ?>px;background:<?php echo esc_attr( $experience_accent ); ?>;color:#fff;text-decoration:none;font-weight:700;cursor:pointer;box-shadow:0 16px 30px <?php echo esc_attr( self::with_alpha( $experience_accent, '0.2' ) ); ?>}
-            .eop-proposal-button--secondary{background:<?php echo esc_attr( $experience_side_bg ); ?>;color:<?php echo esc_attr( $experience_text ); ?>;box-shadow:none;border:1px solid <?php echo esc_attr( self::with_alpha( $settings['border_color'], '0.18' ) ); ?>}
-            .eop-proposal-actions{display:flex;flex-wrap:wrap;gap:12px}
-            .eop-proposal-actions form{display:flex;width:100%}
-            .eop-proposal-actions .eop-proposal-button{width:100%}
-            .eop-proposal-note{margin:0;padding:14px 16px;border-radius:18px;background:#ecfdf5;border:1px solid #bbf7d0;color:#166534}
-            .eop-proposal-wrap.is-flow-focus{max-width:<?php echo esc_attr( min( $max_width, 1040 ) ); ?>px;padding-bottom:34px}
-            .eop-proposal-wrap.is-flow-focus .eop-proposal-card{gap:0}
-            @media (max-width: 980px){.eop-proposal-hero,.eop-proposal-overview{grid-template-columns:1fr}.eop-proposal-overview__side{position:static}.eop-proposal-actions .eop-proposal-button{width:auto}}
-            @media (max-width: 720px){.eop-proposal-wrap{font-size:15px;padding:0 10px 30px}.eop-proposal-hero,.eop-proposal-section,.eop-proposal-summary-card{padding:20px;border-radius:24px}.eop-proposal-brandline{flex-direction:column}.eop-proposal-hero__meta{grid-template-columns:1fr}.eop-proposal-title{font-size:<?php echo esc_attr( self::responsive_preview_size( $title_font_size, '28px', -10 ) ); ?>}.eop-proposal-item{grid-template-columns:1fr}.eop-proposal-item__media{width:88px;height:88px}.eop-proposal-item__summary{justify-items:start;text-align:left}.eop-proposal-item__meta{gap:8px}.eop-proposal-total{gap:10px}.eop-proposal-total__value strong{font-size:14px}}
-        </style>
-        <div class="eop-proposal-wrap<?php echo $confirmed ? ' is-confirmed' : ''; ?><?php echo $is_flow_focus ? ' is-flow-focus' : ''; ?>">
-            <div class="eop-proposal-card">
-                <?php if ( $is_flow_focus ) : ?>
-                    <?php echo EOP_Post_Confirmation_Flow::render_frontend_stage( $order, $line_items, $pdf_url ); ?>
-                <?php else : ?>
-                <div class="eop-proposal-hero">
-                    <div class="eop-proposal-hero__main">
-                        <div class="eop-proposal-brandline">
-                            <div class="eop-proposal-brand<?php echo $has_logo ? '' : ' is-empty'; ?>">
-                                <?php if ( $has_logo ) : ?>
-                                    <img class="eop-proposal-logo" src="<?php echo esc_url( $logo_url ); ?>" alt="">
-                                <?php else : ?>
-                                    <span class="eop-proposal-brand__fallback"><?php esc_html_e( 'Marca da loja', EOP_TEXT_DOMAIN ); ?></span>
-                                <?php endif; ?>
-                            </div>
-                            <div class="eop-proposal-hero__copy">
-                                <div class="eop-proposal-hero__top">
-                                    <div class="eop-proposal-status">
-                                        <?php echo esc_html( $confirmed ? __( 'Proposta confirmada', EOP_TEXT_DOMAIN ) : __( 'Aguardando confirmacao', EOP_TEXT_DOMAIN ) ); ?>
-                                    </div>
-                                    <?php if ( $current_flow_label ) : ?>
-                                        <div class="eop-proposal-stage"><?php echo esc_html( sprintf( __( 'Etapa atual: %s', EOP_TEXT_DOMAIN ), $current_flow_label ) ); ?></div>
-                                    <?php endif; ?>
-                                </div>
-                                <?php if ( '' !== $experience_eyebrow ) : ?>
-                                    <span class="eop-proposal-eyebrow"><?php echo esc_html( $experience_eyebrow ); ?></span>
-                                <?php endif; ?>
-                                    <h1 class="eop-proposal-title"><?php echo esc_html( $experience_title ); ?></h1>
-                                <p class="eop-proposal-text"><?php echo esc_html( $experience_desc ); ?></p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="eop-proposal-hero__aside">
-                        <span class="eop-proposal-hero__aside-label"><?php echo esc_html( '' !== $total_label ? $total_label : __( 'Total aprovado', EOP_TEXT_DOMAIN ) ); ?></span>
-                        <strong><?php echo wp_kses_post( wc_price( $totals['total'] ?? $order->get_total() ) ); ?></strong>
-                        <p><?php echo esc_html( '' !== $total_note ? $total_note : __( 'Revise os itens e conclua a etapa atual para liberar o restante da jornada.', EOP_TEXT_DOMAIN ) ); ?></p>
-                        <div class="eop-proposal-hero__meta">
-                            <div class="eop-proposal-hero__meta-item">
-                                <span><?php esc_html_e( 'Pedido', EOP_TEXT_DOMAIN ); ?></span>
-                                <strong>#<?php echo esc_html( $order->get_id() ); ?></strong>
-                            </div>
-                            <div class="eop-proposal-hero__meta-item">
-                                <span><?php esc_html_e( 'Cliente', EOP_TEXT_DOMAIN ); ?></span>
-                                <strong><?php echo esc_html( $customer_name ); ?></strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="eop-proposal-overview">
-                    <div class="eop-proposal-overview__main">
-                        <section class="eop-proposal-section">
-                            <div class="eop-proposal-section__head">
-                                <div>
-                                    <?php if ( '' !== $items_eyebrow ) : ?>
-                                        <span class="eop-proposal-section__eyebrow"><?php echo esc_html( $items_eyebrow ); ?></span>
-                                    <?php endif; ?>
-                            <h2><?php echo esc_html( $items_title ?: __( 'Itens', EOP_TEXT_DOMAIN ) ); ?></h2>
-                                </div>
-                            </div>
-
-                            <div class="eop-proposal-items">
-                                <?php foreach ( $line_items as $line_item ) : ?>
-                                    <?php
-                                    $item      = $line_item['item'];
-                                    $product   = $line_item['product'];
-                                    $image_url = $product ? wp_get_attachment_image_url( $product->get_image_id(), 'medium' ) : '';
-
-                                    if ( ! $image_url ) {
-                                        $image_url = wc_placeholder_img_src( 'medium' );
-                                    }
-                                    ?>
-                                    <article class="eop-proposal-item">
-                                        <div class="eop-proposal-item__media">
-                                            <img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $item->get_name() ); ?>">
-                                        </div>
-                                        <div class="eop-proposal-item__body">
-                                            <h3 class="eop-proposal-item__name"><?php echo esc_html( $item->get_name() ); ?></h3>
-                                            <?php if ( ! empty( $item_columns ) || ( $show_sku && $product && $product->get_sku() ) ) : ?>
-                                                <div class="eop-proposal-item__meta">
-                                                    <?php foreach ( $item_columns as $column ) : ?>
-                                                        <?php if ( 'quantity' === $column['key'] ) : ?>
-                                                            <span class="eop-proposal-item__pill">
-                                                                <?php
-                                                                printf(
-                                                                    '%1$s: %2$s',
-                                                                    esc_html( $column['label'] ),
-                                                                    esc_html( $line_item['quantity'] )
-                                                                );
-                                                                ?>
-                                                            </span>
-                                                        <?php elseif ( 'unit_price' === $column['key'] ) : ?>
-                                                            <span class="eop-proposal-item__pill">
-                                                                <?php
-                                                                printf(
-                                                                    '%1$s: %2$s',
-                                                                    esc_html( $column['label'] ),
-                                                                    esc_html( wp_strip_all_tags( wc_price( $line_item['unit_price'] ) ) )
-                                                                );
-                                                                ?>
-                                                            </span>
-                                                        <?php elseif ( 'discount' === $column['key'] ) : ?>
-                                                            <div class="eop-proposal-item__pill eop-proposal-item__pill--discount">
-                                                                <strong class="eop-proposal-item__pill-main"><?php echo esc_html( $column['label'] . ': ' . number_format_i18n( $line_item['discount_percent'], abs( $line_item['discount_percent'] - round( $line_item['discount_percent'] ) ) < 0.01 ? 0 : 2 ) . '%' ); ?></strong>
-                                                                <small class="eop-proposal-item__pill-sub"><?php echo esc_html( wp_strip_all_tags( wc_price( $line_item['discount_per_unit'] ) ) . ' / ' . __( 'un.', EOP_TEXT_DOMAIN ) ); ?></small>
-                                                            </div>
-                                                        <?php elseif ( 'discounted_unit_price' === $column['key'] ) : ?>
-                                                            <span class="eop-proposal-item__pill">
-                                                                <?php
-                                                                printf(
-                                                                    '%1$s: %2$s',
-                                                                    esc_html( $column['label'] ),
-                                                                    esc_html( wp_strip_all_tags( wc_price( $line_item['discounted_unit_price'] ) ) )
-                                                                );
-                                                                ?>
-                                                            </span>
-                                                        <?php endif; ?>
-                                                    <?php endforeach; ?>
-                                                    <?php if ( $show_sku && $product && $product->get_sku() ) : ?>
-                                                        <span class="eop-proposal-item__pill">
-                                                            <?php
-                                                            printf(
-                                                                /* translators: %s: product sku */
-                                                                esc_html__( 'SKU: %s', EOP_TEXT_DOMAIN ),
-                                                                esc_html( $product->get_sku() )
-                                                            );
-                                                            ?>
-                                                        </span>
-                                                    <?php endif; ?>
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-                                        <?php if ( $show_line_total ) : ?>
-                                            <div class="eop-proposal-item__summary">
-                                                <span><?php echo esc_html( $item_labels['line_total'] ?? __( 'Total', EOP_TEXT_DOMAIN ) ); ?></span>
-                                                <strong><?php echo wp_kses_post( wc_price( $line_item['line_total'] ) ); ?></strong>
-                                            </div>
-                                        <?php endif; ?>
-                                    </article>
-                                <?php endforeach; ?>
-                            </div>
-                        </section>
-
-                        <?php if ( $show_notes && '' !== $customer_note ) : ?>
-                            <section class="eop-proposal-section">
-                                <div class="eop-proposal-notes">
-                                    <span><?php esc_html_e( 'Observacoes', EOP_TEXT_DOMAIN ); ?></span>
-                                    <p><?php echo esc_html( $customer_note ); ?></p>
-                                </div>
-                            </section>
-                        <?php endif; ?>
-
-                        <?php if ( '1' === $confirm_state ) : ?>
-                            <p class="eop-proposal-note"><?php esc_html_e( 'Proposta confirmada com sucesso.', EOP_TEXT_DOMAIN ); ?></p>
-                        <?php endif; ?>
-                    </div>
-
-                    <aside class="eop-proposal-overview__side">
-                        <section class="eop-proposal-summary-card">
-                            <span class="eop-proposal-summary-card__eyebrow"><?php echo esc_html( '' !== $summary_eyebrow ? $summary_eyebrow : __( 'Contexto do pedido', EOP_TEXT_DOMAIN ) ); ?></span>
-                            <h2><?php echo esc_html( $summary_title ?: __( 'Contexto do pedido', EOP_TEXT_DOMAIN ) ); ?></h2>
-                            <div class="eop-proposal-meta">
-                                <p><strong><?php esc_html_e( 'Pedido', EOP_TEXT_DOMAIN ); ?></strong><span>#<?php echo esc_html( $order->get_id() ); ?></span></p>
-                                <p><strong><?php esc_html_e( 'Cliente', EOP_TEXT_DOMAIN ); ?></strong><span><?php echo esc_html( $customer_name ); ?></span></p>
-                                <?php if ( $show_email && $order->get_billing_email() ) : ?>
-                                    <p><strong><?php esc_html_e( 'E-mail', EOP_TEXT_DOMAIN ); ?></strong><span><?php echo esc_html( $order->get_billing_email() ); ?></span></p>
-                                <?php endif; ?>
-                                <?php if ( $show_phone && $order->get_billing_phone() ) : ?>
-                                    <p><strong><?php esc_html_e( 'Telefone', EOP_TEXT_DOMAIN ); ?></strong><span><?php echo esc_html( $order->get_billing_phone() ); ?></span></p>
-                                <?php endif; ?>
-                            </div>
-                        </section>
-
-                        <?php if ( ! empty( $total_rows ) ) : ?>
-                            <section class="eop-proposal-summary-card">
-                                <?php if ( '' !== $financial_eyebrow ) : ?>
-                                    <span class="eop-proposal-summary-card__eyebrow"><?php echo esc_html( $financial_eyebrow ); ?></span>
-                                <?php endif; ?>
-                                <h2><?php echo esc_html( $financial_title ?: __( 'Resumo', EOP_TEXT_DOMAIN ) ); ?></h2>
-                                <div class="eop-proposal-totals">
-                                    <?php foreach ( $total_rows as $row ) : ?>
-                                        <div class="eop-proposal-total <?php echo esc_attr( $row['class'] ); ?>">
-                                            <span><?php echo esc_html( $row['label'] ); ?></span>
-                                            <?php if ( ! empty( $row['main_value'] ) ) : ?>
-                                                <div class="eop-proposal-total__value">
-                                                    <strong><?php echo esc_html( $row['main_value'] ); ?></strong>
-                                                    <?php if ( ! empty( $row['sub_value'] ) ) : ?>
-                                                        <small><?php echo esc_html( $row['sub_value'] ); ?></small>
-                                                    <?php endif; ?>
-                                                </div>
-                                            <?php else : ?>
-                                                <span><?php echo wp_kses_post( $row['value'] ); ?></span>
-                                            <?php endif; ?>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            </section>
-                        <?php endif; ?>
-
-                        <?php if ( ! $confirmed ) : ?>
-                            <section class="eop-proposal-summary-card">
-                                <span class="eop-proposal-summary-card__eyebrow"><?php echo esc_html( '' !== $actions_eyebrow ? $actions_eyebrow : __( 'Confirmacao da proposta', EOP_TEXT_DOMAIN ) ); ?></span>
-                                <h2><?php echo esc_html( $actions_title ?: __( 'Confirmacao da proposta', EOP_TEXT_DOMAIN ) ); ?></h2>
-                                <div class="eop-proposal-actions">
-                                    <form method="post">
-                                        <?php wp_nonce_field( 'eop_confirm_proposal', 'eop_confirm_proposal_nonce' ); ?>
-                                        <input type="hidden" name="eop_proposal_token" value="<?php echo esc_attr( $order->get_meta( '_eop_public_token', true ) ); ?>" />
-                                        <button type="submit" class="eop-proposal-button"><?php echo esc_html( $button_label ); ?></button>
-                                    </form>
-                                    <?php if ( $pdf_url ) : ?>
-                                        <a class="eop-proposal-button" href="<?php echo esc_url( $pdf_url ); ?>" download="<?php echo esc_attr( $order->get_id() . '.pdf' ); ?>">
-                                            <?php esc_html_e( 'Baixar PDF', EOP_TEXT_DOMAIN ); ?>
-                                        </a>
-                                    <?php endif; ?>
-                                </div>
-                            </section>
-                        <?php elseif ( ! $flow_enabled && ( $payment_url || $pdf_url ) ) : ?>
-                            <section class="eop-proposal-summary-card">
-                                <span class="eop-proposal-summary-card__eyebrow"><?php echo esc_html( '' !== $actions_eyebrow ? $actions_eyebrow : __( 'Acoes rapidas', EOP_TEXT_DOMAIN ) ); ?></span>
-                                <h2><?php echo esc_html( $actions_title ?: __( 'Acoes rapidas', EOP_TEXT_DOMAIN ) ); ?></h2>
-                                <div class="eop-proposal-actions">
-                                    <?php if ( $payment_url ) : ?>
-                                        <a class="eop-proposal-button" href="<?php echo esc_url( $payment_url ); ?>">
-                                            <?php echo esc_html( $pay_label ); ?>
-                                        </a>
-                                    <?php endif; ?>
-                                    <?php if ( $pdf_url ) : ?>
-                                        <a class="eop-proposal-button" href="<?php echo esc_url( $pdf_url ); ?>" download="<?php echo esc_attr( $order->get_id() . '.pdf' ); ?>">
-                                            <?php esc_html_e( 'Baixar PDF', EOP_TEXT_DOMAIN ); ?>
-                                        </a>
-                                    <?php endif; ?>
-                                </div>
-                            </section>
-                        <?php endif; ?>
-                    </aside>
-                </div>
-
-                <?php if ( $confirmed && $flow_enabled ) : ?>
-                    <?php echo EOP_Post_Confirmation_Flow::render_frontend_stage( $order, $line_items, $pdf_url ); ?>
-                <?php endif; ?>
-                <?php endif; ?>
-            </div>
-        </div>
-        <?php
-
-        return ob_get_clean();
     }
 
     private static function normalize_customer_experience_copy( $value, $legacy, $replacement ) {
@@ -1248,81 +918,9 @@ class EOP_Public_Proposal {
             )
         );
 
-        ob_start();
-        ?>
-        <div
-            class="eop-proposal-wrap eop-proposal-wrap--preview"
-            data-eop-proposal-preview-root
-            style="<?php echo esc_attr( sprintf(
-                '--eop-preview-page-bg:%1$s;--eop-preview-hero-bg:%2$s;--eop-preview-panel-bg:%3$s;--eop-preview-side-bg:%4$s;--eop-preview-accent:%5$s;--eop-preview-text:%6$s;--eop-preview-muted:%7$s;--eop-preview-radius:%8$dpx;--eop-preview-font-family:%9$s;--eop-preview-max-width:%10$dpx;--eop-preview-title-size:%11$s;--eop-preview-text-size:%12$s;--eop-preview-brand-bg:%13$s;--eop-preview-panel-soft:%14$s;--eop-preview-border-soft:%15$s;--eop-preview-accent-soft:%16$s;--eop-preview-accent-border:%17$s;--eop-preview-accent-glow:%18$s;--eop-preview-accent-shadow:%19$s;--eop-preview-hero-text:%20$s;--eop-preview-hero-muted:%21$s;--eop-preview-hero-chip-bg:%22$s;--eop-preview-hero-chip-text:%23$s;--eop-preview-pill-text:%24$s;',
-                $page_bg,
-                $hero_bg,
-                $panel_bg,
-                $side_bg,
-                $accent,
-                $text,
-                $muted,
-                $radius,
-                $font_css,
-                absint( $max_width ),
-                $title_font_size,
-                $base_font_size,
-                self::with_alpha( $panel_bg, '0.12' ),
-                self::with_alpha( $panel_bg, '0.18' ),
-                self::with_alpha( $settings['border_color'], '0.18' ),
-                self::with_alpha( $accent, '0.12' ),
-                self::with_alpha( $accent, '0.28' ),
-                self::with_alpha( $accent, '0.28' ),
-                self::with_alpha( $accent, '0.20' ),
-                $hero_text_color,
-                $hero_muted_color,
-                $hero_chip_background,
-                $hero_chip_text,
-                $pill_text_color
-            ) ); ?>"
-        >
-            <div class="eop-proposal-card">
-                <div class="eop-proposal-hero">
-                    <div class="eop-proposal-hero__main">
-                        <div class="eop-proposal-brandline">
-                            <div class="eop-proposal-brand<?php echo $logo_url ? '' : ' is-empty'; ?>" data-preview-logo-wrap>
-                                <?php if ( $logo_url ) : ?>
-                                    <img data-preview-logo src="<?php echo esc_url( $logo_url ); ?>" alt="">
-                                <?php else : ?>
-                                    <span class="eop-proposal-brand__fallback" data-preview-logo-fallback><?php esc_html_e( 'Marca da loja', EOP_TEXT_DOMAIN ); ?></span>
-                                <?php endif; ?>
-                            </div>
-                            <div class="eop-proposal-hero__copy">
-                                <div class="eop-proposal-hero__top">
-                                    <div class="eop-proposal-status" data-preview-status><?php esc_html_e( 'Preview ao vivo', EOP_TEXT_DOMAIN ); ?></div>
-                                    <div class="eop-proposal-stage" data-preview-stage><?php esc_html_e( 'Layout real', EOP_TEXT_DOMAIN ); ?></div>
-                                </div>
-                                <?php if ( '' !== $theme['eyebrow'] ) : ?>
-                                    <span class="eop-proposal-eyebrow" data-preview-eyebrow><?php echo esc_html( $theme['eyebrow'] ); ?></span>
-                                <?php else : ?>
-                                    <span class="eop-proposal-eyebrow" data-preview-eyebrow><?php esc_html_e( 'Experiencia do cliente', EOP_TEXT_DOMAIN ); ?></span>
-                                <?php endif; ?>
-                                <h1 class="eop-proposal-title" data-preview-title><?php echo esc_html( $title ); ?></h1>
-                                <p class="eop-proposal-text" data-preview-description><?php echo esc_html( $description ); ?></p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="eop-proposal-hero__aside">
-                        <span class="eop-proposal-hero__aside-label" data-preview-total-label><?php echo esc_html( $total_label ); ?></span>
-                        <strong data-preview-total-value><?php echo wp_kses_post( $total_value ); ?></strong>
-                        <p data-preview-total-note><?php echo esc_html( $total_note ); ?></p>
-                        <div class="eop-proposal-hero__meta">
-                            <div class="eop-proposal-hero__meta-item">
-                                <span><?php esc_html_e( 'Pedido', EOP_TEXT_DOMAIN ); ?></span>
-                                <strong>#2026-048</strong>
-                            </div>
-                            <div class="eop-proposal-hero__meta-item">
-                                <span><?php esc_html_e( 'Cliente', EOP_TEXT_DOMAIN ); ?></span>
-                                <strong><?php esc_html_e( 'Maria Oliveira', EOP_TEXT_DOMAIN ); ?></strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        /* Bloco legado do preview mantido apenas para referencia historica.
+         * O caminho ativo agora usa render_admin_preview_markup_via_shared_renderer().
+        
 
                 <div class="eop-proposal-overview">
                     <div class="eop-proposal-overview__main">
@@ -1430,6 +1028,7 @@ class EOP_Public_Proposal {
         <?php
 
         return (string) ob_get_clean();
+        */
     }
 
     private static function render_proposal_page_via_shared_renderer( $args ) {
@@ -1725,8 +1324,8 @@ class EOP_Public_Proposal {
     }
 
     private static function get_shared_proposal_style_vars( $settings, $theme ) {
-        $hero_text_color      = self::get_contrast_text_color( $theme['hero_base_color'], '#16243a', '#ffffff' );
-        $hero_muted_color     = self::with_alpha( $hero_text_color, '#ffffff' === strtolower( $hero_text_color ) ? '0.78' : '0.70' );
+        $hero_text_color      = ! empty( $theme['hero_text_color'] ) ? $theme['hero_text_color'] : self::get_contrast_text_color( $theme['hero_base_color'], '#16243a', '#ffffff' );
+        $hero_muted_color     = ! empty( $theme['hero_muted_color'] ) ? $theme['hero_muted_color'] : self::with_alpha( $hero_text_color, '#ffffff' === strtolower( $hero_text_color ) ? '0.78' : '0.70' );
         $hero_chip_background = '#ffffff' === strtolower( $hero_text_color ) ? 'rgba(255, 255, 255, 0.16)' : 'rgba(15, 27, 53, 0.08)';
         $hero_chip_text       = $hero_text_color;
         $pill_text_color      = self::get_contrast_text_color( $theme['accent_color'], '#16243a', '#ffffff' );
@@ -1758,12 +1357,45 @@ class EOP_Public_Proposal {
             'pill_text'               => $pill_text_color,
             'flow_focus_max_width'    => min( absint( $theme['max_width'] ), 1040 ),
             'title_font_size_mobile'  => self::responsive_preview_size( $theme['title_font_size'], '28px', -10 ),
+            'hero_eyebrow_size'       => $theme['hero_eyebrow_size'],
+            'hero_title_line_height'  => $theme['hero_title_line_height'],
+            'hero_title_weight'       => $theme['hero_title_weight'],
+            'hero_text_line_height'   => $theme['hero_text_line_height'],
+            'chip_font_size'          => $theme['chip_font_size'],
+            'chip_font_weight'        => $theme['chip_font_weight'],
+            'section_title_size'      => $theme['section_title_size'],
+            'section_title_weight'    => $theme['section_title_weight'],
+            'item_title_size'         => $theme['item_title_size'],
+            'item_title_weight'       => $theme['item_title_weight'],
+            'button_bg'               => $theme['button_bg'],
+            'button_text'             => $theme['button_text'],
+            'button_font_size'        => $theme['button_font_size'],
+            'button_line_height'      => $theme['button_line_height'],
+            'button_font_weight'      => $theme['button_font_weight'],
+            'button_padding'          => $theme['button_padding'],
+            'button_radius'           => $theme['button_radius'],
+            'button_shadow'           => $theme['button_shadow'],
+            'secondary_button_bg'     => $theme['secondary_button_bg'],
+            'secondary_button_text'   => $theme['secondary_button_text'],
+            'secondary_button_border' => $theme['secondary_button_border'],
+            'secondary_button_font_size' => $theme['secondary_button_font_size'],
+            'secondary_button_line_height' => $theme['secondary_button_line_height'],
+            'secondary_button_font_weight' => $theme['secondary_button_font_weight'],
+            'secondary_button_padding' => $theme['secondary_button_padding'],
+            'secondary_button_radius' => $theme['secondary_button_radius'],
+            'alert_bg'                => $theme['alert_bg'],
+            'alert_border'            => $theme['alert_border'],
+            'alert_text'              => $theme['alert_text'],
+            'alert_font_size'         => $theme['alert_font_size'],
+            'alert_line_height'       => $theme['alert_line_height'],
+            'alert_radius'            => $theme['alert_radius'],
+            'alert_padding'           => $theme['alert_padding'],
         );
     }
 
     private static function build_shared_proposal_inline_style( $style_vars ) {
         return sprintf(
-            '--eop-preview-page-bg:%1$s;--eop-preview-hero-bg:%2$s;--eop-preview-panel-bg:%3$s;--eop-preview-side-bg:%4$s;--eop-preview-accent:%5$s;--eop-preview-text:%6$s;--eop-preview-muted:%7$s;--eop-preview-radius:%8$dpx;--eop-preview-font-family:%9$s;--eop-preview-max-width:%10$dpx;--eop-preview-title-size:%11$s;--eop-preview-text-size:%12$s;--eop-preview-brand-bg:%13$s;--eop-preview-panel-soft:%14$s;--eop-preview-border-soft:%15$s;--eop-preview-accent-soft:%16$s;--eop-preview-accent-border:%17$s;--eop-preview-accent-glow:%18$s;--eop-preview-accent-shadow:%19$s;--eop-preview-hero-text:%20$s;--eop-preview-hero-muted:%21$s;--eop-preview-hero-chip-bg:%22$s;--eop-preview-hero-chip-text:%23$s;--eop-preview-pill-text:%24$s;--eop-preview-flow-focus-max-width:%25$dpx;--eop-preview-title-size-mobile:%26$s;',
+            '--eop-preview-page-bg:%1$s;--eop-preview-hero-bg:%2$s;--eop-preview-panel-bg:%3$s;--eop-preview-side-bg:%4$s;--eop-preview-accent:%5$s;--eop-preview-text:%6$s;--eop-preview-muted:%7$s;--eop-preview-radius:%8$dpx;--eop-preview-font-family:%9$s;--eop-preview-max-width:%10$dpx;--eop-preview-title-size:%11$s;--eop-preview-text-size:%12$s;--eop-preview-brand-bg:%13$s;--eop-preview-panel-soft:%14$s;--eop-preview-border-soft:%15$s;--eop-preview-accent-soft:%16$s;--eop-preview-accent-border:%17$s;--eop-preview-accent-glow:%18$s;--eop-preview-accent-shadow:%19$s;--eop-preview-hero-text:%20$s;--eop-preview-hero-muted:%21$s;--eop-preview-hero-chip-bg:%22$s;--eop-preview-hero-chip-text:%23$s;--eop-preview-pill-text:%24$s;--eop-preview-flow-focus-max-width:%25$dpx;--eop-preview-title-size-mobile:%26$s;--eop-preview-hero-eyebrow-size:%27$s;--eop-preview-hero-title-line-height:%28$s;--eop-preview-hero-title-weight:%29$s;--eop-preview-hero-text-line-height:%30$s;--eop-preview-chip-font-size:%31$s;--eop-preview-chip-font-weight:%32$s;--eop-preview-section-title-size:%33$s;--eop-preview-section-title-weight:%34$s;--eop-preview-item-title-size:%35$s;--eop-preview-item-title-weight:%36$s;--eop-preview-button-bg:%37$s;--eop-preview-button-text:%38$s;--eop-preview-button-font-size:%39$s;--eop-preview-button-line-height:%40$s;--eop-preview-button-font-weight:%41$s;--eop-preview-button-padding:%42$s;--eop-preview-button-radius:%43$s;--eop-preview-button-shadow:%44$s;--eop-preview-secondary-button-bg:%45$s;--eop-preview-secondary-button-text:%46$s;--eop-preview-secondary-button-border:%47$s;--eop-preview-secondary-button-font-size:%48$s;--eop-preview-secondary-button-line-height:%49$s;--eop-preview-secondary-button-font-weight:%50$s;--eop-preview-secondary-button-padding:%51$s;--eop-preview-secondary-button-radius:%52$s;--eop-preview-alert-bg:%53$s;--eop-preview-alert-border:%54$s;--eop-preview-alert-text:%55$s;--eop-preview-alert-font-size:%56$s;--eop-preview-alert-line-height:%57$s;--eop-preview-alert-radius:%58$s;--eop-preview-alert-padding:%59$s;',
             $style_vars['page_bg'],
             $style_vars['hero_bg'],
             $style_vars['panel_bg'],
@@ -1789,7 +1421,40 @@ class EOP_Public_Proposal {
             $style_vars['hero_chip_text'],
             $style_vars['pill_text'],
             $style_vars['flow_focus_max_width'],
-            $style_vars['title_font_size_mobile']
+            $style_vars['title_font_size_mobile'],
+            $style_vars['hero_eyebrow_size'],
+            $style_vars['hero_title_line_height'],
+            $style_vars['hero_title_weight'],
+            $style_vars['hero_text_line_height'],
+            $style_vars['chip_font_size'],
+            $style_vars['chip_font_weight'],
+            $style_vars['section_title_size'],
+            $style_vars['section_title_weight'],
+            $style_vars['item_title_size'],
+            $style_vars['item_title_weight'],
+            $style_vars['button_bg'],
+            $style_vars['button_text'],
+            $style_vars['button_font_size'],
+            $style_vars['button_line_height'],
+            $style_vars['button_font_weight'],
+            $style_vars['button_padding'],
+            $style_vars['button_radius'],
+            $style_vars['button_shadow'],
+            $style_vars['secondary_button_bg'],
+            $style_vars['secondary_button_text'],
+            $style_vars['secondary_button_border'],
+            $style_vars['secondary_button_font_size'],
+            $style_vars['secondary_button_line_height'],
+            $style_vars['secondary_button_font_weight'],
+            $style_vars['secondary_button_padding'],
+            $style_vars['secondary_button_radius'],
+            $style_vars['alert_bg'],
+            $style_vars['alert_border'],
+            $style_vars['alert_text'],
+            $style_vars['alert_font_size'],
+            $style_vars['alert_line_height'],
+            $style_vars['alert_radius'],
+            $style_vars['alert_padding']
         );
     }
 

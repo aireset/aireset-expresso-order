@@ -133,7 +133,7 @@ class EOP_Public_Proposal {
         $totals          = EOP_Order_Creator::sync_order_totals( $order );
         $settings        = EOP_Settings::get_all();
         $theme           = self::get_public_proposal_theme( $settings );
-        $logo_url        = $settings['brand_logo_url'];
+        $logo_url        = self::get_shared_store_logo_url( $settings );
         $confirmed       = 'yes' === $order->get_meta( '_eop_proposal_confirmed', true );
         $line_items      = class_exists( 'EOP_Document_Manager' ) ? EOP_Document_Manager::get_order_line_items_display_data( $order ) : array();
         $button_label    = $settings['proposal_button_label'];
@@ -170,6 +170,11 @@ class EOP_Public_Proposal {
         $experience_accent   = $theme['accent_color'];
         $experience_text     = $theme['text_color'];
         $experience_muted    = $theme['muted_color'];
+        $hero_text_color     = self::get_contrast_text_color( $theme['hero_base_color'], '#16243a', '#ffffff' );
+        $hero_muted_color    = self::with_alpha( $hero_text_color, '#ffffff' === strtolower( $hero_text_color ) ? '0.78' : '0.70' );
+        $hero_chip_background = '#ffffff' === strtolower( $hero_text_color ) ? 'rgba(255, 255, 255, 0.16)' : 'rgba(15, 27, 53, 0.08)';
+        $hero_chip_text      = $hero_text_color;
+        $pill_text_color     = self::get_contrast_text_color( $experience_accent, '#16243a', '#ffffff' );
         $experience_eyebrow  = $theme['eyebrow'];
         $experience_title    = $theme['title'];
         $experience_desc     = $theme['description'];
@@ -214,14 +219,15 @@ class EOP_Public_Proposal {
             .eop-proposal-brandline{display:flex;align-items:flex-start;gap:18px}
             .eop-proposal-brand{display:flex;align-items:center;justify-content:center;min-width:110px;min-height:90px;padding:16px 18px;border-radius:26px;background:<?php echo esc_attr( self::with_alpha( $experience_panel_bg, '0.12' ) ); ?>;border:1px solid <?php echo esc_attr( self::with_alpha( $settings['border_color'], '0.18' ) ); ?>;backdrop-filter:blur(10px)}
             .eop-proposal-logo{max-height:60px;max-width:210px}
+            .eop-proposal-brand__fallback{color:<?php echo esc_attr( $hero_text_color ); ?>;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center}
             .eop-proposal-hero__copy{display:grid;gap:12px;max-width:640px}
             .eop-proposal-hero__top{display:flex;flex-wrap:wrap;gap:10px}
             .eop-proposal-status,.eop-proposal-stage{display:inline-flex;align-items:center;min-height:38px;padding:0 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-            .eop-proposal-status{background:<?php echo esc_attr( self::with_alpha( $experience_panel_bg, '0.18' ) ); ?>;color:<?php echo esc_attr( $experience_text ); ?>;border:1px solid <?php echo esc_attr( self::with_alpha( $settings['border_color'], '0.18' ) ); ?>}
-            .eop-proposal-stage{background:<?php echo esc_attr( self::with_alpha( $experience_accent, '0.16' ) ); ?>;color:<?php echo esc_attr( $experience_text ); ?>;border:1px solid <?php echo esc_attr( self::with_alpha( $experience_accent, '0.28' ) ); ?>}
-            .eop-proposal-eyebrow{display:block;color:<?php echo esc_attr( $experience_muted ); ?>;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}
-            .eop-proposal-title{margin:0;font-size:<?php echo esc_attr( $title_font_size ); ?>;line-height:.98;letter-spacing:-.05em;color:<?php echo esc_attr( $experience_text ); ?>}
-            .eop-proposal-text{margin:0;max-width:58ch;color:<?php echo esc_attr( $experience_muted ); ?>;font-size:16px;line-height:1.7}
+            .eop-proposal-status{background:<?php echo esc_attr( $hero_chip_background ); ?>;color:<?php echo esc_attr( $hero_chip_text ); ?>;border:1px solid <?php echo esc_attr( self::with_alpha( $settings['border_color'], '0.18' ) ); ?>}
+            .eop-proposal-stage{background:<?php echo esc_attr( self::with_alpha( $experience_accent, '0.16' ) ); ?>;color:<?php echo esc_attr( $hero_chip_text ); ?>;border:1px solid <?php echo esc_attr( self::with_alpha( $experience_accent, '0.28' ) ); ?>}
+            .eop-proposal-eyebrow{display:block;color:<?php echo esc_attr( $hero_muted_color ); ?>;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}
+            .eop-proposal-title{margin:0;font-size:<?php echo esc_attr( $title_font_size ); ?>;line-height:.98;letter-spacing:-.05em;color:<?php echo esc_attr( $hero_text_color ); ?>}
+            .eop-proposal-text{margin:0;max-width:58ch;color:<?php echo esc_attr( $hero_muted_color ); ?>;font-size:16px;line-height:1.7}
             .eop-proposal-hero__aside{padding:24px;border-radius:28px;background:<?php echo esc_attr( self::with_alpha( $experience_side_bg, '0.9' ) ); ?>;border:1px solid <?php echo esc_attr( self::with_alpha( $settings['border_color'], '0.18' ) ); ?>;backdrop-filter:blur(10px)}
             .eop-proposal-hero__aside-label{color:<?php echo esc_attr( $experience_muted ); ?>;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
             .eop-proposal-hero__aside strong{font-size:44px;line-height:.95;letter-spacing:-.06em;color:<?php echo esc_attr( $experience_text ); ?>}
@@ -250,7 +256,7 @@ class EOP_Public_Proposal {
             .eop-proposal-item__body{min-width:0}
             .eop-proposal-item__name{margin:0 0 8px;font-size:23px;line-height:1.18;color:<?php echo esc_attr( $experience_text ); ?>}
             .eop-proposal-item__meta{display:flex;flex-wrap:wrap;gap:8px 12px;color:<?php echo esc_attr( $experience_muted ); ?>;font-size:14px}
-            .eop-proposal-item__pill{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;background:<?php echo esc_attr( self::with_alpha( $experience_accent, '0.12' ) ); ?>;color:<?php echo esc_attr( $experience_accent ); ?>;font-weight:700;line-height:1.2;white-space:nowrap;max-width:100%}
+            .eop-proposal-item__pill{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;background:<?php echo esc_attr( self::with_alpha( $experience_accent, '0.12' ) ); ?>;color:<?php echo esc_attr( $pill_text_color ); ?>;font-weight:700;line-height:1.2;white-space:nowrap;max-width:100%}
             .eop-proposal-item__pill--discount{display:grid;gap:2px;align-items:flex-start;padding:9px 12px;white-space:normal;border-radius:18px}
             .eop-proposal-item__pill-main{font-size:13px;line-height:1.2}
             .eop-proposal-item__pill-sub{font-size:12px;line-height:1.25;color:<?php echo esc_attr( $experience_muted ); ?>}
@@ -285,11 +291,13 @@ class EOP_Public_Proposal {
                 <div class="eop-proposal-hero">
                     <div class="eop-proposal-hero__main">
                         <div class="eop-proposal-brandline">
-                            <?php if ( $has_logo ) : ?>
-                                <div class="eop-proposal-brand">
+                            <div class="eop-proposal-brand<?php echo $has_logo ? '' : ' is-empty'; ?>">
+                                <?php if ( $has_logo ) : ?>
                                     <img class="eop-proposal-logo" src="<?php echo esc_url( $logo_url ); ?>" alt="">
-                                </div>
-                            <?php endif; ?>
+                                <?php else : ?>
+                                    <span class="eop-proposal-brand__fallback"><?php esc_html_e( 'Marca da loja', EOP_TEXT_DOMAIN ); ?></span>
+                                <?php endif; ?>
+                            </div>
                             <div class="eop-proposal-hero__copy">
                                 <div class="eop-proposal-hero__top">
                                     <div class="eop-proposal-status">
@@ -707,7 +715,7 @@ class EOP_Public_Proposal {
         }
 
         .eop-proposal-brand__fallback {
-            color: var(--eop-preview-text, #fff);
+            color: var(--eop-preview-hero-text, #fff);
             font-size: 13px;
             font-weight: 800;
             letter-spacing: 0.08em;
@@ -745,14 +753,14 @@ class EOP_Public_Proposal {
         }
 
         .eop-proposal-status {
-            background: var(--eop-preview-panel-soft, rgba(255, 255, 255, 0.18));
-            color: var(--eop-preview-text, #fff);
+            background: var(--eop-preview-hero-chip-bg, rgba(255, 255, 255, 0.16));
+            color: var(--eop-preview-hero-chip-text, #fff);
             border: 1px solid var(--eop-preview-border-soft, rgba(255, 255, 255, 0.18));
         }
 
         .eop-proposal-stage {
-            background: var(--eop-preview-accent-soft, rgba(215, 138, 47, 0.16));
-            color: var(--eop-preview-text, #fff);
+            background: var(--eop-preview-accent-soft, rgba(215, 138, 47, 0.22));
+            color: var(--eop-preview-hero-chip-text, #fff);
             border: 1px solid var(--eop-preview-accent-border, rgba(215, 138, 47, 0.28));
         }
 
@@ -771,20 +779,25 @@ class EOP_Public_Proposal {
             text-transform: uppercase;
         }
 
+        .eop-proposal-eyebrow {
+            color: var(--eop-preview-hero-muted, rgba(255, 255, 255, 0.78));
+        }
+
         .eop-proposal-title {
             margin: 0;
             font-size: var(--eop-preview-title-size, 46px);
             line-height: 0.98;
             letter-spacing: -0.05em;
-            color: var(--eop-preview-text, #16243a);
+            color: var(--eop-preview-hero-text, #fff);
+            text-wrap: balance;
         }
 
         .eop-proposal-text {
             margin: 0;
             max-width: 58ch;
-            color: var(--eop-preview-muted, #66768d);
+            color: var(--eop-preview-hero-muted, rgba(255, 255, 255, 0.78));
             font-size: var(--eop-preview-text-size, 16px);
-            line-height: 1.7;
+            line-height: 1.72;
         }
 
         .eop-proposal-hero__aside {
@@ -941,7 +954,7 @@ class EOP_Public_Proposal {
             padding: 0 12px;
             border-radius: 999px;
             background: var(--eop-preview-accent-soft, rgba(215, 138, 47, 0.12));
-            color: var(--eop-preview-accent, #d78a2f);
+            color: var(--eop-preview-pill-text, #1a2550);
             font-weight: 700;
             line-height: 1.2;
             white-space: nowrap;
@@ -1052,9 +1065,9 @@ class EOP_Public_Proposal {
             margin: 0;
             padding: 14px 16px;
             border-radius: 18px;
-            background: #ecfdf5;
-            border: 1px solid #bbf7d0;
-            color: #166534;
+            background: linear-gradient(180deg, rgba(54, 211, 153, 0.10), rgba(16, 185, 129, 0.08));
+            border: 1px solid rgba(16, 185, 129, 0.18);
+            color: #196647;
         }
 
         @media (max-width: 980px) {
@@ -1134,7 +1147,7 @@ class EOP_Public_Proposal {
     public static function render_admin_preview_markup( $settings = array() ) {
         $settings = is_array( $settings ) ? wp_parse_args( $settings, EOP_Settings::get_defaults() ) : EOP_Settings::get_all();
         $theme    = self::get_public_proposal_theme( $settings );
-        $logo_url = trim( (string) ( $settings['brand_logo_url'] ?? '' ) );
+        $logo_url = self::get_shared_store_logo_url( $settings );
         $title    = trim( (string) ( $settings['proposal_title'] ?? $theme['title'] ) );
         $description = trim( (string) ( $settings['proposal_description'] ?? $theme['description'] ) );
         $items_eyebrow = trim( (string) ( $theme['items_eyebrow'] ?: __( 'Resumo visual', EOP_TEXT_DOMAIN ) ) );
@@ -1159,6 +1172,11 @@ class EOP_Public_Proposal {
         $base_font_size = $theme['base_font_size'];
         $title_font_size = $theme['title_font_size'];
         $radius = absint( $settings['border_radius'] );
+        $hero_text_color = self::get_contrast_text_color( $theme['hero_base_color'], '#16243a', '#ffffff' );
+        $hero_muted_color = self::with_alpha( $hero_text_color, '#ffffff' === strtolower( $hero_text_color ) ? '0.78' : '0.70' );
+        $hero_chip_background = '#ffffff' === strtolower( $hero_text_color ) ? 'rgba(255, 255, 255, 0.16)' : 'rgba(15, 27, 53, 0.08)';
+        $hero_chip_text = $hero_text_color;
+        $pill_text_color = self::get_contrast_text_color( $accent, '#16243a', '#ffffff' );
         $total_value = function_exists( 'wc_price' ) ? wc_price( 1499.9 ) : 'R$ 1.499,90';
         $discount_value = function_exists( 'wc_price' ) ? wc_price( 120 ) : 'R$ 120,00';
 
@@ -1168,7 +1186,7 @@ class EOP_Public_Proposal {
             class="eop-proposal-wrap eop-proposal-wrap--preview"
             data-eop-proposal-preview-root
             style="<?php echo esc_attr( sprintf(
-                '--eop-preview-page-bg:%1$s;--eop-preview-hero-bg:%2$s;--eop-preview-panel-bg:%3$s;--eop-preview-side-bg:%4$s;--eop-preview-accent:%5$s;--eop-preview-text:%6$s;--eop-preview-muted:%7$s;--eop-preview-radius:%8$dpx;--eop-preview-font-family:%9$s;--eop-preview-max-width:%10$dpx;--eop-preview-title-size:%11$s;--eop-preview-text-size:%12$s;--eop-preview-brand-bg:%13$s;--eop-preview-panel-soft:%14$s;--eop-preview-border-soft:%15$s;--eop-preview-accent-soft:%16$s;--eop-preview-accent-border:%17$s;--eop-preview-accent-glow:%18$s;--eop-preview-accent-shadow:%19$s;',
+                '--eop-preview-page-bg:%1$s;--eop-preview-hero-bg:%2$s;--eop-preview-panel-bg:%3$s;--eop-preview-side-bg:%4$s;--eop-preview-accent:%5$s;--eop-preview-text:%6$s;--eop-preview-muted:%7$s;--eop-preview-radius:%8$dpx;--eop-preview-font-family:%9$s;--eop-preview-max-width:%10$dpx;--eop-preview-title-size:%11$s;--eop-preview-text-size:%12$s;--eop-preview-brand-bg:%13$s;--eop-preview-panel-soft:%14$s;--eop-preview-border-soft:%15$s;--eop-preview-accent-soft:%16$s;--eop-preview-accent-border:%17$s;--eop-preview-accent-glow:%18$s;--eop-preview-accent-shadow:%19$s;--eop-preview-hero-text:%20$s;--eop-preview-hero-muted:%21$s;--eop-preview-hero-chip-bg:%22$s;--eop-preview-hero-chip-text:%23$s;--eop-preview-pill-text:%24$s;',
                 $page_bg,
                 $hero_bg,
                 $panel_bg,
@@ -1187,7 +1205,12 @@ class EOP_Public_Proposal {
                 self::with_alpha( $accent, '0.12' ),
                 self::with_alpha( $accent, '0.28' ),
                 self::with_alpha( $accent, '0.28' ),
-                self::with_alpha( $accent, '0.20' )
+                self::with_alpha( $accent, '0.20' ),
+                $hero_text_color,
+                $hero_muted_color,
+                $hero_chip_background,
+                $hero_chip_text,
+                $pill_text_color
             ) ); ?>"
         >
             <div class="eop-proposal-card">
@@ -1198,7 +1221,7 @@ class EOP_Public_Proposal {
                                 <?php if ( $logo_url ) : ?>
                                     <img data-preview-logo src="<?php echo esc_url( $logo_url ); ?>" alt="">
                                 <?php else : ?>
-                                    <span class="eop-proposal-brand__fallback" data-preview-logo-fallback><?php esc_html_e( 'Logo opcional', EOP_TEXT_DOMAIN ); ?></span>
+                                    <span class="eop-proposal-brand__fallback" data-preview-logo-fallback><?php esc_html_e( 'Marca da loja', EOP_TEXT_DOMAIN ); ?></span>
                                 <?php endif; ?>
                             </div>
                             <div class="eop-proposal-hero__copy">
@@ -1403,6 +1426,7 @@ class EOP_Public_Proposal {
                 $resolve( 'customer_experience_hero_background_color', 'primary_color', '#00034b' ),
                 $resolve( 'customer_experience_hero_background_secondary_color', '', '#243553' )
             ),
+            'hero_base_color'        => $resolve( 'customer_experience_hero_background_color', 'primary_color', '#00034b' ),
             'panel_background_css'   => self::build_background_css(
                 $resolve( 'customer_experience_panel_background_mode', '', 'solid' ) === 'gradient' ? 'gradient' : 'solid',
                 $resolve( 'customer_experience_panel_background_color', 'proposal_card_color', '#ffffff' ),
@@ -1473,6 +1497,68 @@ class EOP_Public_Proposal {
         }
 
         return $color;
+    }
+
+    /**
+     * Resolve a logo oficial da loja para a experiencia publica.
+     *
+     * Prioridade:
+     * 1. logo configurada em "Informacoes sobre a loja" no modulo PDF
+     * 2. campo legado `brand_logo_url`, mantido como fallback
+     *
+     * @param array $settings Configuracoes gerais do plugin.
+     * @return string
+     */
+    private static function get_shared_store_logo_url( $settings ) {
+        $settings = is_array( $settings ) ? $settings : EOP_Settings::get_all();
+        $pdf_logo = '';
+
+        if ( class_exists( 'EOP_PDF_Settings' ) && method_exists( 'EOP_PDF_Settings', 'get_all' ) ) {
+            $pdf_settings = EOP_PDF_Settings::get_all();
+            $pdf_logo     = trim( (string) ( $pdf_settings['shop_logo_url'] ?? '' ) );
+        }
+
+        if ( '' !== $pdf_logo ) {
+            return $pdf_logo;
+        }
+
+        return trim( (string) ( $settings['brand_logo_url'] ?? '' ) );
+    }
+
+    /**
+     * Retorna uma cor de contraste simples a partir de um fundo hexadecimal.
+     *
+     * O objetivo aqui e manter os previews legiveis mesmo quando a experiencia
+     * publica usa fundos escuros ou muito saturados no hero principal.
+     *
+     * @param string $background   Cor base do fundo.
+     * @param string $dark_choice  Cor retornada para fundos claros.
+     * @param string $light_choice Cor retornada para fundos escuros.
+     * @return string
+     */
+    private static function get_contrast_text_color( $background, $dark_choice = '#16243a', $light_choice = '#ffffff' ) {
+        $background = trim( (string) $background );
+
+        if ( '' === $background || '#' !== $background[0] ) {
+            return $light_choice;
+        }
+
+        $hex = ltrim( $background, '#' );
+
+        if ( 3 === strlen( $hex ) ) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+
+        if ( 6 !== strlen( $hex ) || ! ctype_xdigit( $hex ) ) {
+            return $light_choice;
+        }
+
+        $r = hexdec( substr( $hex, 0, 2 ) );
+        $g = hexdec( substr( $hex, 2, 2 ) );
+        $b = hexdec( substr( $hex, 4, 2 ) );
+        $luminance = ( ( 0.299 * $r ) + ( 0.587 * $g ) + ( 0.114 * $b ) ) / 255;
+
+        return $luminance > 0.62 ? $dark_choice : $light_choice;
     }
 
     private static function prepare_total_rows_for_display( WC_Order $order, $rows ) {

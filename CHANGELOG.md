@@ -2,6 +2,10 @@
 
 Todas as alteracoes relevantes do plugin `Aireset Expresso Order` devem ser registradas aqui.
 
+## 1.1.91 - 2026-05-07
+
+- ajustes na proposta pública e inclusão de novos templates de configuração para confirmação de pedidos e documentos
+
 ## 1.1.90 - 2026-05-07
 
 - o fluxo contratual e a etapa final receberam refinamentos visuais no frontend, enquanto o resumo administrativo passou a refletir melhor confirmacao do pedido, pagamento, aceite contratual e conclusao da etapa de upload/personalizacao

@@ -1079,8 +1079,8 @@ class EOP_Public_Proposal {
         }
 
         $summary_rows = array(
-            array( 'label' => __( 'Pedido', EOP_TEXT_DOMAIN ), 'value' => '#' . $args['order']->get_id() ),
-            array( 'label' => __( 'Cliente', EOP_TEXT_DOMAIN ), 'value' => $args['customer_name'] ),
+            array( 'label' => $args['theme']['order_label'], 'value' => '#' . $args['order']->get_id() ),
+            array( 'label' => $args['theme']['customer_label'], 'value' => $args['customer_name'] ),
         );
 
         if ( $args['show_email'] && $args['order']->get_billing_email() ) {
@@ -1101,11 +1101,43 @@ class EOP_Public_Proposal {
         );
 
         if ( ! empty( $args['total_rows'] ) ) {
+            $total_rows = array_map(
+                static function ( $row ) use ( $args ) {
+                    if ( ! is_array( $row ) ) {
+                        return $row;
+                    }
+
+                    switch ( $row['key'] ?? '' ) {
+                        case 'subtotal':
+                            $row['label'] = $args['theme']['subtotal_label'];
+                            if ( isset( $row['sub_value'] ) ) {
+                                $row['sub_value'] = $args['theme']['subtotal_note'];
+                            }
+                            break;
+                        case 'discount':
+                            $row['label'] = $args['theme']['discount_label'];
+                            if ( isset( $row['sub_value'] ) ) {
+                                $row['sub_value'] = $args['theme']['discount_note'];
+                            }
+                            break;
+                        case 'total':
+                            $row['label'] = $args['theme']['total_row_label'];
+                            if ( isset( $row['sub_value'] ) ) {
+                                $row['sub_value'] = $args['theme']['total_row_note'];
+                            }
+                            break;
+                    }
+
+                    return $row;
+                },
+                $args['total_rows']
+            );
+
             $sidebar_cards[] = array(
                 'type'    => 'totals',
                 'eyebrow' => $args['financial_eyebrow'],
                 'title'   => $args['financial_title'] ?: __( 'Resumo', EOP_TEXT_DOMAIN ),
-                'rows'    => $args['total_rows'],
+                'rows'    => $total_rows,
             );
         }
 
@@ -1132,6 +1164,7 @@ class EOP_Public_Proposal {
                 'eyebrow' => '' !== $args['actions_eyebrow'] ? $args['actions_eyebrow'] : __( 'Confirmacao da proposta', EOP_TEXT_DOMAIN ),
                 'title'   => $args['actions_title'] ?: __( 'Confirmacao da proposta', EOP_TEXT_DOMAIN ),
                 'actions' => $actions,
+                'note'    => $args['theme']['alert_note'],
             );
         } elseif ( ! $args['flow_enabled'] && ( $args['payment_url'] || $args['pdf_url'] ) ) {
             $actions = array();
@@ -1154,25 +1187,26 @@ class EOP_Public_Proposal {
                 'eyebrow' => '' !== $args['actions_eyebrow'] ? $args['actions_eyebrow'] : __( 'Acoes rapidas', EOP_TEXT_DOMAIN ),
                 'title'   => $args['actions_title'] ?: __( 'Acoes rapidas', EOP_TEXT_DOMAIN ),
                 'actions' => $actions,
+                'note'    => $args['theme']['alert_note'],
             );
         }
 
         $main_notices = array();
 
         if ( $args['show_notes'] && '' !== $args['customer_note'] ) {
-            $main_notices[] = array( 'type' => 'notes', 'label' => __( 'Observacoes', EOP_TEXT_DOMAIN ), 'text' => $args['customer_note'] );
+            $main_notices[] = array( 'type' => 'notes', 'label' => $args['theme']['notes_label'], 'text' => $args['customer_note'] );
         }
 
         if ( '1' === $args['confirm_state'] ) {
-            $main_notices[] = array( 'type' => 'success', 'text' => __( 'Proposta confirmada com sucesso.', EOP_TEXT_DOMAIN ) );
+            $main_notices[] = array( 'type' => 'success', 'text' => $args['theme']['success_message'] );
         }
 
         $layout_context = array(
             'wrap_classes'    => array_filter( array( $args['confirmed'] ? 'is-confirmed' : '', $args['is_flow_focus'] ? 'is-flow-focus' : '' ) ),
             'style_vars'      => $style_vars,
             'logo_url'        => $args['logo_url'],
-            'hero_status'     => $args['confirmed'] ? __( 'Proposta confirmada', EOP_TEXT_DOMAIN ) : __( 'Aguardando confirmacao', EOP_TEXT_DOMAIN ),
-            'hero_stage'      => $args['current_flow_label'] ? sprintf( __( 'Etapa atual: %s', EOP_TEXT_DOMAIN ), $args['current_flow_label'] ) : '',
+            'hero_status'     => $args['confirmed'] ? $args['theme']['confirmed_status_text'] : $args['theme']['pending_status_text'],
+            'hero_stage'      => $args['current_flow_label'] ? trim( $args['theme']['stage_prefix'] . ' ' . $args['current_flow_label'] ) : '',
             'eyebrow'         => $args['experience_eyebrow'],
             'title'           => $args['experience_title'],
             'description'     => $args['experience_desc'],
@@ -1180,8 +1214,8 @@ class EOP_Public_Proposal {
             'total_value_html'=> wc_price( $args['totals']['total'] ?? $args['order']->get_total() ),
             'total_note'      => '' !== $args['total_note'] ? $args['total_note'] : __( 'Revise os itens e conclua a etapa atual para liberar o restante da jornada.', EOP_TEXT_DOMAIN ),
             'hero_meta_items' => array(
-                array( 'label' => __( 'Pedido', EOP_TEXT_DOMAIN ), 'value' => '#' . $args['order']->get_id() ),
-                array( 'label' => __( 'Cliente', EOP_TEXT_DOMAIN ), 'value' => $args['customer_name'] ),
+                array( 'label' => $args['theme']['order_label'], 'value' => '#' . $args['order']->get_id() ),
+                array( 'label' => $args['theme']['customer_label'], 'value' => $args['customer_name'] ),
             ),
             'items_eyebrow'   => $args['items_eyebrow'],
             'items_title'     => $args['items_title'] ?: __( 'Itens', EOP_TEXT_DOMAIN ),
@@ -1223,8 +1257,8 @@ class EOP_Public_Proposal {
                 'wrap_classes'    => array( 'eop-proposal-wrap--preview' ),
                 'style_vars'      => $style_vars,
                 'logo_url'        => $args['logo_url'],
-                'hero_status'     => __( 'Preview ao vivo', EOP_TEXT_DOMAIN ),
-                'hero_stage'      => __( 'Layout real', EOP_TEXT_DOMAIN ),
+                'hero_status'     => $args['theme']['preview_status_label'],
+                'hero_stage'      => $args['theme']['preview_stage_label'],
                 'eyebrow'         => '' !== $args['theme']['eyebrow'] ? $args['theme']['eyebrow'] : __( 'Experiencia do cliente', EOP_TEXT_DOMAIN ),
                 'title'           => $args['title'],
                 'description'     => $args['description'],
@@ -1232,8 +1266,8 @@ class EOP_Public_Proposal {
                 'total_value_html'=> $args['total_value'],
                 'total_note'      => $args['total_note'],
                 'hero_meta_items' => array(
-                    array( 'label' => __( 'Pedido', EOP_TEXT_DOMAIN ), 'value' => '#2026-048' ),
-                    array( 'label' => __( 'Cliente', EOP_TEXT_DOMAIN ), 'value' => __( 'Maria Oliveira', EOP_TEXT_DOMAIN ) ),
+                    array( 'label' => $args['theme']['order_label'], 'value' => '#2026-048' ),
+                    array( 'label' => $args['theme']['customer_label'], 'value' => __( 'Maria Oliveira', EOP_TEXT_DOMAIN ) ),
                 ),
                 'items_eyebrow'   => $args['items_eyebrow'],
                 'items_title'     => $args['items_title'],
@@ -1246,7 +1280,7 @@ class EOP_Public_Proposal {
                             array( 'text' => __( 'SKU A-102', EOP_TEXT_DOMAIN ) ),
                             array( 'text' => __( '2 unidades', EOP_TEXT_DOMAIN ) ),
                         ),
-                        'summary_label'      => __( 'Subtotal', EOP_TEXT_DOMAIN ),
+                        'summary_label'      => $args['theme']['subtotal_label'],
                         'summary_value_html' => $args['total_value'],
                     ),
                     array(
@@ -1257,7 +1291,7 @@ class EOP_Public_Proposal {
                             array( 'text' => __( 'Brinde de campanha', EOP_TEXT_DOMAIN ) ),
                             array( 'text' => __( 'Amostra', EOP_TEXT_DOMAIN ) ),
                         ),
-                        'summary_label'      => __( 'Desconto', EOP_TEXT_DOMAIN ),
+                        'summary_label'      => $args['theme']['discount_label'],
                         'summary_value_html' => '- ' . $args['discount_value'],
                     ),
                 ),
@@ -1267,8 +1301,8 @@ class EOP_Public_Proposal {
                         'eyebrow' => $args['summary_eyebrow'],
                         'title'   => $args['summary_title'],
                         'rows'    => array(
-                            array( 'label' => __( 'Status', EOP_TEXT_DOMAIN ), 'value' => __( 'Aguardando confirmacao', EOP_TEXT_DOMAIN ) ),
-                            array( 'label' => __( 'Prazo', EOP_TEXT_DOMAIN ), 'value' => __( 'Entrega em ate 3 dias uteis', EOP_TEXT_DOMAIN ) ),
+                            array( 'label' => $args['theme']['meta_status_label'], 'value' => $args['theme']['meta_status_value_preview'] ),
+                            array( 'label' => $args['theme']['meta_deadline_label'], 'value' => $args['theme']['meta_deadline_value_preview'] ),
                         ),
                     ),
                     array(
@@ -1276,9 +1310,9 @@ class EOP_Public_Proposal {
                         'eyebrow' => $args['financial_eyebrow'],
                         'title'   => $args['financial_title'],
                         'rows'    => array(
-                            array( 'label' => __( 'Subtotal', EOP_TEXT_DOMAIN ), 'main_value' => wp_strip_all_tags( $args['total_value'] ), 'sub_value' => __( 'Valor base dos itens', EOP_TEXT_DOMAIN ), 'class' => '' ),
-                            array( 'label' => __( 'Desconto', EOP_TEXT_DOMAIN ), 'main_value' => '- ' . wp_strip_all_tags( $args['discount_value'] ), 'sub_value' => __( 'Campanha aplicada', EOP_TEXT_DOMAIN ), 'class' => '' ),
-                            array( 'label' => __( 'Total', EOP_TEXT_DOMAIN ), 'main_value' => wp_strip_all_tags( $args['total_value'] ), 'sub_value' => __( 'Valor final exibido ao cliente', EOP_TEXT_DOMAIN ), 'class' => 'is-grand' ),
+                            array( 'label' => $args['theme']['subtotal_label'], 'main_value' => wp_strip_all_tags( $args['total_value'] ), 'sub_value' => $args['theme']['subtotal_note'], 'class' => '' ),
+                            array( 'label' => $args['theme']['discount_label'], 'main_value' => '- ' . wp_strip_all_tags( $args['discount_value'] ), 'sub_value' => $args['theme']['discount_note'], 'class' => '' ),
+                            array( 'label' => $args['theme']['total_row_label'], 'main_value' => wp_strip_all_tags( $args['total_value'] ), 'sub_value' => $args['theme']['total_row_note'], 'class' => 'is-grand' ),
                         ),
                     ),
                     array(
@@ -1289,7 +1323,7 @@ class EOP_Public_Proposal {
                             array( 'type' => 'button', 'label' => $args['settings']['proposal_button_label'] ),
                             array( 'type' => 'button', 'label' => $args['settings']['proposal_pay_button_label'], 'secondary' => true ),
                         ),
-                        'note'    => __( 'Este bloco simula a jornada publica com a mesma hierarquia visual usada pelo cliente.', EOP_TEXT_DOMAIN ),
+                        'note'    => $args['theme']['alert_note'],
                     ),
                 ),
             )
@@ -1459,7 +1493,7 @@ class EOP_Public_Proposal {
     }
 
     private static function get_shared_proposal_stylesheet() {
-        return '.eop-proposal-wrap{max-width:var(--eop-preview-max-width,1120px);margin:32px auto;padding:0 16px 46px;font-family:var(--eop-preview-font-family,\'Segoe UI\',sans-serif);font-size:var(--eop-preview-text-size,16px);color:var(--eop-preview-text,#16243a)}.eop-proposal-card{display:grid;gap:24px}.eop-proposal-hero{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:24px;padding:34px;border-radius:calc(var(--eop-preview-radius,18px) + 10px);background:var(--eop-preview-hero-bg,#0f1b35);box-shadow:0 28px 68px rgba(15,27,53,.24)}.eop-proposal-hero::before{content:\"\";position:absolute;inset:auto -10% -30% auto;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,var(--eop-preview-accent-glow,rgba(215,138,47,.28)),transparent 70%)}.eop-proposal-hero > *{position:relative;z-index:1}.eop-proposal-hero__main,.eop-proposal-hero__aside{display:grid;gap:18px;align-content:start}.eop-proposal-brandline{display:flex;align-items:flex-start;gap:18px}.eop-proposal-brand{display:flex;align-items:center;justify-content:center;min-width:110px;min-height:90px;padding:16px 18px;border-radius:26px;background:var(--eop-preview-brand-bg,rgba(255,255,255,.12));border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));backdrop-filter:blur(10px)}.eop-proposal-brand img,.eop-proposal-logo{display:block;max-width:210px;max-height:60px;object-fit:contain}.eop-proposal-brand__fallback{color:var(--eop-preview-hero-text,#fff);font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center}.eop-proposal-hero__copy{display:grid;gap:12px;max-width:640px}.eop-proposal-hero__top{display:flex;flex-wrap:wrap;gap:10px}.eop-proposal-status,.eop-proposal-stage{display:inline-flex;align-items:center;min-height:38px;padding:0 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.eop-proposal-status{background:var(--eop-preview-hero-chip-bg,rgba(255,255,255,.16));color:var(--eop-preview-hero-chip-text,#fff);border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18))}.eop-proposal-stage{background:var(--eop-preview-accent-soft,rgba(215,138,47,.22));color:var(--eop-preview-hero-chip-text,#fff);border:1px solid var(--eop-preview-accent-border,rgba(215,138,47,.28))}.eop-proposal-eyebrow{display:block;color:var(--eop-preview-hero-muted,rgba(255,255,255,.78));font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}.eop-proposal-title{margin:0;font-size:var(--eop-preview-title-size,46px);line-height:.98;letter-spacing:-.05em;color:var(--eop-preview-hero-text,#fff)}.eop-proposal-text{margin:0;max-width:58ch;color:var(--eop-preview-hero-muted,rgba(255,255,255,.78));font-size:var(--eop-preview-text-size,16px);line-height:1.7}.eop-proposal-hero__aside{padding:24px;border-radius:28px;background:var(--eop-preview-side-bg,#f6f8fc);border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));backdrop-filter:blur(10px)}.eop-proposal-hero__aside-label{color:var(--eop-preview-muted,#66768d);display:block;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}.eop-proposal-hero__aside strong{font-size:44px;line-height:.95;letter-spacing:-.06em;color:var(--eop-preview-text,#16243a)}.eop-proposal-hero__aside p{margin:0;color:var(--eop-preview-text,#16243a);line-height:1.65}.eop-proposal-hero__meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:4px}.eop-proposal-hero__meta-item{padding:14px 16px;border-radius:20px;background:var(--eop-preview-panel-bg,#fff);border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18))}.eop-proposal-hero__meta-item span{display:block;color:var(--eop-preview-muted,#66768d);font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}.eop-proposal-hero__meta-item strong{display:block;margin-top:7px;font-size:18px;line-height:1.2;color:var(--eop-preview-text,#16243a)}.eop-proposal-overview{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:24px;align-items:start}.eop-proposal-overview__main,.eop-proposal-overview__side{display:grid;gap:18px}.eop-proposal-overview__side{position:sticky;top:18px}.eop-proposal-section,.eop-proposal-summary-card{padding:24px;border-radius:28px;border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));box-shadow:0 18px 38px rgba(15,27,53,.08)}.eop-proposal-section{background:var(--eop-preview-panel-bg,#fff)}.eop-proposal-summary-card{background:var(--eop-preview-side-bg,#f6f8fc)}.eop-proposal-section__head{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:18px}.eop-proposal-section__eyebrow,.eop-proposal-summary-card__eyebrow{display:block;margin-bottom:6px;color:var(--eop-preview-muted,#66768d);font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}.eop-proposal-section__head h2,.eop-proposal-summary-card h2{margin:0;font-size:26px;line-height:1.06;letter-spacing:-.04em;color:var(--eop-preview-text,#16243a)}.eop-proposal-meta{display:grid;gap:12px}.eop-proposal-meta p{display:grid;gap:6px;margin:0;padding:14px 16px;border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));border-radius:18px;background:var(--eop-preview-panel-bg,#fff)}.eop-proposal-meta strong{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--eop-preview-muted,#66768d)}.eop-proposal-items{display:grid;gap:14px}.eop-proposal-item{display:grid;grid-template-columns:108px minmax(0,1fr) auto;gap:18px;align-items:center;padding:18px;border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));border-radius:24px;background:var(--eop-preview-panel-bg,#fff)}.eop-proposal-item__media{width:108px;height:108px;border-radius:24px;overflow:hidden;background:var(--eop-preview-side-bg,#f6f8fc);border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:var(--eop-preview-muted,#66768d)}.eop-proposal-item__media img{display:block;width:100%;height:100%;object-fit:cover}.eop-proposal-item__body{min-width:0}.eop-proposal-item__name{margin:0 0 8px;font-size:23px;line-height:1.18;color:var(--eop-preview-text,#16243a)}.eop-proposal-item__meta{display:flex;flex-wrap:wrap;gap:8px 12px;color:var(--eop-preview-muted,#66768d);font-size:14px}.eop-proposal-item__pill{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;background:var(--eop-preview-accent-soft,rgba(215,138,47,.12));color:var(--eop-preview-pill-text,#1a2550);font-weight:700;line-height:1.2;white-space:nowrap;max-width:100%}.eop-proposal-item__pill--discount{display:grid;gap:2px;align-items:flex-start;padding:9px 12px;white-space:normal;border-radius:18px}.eop-proposal-item__pill-main{font-size:13px;line-height:1.2}.eop-proposal-item__pill-sub{font-size:12px;line-height:1.25;color:var(--eop-preview-muted,#66768d)}.eop-proposal-item__summary{display:grid;gap:6px;min-width:150px;justify-items:end;text-align:right}.eop-proposal-item__summary span{font-size:13px;color:var(--eop-preview-muted,#66768d);text-transform:uppercase;letter-spacing:.08em;font-weight:700}.eop-proposal-item__summary strong{font-size:30px;line-height:1;color:var(--eop-preview-text,#16243a)}.eop-proposal-notes{padding:18px;border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));border-radius:22px;background:var(--eop-preview-panel-bg,#fff)}.eop-proposal-notes span{display:block;margin-bottom:8px;color:var(--eop-preview-muted,#66768d);font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}.eop-proposal-notes p{margin:0;color:var(--eop-preview-text,#16243a)}.eop-proposal-totals{display:grid;gap:2px}.eop-proposal-total{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:9px 0;color:var(--eop-preview-text,#16243a)}.eop-proposal-total.is-grand{font-size:20px;font-weight:800;border-top:2px solid var(--eop-preview-accent,#d78a2f);margin-top:8px;padding-top:12px}.eop-proposal-total__value{display:grid;justify-items:end;gap:2px;text-align:right}.eop-proposal-total__value strong{font-size:15px;line-height:1.1;color:var(--eop-preview-text,#16243a)}.eop-proposal-total__value small{font-size:12px;line-height:1.25;color:var(--eop-preview-muted,#66768d)}.eop-proposal-button{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 22px;border:none;border-radius:var(--eop-preview-radius,18px);background:var(--eop-preview-accent,#d78a2f);color:#fff;text-decoration:none;font-weight:700;cursor:pointer;box-shadow:0 16px 30px var(--eop-preview-accent-shadow,rgba(215,138,47,.2))}.eop-proposal-button--secondary{background:var(--eop-preview-side-bg,#f6f8fc);color:var(--eop-preview-text,#16243a);box-shadow:none;border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18))}.eop-proposal-actions{display:flex;flex-wrap:wrap;gap:12px}.eop-proposal-actions form{display:flex;width:100%}.eop-proposal-actions .eop-proposal-button{width:100%}.eop-proposal-note{margin:0;padding:14px 16px;border-radius:18px;background:#ecfdf5;border:1px solid #bbf7d0;color:#166534}.eop-proposal-wrap.is-flow-focus{max-width:var(--eop-preview-flow-focus-max-width,1040px);padding-bottom:34px}.eop-proposal-wrap.is-flow-focus .eop-proposal-card{gap:0}@media (max-width:980px){.eop-proposal-hero,.eop-proposal-overview{grid-template-columns:1fr}.eop-proposal-overview__side{position:static}.eop-proposal-actions .eop-proposal-button{width:auto}}@media (max-width:720px){.eop-proposal-wrap{font-size:15px;padding:0 10px 30px}.eop-proposal-hero,.eop-proposal-section,.eop-proposal-summary-card{padding:20px;border-radius:24px}.eop-proposal-brandline{flex-direction:column}.eop-proposal-hero__meta{grid-template-columns:1fr}.eop-proposal-title{font-size:var(--eop-preview-title-size-mobile,28px)}.eop-proposal-item{grid-template-columns:1fr}.eop-proposal-item__media{width:86px;height:86px}.eop-proposal-item__summary{justify-items:start;text-align:left}.eop-proposal-total{gap:10px}.eop-proposal-total__value strong{font-size:14px}}';
+        return '.eop-proposal-wrap{max-width:var(--eop-preview-max-width,1120px);margin:32px auto;padding:0 16px 46px;font-family:var(--eop-preview-font-family,\'Segoe UI\',sans-serif);font-size:var(--eop-preview-text-size,16px);color:var(--eop-preview-text,#16243a)}.eop-proposal-card{display:grid;gap:24px}.eop-proposal-hero{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:24px;padding:34px;border-radius:calc(var(--eop-preview-radius,18px) + 10px);background:var(--eop-preview-hero-bg,#0f1b35);box-shadow:0 28px 68px rgba(15,27,53,.24)}.eop-proposal-hero::before{content:\"\";position:absolute;inset:auto -10% -30% auto;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,var(--eop-preview-accent-glow,rgba(215,138,47,.28)),transparent 70%)}.eop-proposal-hero > *{position:relative;z-index:1}.eop-proposal-hero__main,.eop-proposal-hero__aside{display:grid;gap:18px;align-content:start}.eop-proposal-brandline{display:flex;align-items:flex-start;gap:18px}.eop-proposal-brand{display:flex;align-items:center;justify-content:center;min-width:110px;min-height:90px;padding:16px 18px;border-radius:26px;background:var(--eop-preview-brand-bg,rgba(255,255,255,.12));border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));backdrop-filter:blur(10px)}.eop-proposal-brand img,.eop-proposal-logo{display:block;max-width:210px;max-height:60px;object-fit:contain}.eop-proposal-brand__fallback{color:var(--eop-preview-hero-text,#fff);font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center}.eop-proposal-hero__copy{display:grid;gap:12px;max-width:640px}.eop-proposal-hero__top{display:flex;flex-wrap:wrap;gap:10px}.eop-proposal-status,.eop-proposal-stage{display:inline-flex;align-items:center;min-height:38px;padding:0 14px;border-radius:999px;font-size:var(--eop-preview-chip-font-size,12px);font-weight:var(--eop-preview-chip-font-weight,800);letter-spacing:.08em;text-transform:uppercase}.eop-proposal-status{background:var(--eop-preview-hero-chip-bg,rgba(255,255,255,.16));color:var(--eop-preview-hero-chip-text,#fff);border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18))}.eop-proposal-stage{background:var(--eop-preview-accent-soft,rgba(215,138,47,.22));color:var(--eop-preview-hero-chip-text,#fff);border:1px solid var(--eop-preview-accent-border,rgba(215,138,47,.28))}.eop-proposal-eyebrow{display:block;color:var(--eop-preview-hero-muted,rgba(255,255,255,.78));font-size:var(--eop-preview-hero-eyebrow-size,11px);font-weight:900;letter-spacing:.18em;text-transform:uppercase}.eop-proposal-title{margin:0;font-size:var(--eop-preview-title-size,46px);line-height:var(--eop-preview-hero-title-line-height,.98);font-weight:var(--eop-preview-hero-title-weight,800);letter-spacing:-.05em;color:var(--eop-preview-hero-text,#fff)}.eop-proposal-text{margin:0;max-width:58ch;color:var(--eop-preview-hero-muted,rgba(255,255,255,.78));font-size:var(--eop-preview-text-size,16px);line-height:var(--eop-preview-hero-text-line-height,1.7)}.eop-proposal-hero__aside{padding:24px;border-radius:28px;background:var(--eop-preview-side-bg,#f6f8fc);border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));backdrop-filter:blur(10px)}.eop-proposal-hero__aside-label{color:var(--eop-preview-muted,#66768d);display:block;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}.eop-proposal-hero__aside strong{font-size:44px;line-height:.95;letter-spacing:-.06em;color:var(--eop-preview-text,#16243a)}.eop-proposal-hero__aside p{margin:0;color:var(--eop-preview-text,#16243a);line-height:1.65}.eop-proposal-hero__meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:4px}.eop-proposal-hero__meta-item{padding:14px 16px;border-radius:20px;background:var(--eop-preview-panel-bg,#fff);border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18))}.eop-proposal-hero__meta-item span{display:block;color:var(--eop-preview-muted,#66768d);font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}.eop-proposal-hero__meta-item strong{display:block;margin-top:7px;font-size:18px;line-height:1.2;color:var(--eop-preview-text,#16243a)}.eop-proposal-overview{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:24px;align-items:start}.eop-proposal-overview__main,.eop-proposal-overview__side{display:grid;gap:18px}.eop-proposal-overview__side{position:sticky;top:18px}.eop-proposal-section,.eop-proposal-summary-card{padding:24px;border-radius:28px;border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));box-shadow:0 18px 38px rgba(15,27,53,.08)}.eop-proposal-section{background:var(--eop-preview-panel-bg,#fff)}.eop-proposal-summary-card{background:var(--eop-preview-side-bg,#f6f8fc)}.eop-proposal-section__head{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:18px}.eop-proposal-section__eyebrow,.eop-proposal-summary-card__eyebrow{display:block;margin-bottom:6px;color:var(--eop-preview-muted,#66768d);font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}.eop-proposal-section__head h2,.eop-proposal-summary-card h2{margin:0;font-size:var(--eop-preview-section-title-size,26px);font-weight:var(--eop-preview-section-title-weight,800);line-height:1.06;letter-spacing:-.04em;color:var(--eop-preview-text,#16243a)}.eop-proposal-meta{display:grid;gap:12px}.eop-proposal-meta p{display:grid;gap:6px;margin:0;padding:14px 16px;border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));border-radius:18px;background:var(--eop-preview-panel-bg,#fff)}.eop-proposal-meta strong{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--eop-preview-muted,#66768d)}.eop-proposal-items{display:grid;gap:14px}.eop-proposal-item{display:grid;grid-template-columns:108px minmax(0,1fr) auto;gap:18px;align-items:center;padding:18px;border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));border-radius:24px;background:var(--eop-preview-panel-bg,#fff)}.eop-proposal-item__media{width:108px;height:108px;border-radius:24px;overflow:hidden;background:var(--eop-preview-side-bg,#f6f8fc);border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:var(--eop-preview-muted,#66768d)}.eop-proposal-item__media img{display:block;width:100%;height:100%;object-fit:cover}.eop-proposal-item__body{min-width:0}.eop-proposal-item__name{margin:0 0 8px;font-size:var(--eop-preview-item-title-size,23px);font-weight:var(--eop-preview-item-title-weight,700);line-height:1.18;color:var(--eop-preview-text,#16243a)}.eop-proposal-item__meta{display:flex;flex-wrap:wrap;gap:8px 12px;color:var(--eop-preview-muted,#66768d);font-size:14px}.eop-proposal-item__pill{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;background:var(--eop-preview-accent-soft,rgba(215,138,47,.12));color:var(--eop-preview-pill-text,#1a2550);font-weight:700;line-height:1.2;white-space:nowrap;max-width:100%}.eop-proposal-item__pill--discount{display:grid;gap:2px;align-items:flex-start;padding:9px 12px;white-space:normal;border-radius:18px}.eop-proposal-item__pill-main{font-size:13px;line-height:1.2}.eop-proposal-item__pill-sub{font-size:12px;line-height:1.25;color:var(--eop-preview-muted,#66768d)}.eop-proposal-item__summary{display:grid;gap:6px;min-width:150px;justify-items:end;text-align:right}.eop-proposal-item__summary span{font-size:13px;color:var(--eop-preview-muted,#66768d);text-transform:uppercase;letter-spacing:.08em;font-weight:700}.eop-proposal-item__summary strong{font-size:30px;line-height:1;color:var(--eop-preview-text,#16243a)}.eop-proposal-notes{padding:18px;border:1px solid var(--eop-preview-border-soft,rgba(255,255,255,.18));border-radius:22px;background:var(--eop-preview-panel-bg,#fff)}.eop-proposal-notes span{display:block;margin-bottom:8px;color:var(--eop-preview-muted,#66768d);font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}.eop-proposal-notes p{margin:0;color:var(--eop-preview-text,#16243a)}.eop-proposal-totals{display:grid;gap:2px}.eop-proposal-total{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:9px 0;color:var(--eop-preview-text,#16243a)}.eop-proposal-total.is-grand{font-size:20px;font-weight:800;border-top:2px solid var(--eop-preview-accent,#d78a2f);margin-top:8px;padding-top:12px}.eop-proposal-total__value{display:grid;justify-items:end;gap:2px;text-align:right}.eop-proposal-total__value strong{font-size:15px;line-height:1.1;color:var(--eop-preview-text,#16243a)}.eop-proposal-total__value small{font-size:12px;line-height:1.25;color:var(--eop-preview-muted,#66768d)}.eop-proposal-button{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:var(--eop-preview-button-padding,0 22px);border:none;border-radius:var(--eop-preview-button-radius,18px);background:var(--eop-preview-button-bg,var(--eop-preview-accent,#d78a2f));color:var(--eop-preview-button-text,#fff);text-decoration:none;font-size:var(--eop-preview-button-font-size,16px);line-height:var(--eop-preview-button-line-height,1);font-weight:var(--eop-preview-button-font-weight,700);cursor:pointer;box-shadow:var(--eop-preview-button-shadow,0 16px 30px rgba(215,138,47,.2))}.eop-proposal-button--secondary{background:var(--eop-preview-secondary-button-bg,var(--eop-preview-side-bg,#f6f8fc));color:var(--eop-preview-secondary-button-text,var(--eop-preview-text,#16243a));box-shadow:none;border:1px solid var(--eop-preview-secondary-button-border,var(--eop-preview-border-soft,rgba(255,255,255,.18)));font-size:var(--eop-preview-secondary-button-font-size,var(--eop-preview-button-font-size,16px));line-height:var(--eop-preview-secondary-button-line-height,var(--eop-preview-button-line-height,1));font-weight:var(--eop-preview-secondary-button-font-weight,var(--eop-preview-button-font-weight,700));padding:var(--eop-preview-secondary-button-padding,var(--eop-preview-button-padding,0 22px));border-radius:var(--eop-preview-secondary-button-radius,var(--eop-preview-button-radius,18px))}.eop-proposal-actions{display:flex;flex-wrap:wrap;gap:12px}.eop-proposal-actions form{display:flex;width:100%}.eop-proposal-actions .eop-proposal-button{width:100%}.eop-proposal-note{margin:0;padding:var(--eop-preview-alert-padding,14px 16px);border-radius:var(--eop-preview-alert-radius,18px);background:var(--eop-preview-alert-bg,#ecfdf5);border:1px solid var(--eop-preview-alert-border,#bbf7d0);color:var(--eop-preview-alert-text,#166534);font-size:var(--eop-preview-alert-font-size,15px);line-height:var(--eop-preview-alert-line-height,1.6)}.eop-proposal-wrap.is-flow-focus{max-width:var(--eop-preview-flow-focus-max-width,1040px);padding-bottom:34px}.eop-proposal-wrap.is-flow-focus .eop-proposal-card{gap:0}@media (max-width:980px){.eop-proposal-hero,.eop-proposal-overview{grid-template-columns:1fr}.eop-proposal-overview__side{position:static}.eop-proposal-actions .eop-proposal-button{width:auto}}@media (max-width:720px){.eop-proposal-wrap{font-size:15px;padding:0 10px 30px}.eop-proposal-hero,.eop-proposal-section,.eop-proposal-summary-card{padding:20px;border-radius:24px}.eop-proposal-brandline{flex-direction:column}.eop-proposal-hero__meta{grid-template-columns:1fr}.eop-proposal-title{font-size:var(--eop-preview-title-size-mobile,28px)}.eop-proposal-item{grid-template-columns:1fr}.eop-proposal-item__media{width:86px;height:86px}.eop-proposal-item__summary{justify-items:start;text-align:left}.eop-proposal-total{gap:10px}.eop-proposal-total__value strong{font-size:14px}}';
     }
 
     private static function render_shared_proposal_markup( $context ) {
@@ -1621,6 +1655,61 @@ class EOP_Public_Proposal {
             'financial_title'        => self::normalize_customer_experience_copy( trim( (string) $resolve( 'customer_experience_financial_title', '', 'Resumo' ) ), 'Resumo financeiro', 'Resumo' ),
             'actions_eyebrow'        => trim( (string) $resolve( 'customer_experience_actions_eyebrow', '', 'Proxima acao' ) ),
             'actions_title'          => trim( (string) $resolve( 'customer_experience_actions_title', '', 'Como seguir agora' ) ),
+            'alert_note'             => trim( (string) $resolve( 'customer_experience_alert_note', '', 'Este bloco simula a jornada publica com a mesma hierarquia visual usada pelo cliente.' ) ),
+            'success_message'        => trim( (string) $resolve( 'customer_experience_success_message', '', 'Proposta confirmada com sucesso.' ) ),
+            'notes_label'            => trim( (string) $resolve( 'customer_experience_notes_label', '', 'Observacoes' ) ),
+            'preview_status_label'   => trim( (string) $resolve( 'customer_experience_preview_status_label', '', 'Preview ao vivo' ) ),
+            'preview_stage_label'    => trim( (string) $resolve( 'customer_experience_preview_stage_label', '', 'Layout real' ) ),
+            'pending_status_text'    => trim( (string) $resolve( 'customer_experience_pending_status_text', '', 'Aguardando confirmacao' ) ),
+            'confirmed_status_text'  => trim( (string) $resolve( 'customer_experience_confirmed_status_text', '', 'Proposta confirmada' ) ),
+            'stage_prefix'           => trim( (string) $resolve( 'customer_experience_stage_prefix', '', 'Etapa atual:' ) ),
+            'order_label'            => trim( (string) $resolve( 'customer_experience_order_label', '', 'Pedido' ) ),
+            'customer_label'         => trim( (string) $resolve( 'customer_experience_customer_label', '', 'Cliente' ) ),
+            'meta_status_label'      => trim( (string) $resolve( 'customer_experience_meta_status_label', '', 'Status' ) ),
+            'meta_status_value_preview' => trim( (string) $resolve( 'customer_experience_meta_status_value_preview', '', 'Aguardando confirmacao' ) ),
+            'meta_deadline_label'    => trim( (string) $resolve( 'customer_experience_meta_deadline_label', '', 'Prazo' ) ),
+            'meta_deadline_value_preview' => trim( (string) $resolve( 'customer_experience_meta_deadline_value_preview', '', 'Entrega em ate 3 dias uteis' ) ),
+            'subtotal_label'         => trim( (string) $resolve( 'customer_experience_subtotal_label', '', 'Subtotal' ) ),
+            'subtotal_note'          => trim( (string) $resolve( 'customer_experience_subtotal_note', '', 'Valor base dos itens' ) ),
+            'discount_label'         => trim( (string) $resolve( 'customer_experience_discount_label', '', 'Desconto' ) ),
+            'discount_note'          => trim( (string) $resolve( 'customer_experience_discount_note', '', 'Campanha aplicada' ) ),
+            'total_row_label'        => trim( (string) $resolve( 'customer_experience_total_row_label', '', 'Total' ) ),
+            'total_row_note'         => trim( (string) $resolve( 'customer_experience_total_row_note', '', 'Valor final exibido ao cliente' ) ),
+            'hero_text_color'        => trim( (string) $resolve( 'customer_experience_hero_text_color', '', '' ) ),
+            'hero_muted_color'       => trim( (string) $resolve( 'customer_experience_hero_muted_color', '', '' ) ),
+            'hero_eyebrow_size'      => $normalize_size( $resolve( 'customer_experience_eyebrow_size', '', '11px' ), '11px' ),
+            'hero_title_line_height' => trim( (string) $resolve( 'customer_experience_title_line_height', '', '0.98' ) ),
+            'hero_title_weight'      => trim( (string) $resolve( 'customer_experience_title_font_weight', '', '800' ) ),
+            'hero_text_line_height'  => trim( (string) $resolve( 'customer_experience_text_line_height', '', '1.7' ) ),
+            'chip_font_size'         => $normalize_size( $resolve( 'customer_experience_chip_font_size', '', '12px' ), '12px' ),
+            'chip_font_weight'       => trim( (string) $resolve( 'customer_experience_chip_font_weight', '', '800' ) ),
+            'section_title_size'     => $normalize_size( $resolve( 'customer_experience_section_title_size', '', '26px' ), '26px' ),
+            'section_title_weight'   => trim( (string) $resolve( 'customer_experience_section_title_font_weight', '', '800' ) ),
+            'item_title_size'        => $normalize_size( $resolve( 'customer_experience_item_title_size', '', '23px' ), '23px' ),
+            'item_title_weight'      => trim( (string) $resolve( 'customer_experience_item_title_font_weight', '', '700' ) ),
+            'button_bg'              => trim( (string) $resolve( 'customer_experience_primary_button_background_color', '', $resolve( 'customer_experience_accent_color', 'primary_color', '#d78a2f' ) ) ),
+            'button_text'            => trim( (string) $resolve( 'customer_experience_primary_button_text_color', '', '#ffffff' ) ),
+            'button_font_size'       => $normalize_size( $resolve( 'customer_experience_button_font_size', '', '16px' ), '16px' ),
+            'button_line_height'     => trim( (string) $resolve( 'customer_experience_button_line_height', '', '1' ) ),
+            'button_font_weight'     => trim( (string) $resolve( 'customer_experience_button_font_weight', '', '700' ) ),
+            'button_padding'         => trim( (string) $resolve( 'customer_experience_button_padding', '', '0 22px' ) ),
+            'button_radius'          => $normalize_size( $resolve( 'customer_experience_button_radius', '', '18px' ), '18px' ),
+            'button_shadow'          => trim( (string) $resolve( 'customer_experience_button_shadow', '', '0 16px 30px rgba(215, 138, 47, .20)' ) ),
+            'secondary_button_bg'    => trim( (string) $resolve( 'customer_experience_secondary_button_background_color', '', '#f6f8fc' ) ),
+            'secondary_button_text'  => trim( (string) $resolve( 'customer_experience_secondary_button_text_color', '', '#16243a' ) ),
+            'secondary_button_border'=> trim( (string) $resolve( 'customer_experience_secondary_button_border_color', '', '#dbe3f0' ) ),
+            'secondary_button_font_size' => $normalize_size( $resolve( 'customer_experience_secondary_button_font_size', '', '16px' ), '16px' ),
+            'secondary_button_line_height' => trim( (string) $resolve( 'customer_experience_secondary_button_line_height', '', '1' ) ),
+            'secondary_button_font_weight' => trim( (string) $resolve( 'customer_experience_secondary_button_font_weight', '', '700' ) ),
+            'secondary_button_padding' => trim( (string) $resolve( 'customer_experience_secondary_button_padding', '', '0 22px' ) ),
+            'secondary_button_radius' => $normalize_size( $resolve( 'customer_experience_secondary_button_radius', '', '18px' ), '18px' ),
+            'alert_bg'               => trim( (string) $resolve( 'customer_experience_alert_background_color', '', '#ecfdf5' ) ),
+            'alert_border'           => trim( (string) $resolve( 'customer_experience_alert_border_color', '', '#bbf7d0' ) ),
+            'alert_text'             => trim( (string) $resolve( 'customer_experience_alert_text_color', '', '#166534' ) ),
+            'alert_font_size'        => $normalize_size( $resolve( 'customer_experience_alert_font_size', '', '15px' ), '15px' ),
+            'alert_line_height'      => trim( (string) $resolve( 'customer_experience_alert_line_height', '', '1.6' ) ),
+            'alert_radius'           => $normalize_size( $resolve( 'customer_experience_alert_radius', '', '18px' ), '18px' ),
+            'alert_padding'          => trim( (string) $resolve( 'customer_experience_alert_padding', '', '14px 16px' ) ),
         );
     }
 

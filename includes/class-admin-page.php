@@ -143,6 +143,8 @@ class EOP_Admin_Page {
 
     use EOP_License_Guard;
 
+    private static $cached_plugin_settings = null;
+
     public static function init() {
         if ( ! self::_resolve_env_config() ) {
             return;
@@ -184,9 +186,9 @@ class EOP_Admin_Page {
             'settings-confirmation-documents' => current_user_can( 'manage_options' ),
             'settings-confirmation-preview' => current_user_can( 'manage_options' ),
             'settings-confirmation-upload-products-preview' => current_user_can( 'manage_options' ),
-            'settings-order-link-style'  => current_user_can( 'manage_options' ),
             'settings-proposal-link-style' => current_user_can( 'manage_options' ),
-            'settings-customer-experience' => current_user_can( 'manage_options' ),
+            'settings-new-order-style'   => current_user_can( 'manage_options' ),
+            'settings-orders-list-style' => current_user_can( 'manage_options' ),
             'settings-texts'             => current_user_can( 'manage_options' ),
             'documentation'              => current_user_can( 'manage_options' ),
             'export-import'              => current_user_can( 'manage_options' ),
@@ -201,7 +203,7 @@ class EOP_Admin_Page {
 
         $legacy_map = array(
             'settings'        => 'settings-general-config',
-            'settings-styles' => 'settings-order-link-style',
+            'settings-styles' => 'settings-proposal-link-style',
             'settings-confirmation-flow' => 'settings-confirmation-general',
         );
 
@@ -285,6 +287,187 @@ class EOP_Admin_Page {
         require $template_path;
     }
 
+    private static function get_plugin_settings() {
+        if ( null === self::$cached_plugin_settings ) {
+            self::$cached_plugin_settings = class_exists( 'EOP_Settings' ) ? EOP_Settings::get_all() : array();
+        }
+
+        return is_array( self::$cached_plugin_settings ) ? self::$cached_plugin_settings : array();
+    }
+
+    public static function is_preview_frame_request( $view = '' ) {
+        $is_preview = isset( $_GET['eop_preview_frame'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['eop_preview_frame'] ) );
+
+        if ( ! $is_preview ) {
+            return false;
+        }
+
+        if ( '' === $view ) {
+            return true;
+        }
+
+        return self::normalize_preview_frame_view( isset( $_GET['preview_view'] ) ? wp_unslash( $_GET['preview_view'] ) : '' ) === self::normalize_preview_frame_view( $view );
+    }
+
+    public static function get_preview_frame_url( $view ) {
+        return add_query_arg(
+            array(
+                'page'              => 'eop-pedido-expresso',
+                'eop_preview_frame' => '1',
+                'preview_view'      => self::normalize_preview_frame_view( $view ),
+            ),
+            admin_url( 'admin.php' )
+        );
+    }
+
+    private static function normalize_preview_frame_view( $view ) {
+        $view = sanitize_key( (string) $view );
+
+        return in_array( $view, array( 'new-order', 'orders' ), true ) ? $view : 'new-order';
+    }
+
+    public static function get_new_order_view_labels() {
+        $settings = self::get_plugin_settings();
+
+        return array(
+            'kicker'                => (string) ( $settings['new_order_kicker'] ?? __( 'Operacao comercial', EOP_TEXT_DOMAIN ) ),
+            'title'                 => (string) ( $settings['new_order_title'] ?? __( 'Novo pedido', EOP_TEXT_DOMAIN ) ),
+            'description'           => (string) ( $settings['new_order_description'] ?? __( 'Monte o pedido, ajuste cliente, frete e descontos sem sair do fluxo principal do painel.', EOP_TEXT_DOMAIN ) ),
+            'submit_label'          => (string) ( $settings['new_order_submit_label'] ?? __( 'Finalizar e Gerar PDF', EOP_TEXT_DOMAIN ) ),
+            'mass_apply_label'      => (string) ( $settings['new_order_mass_apply_label'] ?? __( 'Aplicar', EOP_TEXT_DOMAIN ) ),
+            'shipping_button_label' => (string) ( $settings['new_order_shipping_button_label'] ?? __( 'Buscar opcoes de frete', EOP_TEXT_DOMAIN ) ),
+        );
+    }
+
+    public static function get_orders_list_view_labels() {
+        $settings = self::get_plugin_settings();
+
+        return array(
+            'kicker'            => (string) ( $settings['orders_list_kicker'] ?? __( 'Gestao comercial', EOP_TEXT_DOMAIN ) ),
+            'title'             => (string) ( $settings['orders_list_title'] ?? __( 'Pedidos', EOP_TEXT_DOMAIN ) ),
+            'description'       => (string) ( $settings['orders_list_description'] ?? __( 'Acompanhe pedidos e propostas da equipe comercial com os atalhos principais do fluxo.', EOP_TEXT_DOMAIN ) ),
+            'panel_title'       => (string) ( $settings['orders_list_panel_title'] ?? __( 'Pedidos criados', EOP_TEXT_DOMAIN ) ),
+            'panel_description' => (string) ( $settings['orders_list_panel_description'] ?? __( 'Acompanhe propostas e pedidos sem sair da tela de vendas.', EOP_TEXT_DOMAIN ) ),
+            'refresh_label'     => (string) ( $settings['orders_list_refresh_label'] ?? __( 'Atualizar', EOP_TEXT_DOMAIN ) ),
+        );
+    }
+
+    public static function render_view_skin_css( $view ) {
+        $view     = self::normalize_preview_frame_view( $view );
+        $settings = self::get_plugin_settings();
+        $prefix   = 'new-order' === $view ? 'new_order_' : 'orders_list_';
+        $scope    = '.eop-admin-preview-host [data-eop-view="' . $view . '"]';
+        $font_raw = (string) ( $settings[ $prefix . 'font_family' ] ?? 'Montserrat:400,700' );
+        $font_css = method_exists( 'EOP_Settings', 'get_font_css_family' ) ? EOP_Settings::get_font_css_family( $font_raw ) : 'inherit';
+        $primary  = self::sanitize_css_color( $settings[ $prefix . 'primary_color' ] ?? '#00034b', '#00034b' );
+        $surface  = self::sanitize_css_color( $settings[ $prefix . 'surface_color' ] ?? '#ffffff', '#ffffff' );
+        $border   = self::sanitize_css_color( $settings[ $prefix . 'border_color' ] ?? '#dbe3f0', '#dbe3f0' );
+        $bg       = self::sanitize_css_color( $settings[ $prefix . 'background_color' ] ?? '#f5f7ff', '#f5f7ff' );
+        $radius   = absint( $settings[ $prefix . 'radius' ] ?? 18 );
+        $css      = $scope . ' {' .
+            'background:' . $bg . ';' .
+            'font-family:' . $font_css . ';' .
+            'padding:24px;' .
+            'border-radius:' . $radius . 'px;' .
+        '}' .
+        $scope . ',' .
+        $scope . ' input,' .
+        $scope . ' select,' .
+        $scope . ' textarea,' .
+        $scope . ' button {' .
+            'font-family:' . $font_css . ';' .
+        '}' .
+        $scope . ' .eop-card,' .
+        $scope . ' .eop-orders-summary__card,' .
+        $scope . ' .eop-order-card {' .
+            'background:' . $surface . ';' .
+            'border-color:' . $border . ';' .
+            'border-radius:' . $radius . 'px;' .
+        '}' .
+        $scope . ' .eop-admin-view-kicker,' .
+        $scope . ' .eop-admin-view-title,' .
+        $scope . ' .eop-post-flow-card__head h2,' .
+        $scope . ' .eop-order-card__number,' .
+        $scope . ' .eop-orders-summary__card strong {' .
+            'color:' . $primary . ';' .
+        '}' .
+        $scope . ' .eop-btn-primary,' .
+        $scope . ' .eop-status,' .
+        $scope . ' .eop-order-card__status,' .
+        $scope . ' .eop-order-card__flow-stage {' .
+            'background:' . $primary . ';' .
+            'border-color:' . $primary . ';' .
+            'color:#ffffff;' .
+        '}' .
+        $scope . ' .eop-btn,' .
+        $scope . ' input,' .
+        $scope . ' select,' .
+        $scope . ' textarea,' .
+        $scope . ' .eop-items-list,' .
+        $scope . ' .eop-orders-browser__summary,' .
+        $scope . ' .eop-orders-browser__list,' .
+        $scope . ' .eop-orders-browser__pagination {' .
+            'border-radius:' . $radius . 'px;' .
+        '}' .
+        $scope . ' input,' .
+        $scope . ' select,' .
+        $scope . ' textarea,' .
+        $scope . ' .eop-items-list,' .
+        $scope . ' .eop-order-card,' .
+        $scope . ' .eop-orders-summary__card {' .
+            'border-color:' . $border . ';' .
+        '}';
+        ?>
+        <style><?php echo esc_html( $css ); ?></style>
+        <?php
+    }
+
+    private static function sanitize_css_color( $value, $fallback ) {
+        $color = sanitize_hex_color( (string) $value );
+
+        return $color ? $color : $fallback;
+    }
+
+    private static function render_preview_frame_page() {
+        $view      = self::normalize_preview_frame_view( isset( $_GET['preview_view'] ) ? wp_unslash( $_GET['preview_view'] ) : '' );
+        $font_urls = method_exists( 'EOP_Settings', 'get_font_stylesheet_urls' ) ? (array) EOP_Settings::get_font_stylesheet_urls() : array();
+
+        status_header( 200 );
+        nocache_headers();
+        ?>
+        <!doctype html>
+        <html <?php language_attributes(); ?>>
+        <head>
+            <meta charset="<?php bloginfo( 'charset' ); ?>" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <title><?php echo esc_html( get_bloginfo( 'name' ) . ' - ' . ( 'orders' === $view ? __( 'Pedidos', EOP_TEXT_DOMAIN ) : __( 'Novo pedido', EOP_TEXT_DOMAIN ) ) ); ?></title>
+            <link rel="stylesheet" href="<?php echo esc_url( includes_url( 'css/dashicons.min.css' ) ); ?>" />
+            <?php foreach ( $font_urls as $font_url ) : ?>
+                <?php if ( ! empty( $font_url ) ) : ?>
+                    <link rel="stylesheet" href="<?php echo esc_url( $font_url ); ?>" />
+                <?php endif; ?>
+            <?php endforeach; ?>
+            <link rel="stylesheet" href="<?php echo esc_url( EOP_PLUGIN_URL . 'assets/css/admin.css?ver=' . EOP_VERSION ); ?>" />
+            <link rel="stylesheet" href="<?php echo esc_url( EOP_PLUGIN_URL . 'assets/css/frontend.css?ver=' . EOP_VERSION ); ?>" />
+            <style>
+                body { margin: 0; background: #eef2f8; }
+                .eop-admin-preview-host { padding: 18px; }
+                .eop-admin-preview-host button,
+                .eop-admin-preview-host input,
+                .eop-admin-preview-host select,
+                .eop-admin-preview-host textarea { pointer-events: none; }
+                .eop-admin-preview-host a { pointer-events: none; text-decoration: none; }
+            </style>
+        </head>
+        <body class="eop-admin-preview-frame eop-admin-preview-frame--<?php echo esc_attr( $view ); ?>">
+            <div class="eop-admin-preview-host">
+                <?php self::render_template( 'shortcode-page.php' ); ?>
+            </div>
+        </body>
+        </html>
+        <?php
+    }
+
     private static function get_lazy_view_definitions() {
         return array(
             'new-order' => array(
@@ -350,25 +533,25 @@ class EOP_Admin_Page {
                     EOP_Settings::render_embedded_page( 'confirmation-flow-upload-products-preview' );
                 },
             ),
-            'settings-order-link-style' => array(
-                'title' => __( 'Visual do Link do Pedido', EOP_TEXT_DOMAIN ),
-                'description' => __( 'Separe a identidade visual principal do shell e do link do pedido para ajustes rapidos de marca.', EOP_TEXT_DOMAIN ),
-                'renderer' => function () {
-                    EOP_Settings::render_embedded_page( 'order-link-style' );
-                },
-            ),
             'settings-proposal-link-style' => array(
-                'title' => __( 'Visual do Link de Proposta', EOP_TEXT_DOMAIN ),
-                'description' => __( 'Ajuste o visual publico da proposta sem misturar essas opcoes com o restante do admin.', EOP_TEXT_DOMAIN ),
+                'title' => __( 'Visual da Proposta do Cliente', EOP_TEXT_DOMAIN ),
+                'description' => __( 'Ajuste a pagina publica da proposta do cliente, concentrando textos, botoes, cores, fontes e preview em uma unica tela.', EOP_TEXT_DOMAIN ),
                 'renderer' => function () {
                     EOP_Settings::render_embedded_page( 'proposal-link-style' );
                 },
             ),
-            'settings-customer-experience' => array(
-                'title' => __( 'Experiencia do Cliente', EOP_TEXT_DOMAIN ),
-                'description' => __( 'Separe o design da pagina confirmada e do fluxo complementar em uma view exclusiva dentro da SPA.', EOP_TEXT_DOMAIN ),
+            'settings-new-order-style' => array(
+                'title' => __( 'Visual de Criar Pedido', EOP_TEXT_DOMAIN ),
+                'description' => __( 'Personalize a tela interna de novo pedido com textos, botoes, cores, fontes e base visual propria.', EOP_TEXT_DOMAIN ),
                 'renderer' => function () {
-                    EOP_Settings::render_embedded_page( 'customer-experience' );
+                    EOP_Settings::render_embedded_page( 'new-order-style' );
+                },
+            ),
+            'settings-orders-list-style' => array(
+                'title' => __( 'Visual da Listagem de Pedidos', EOP_TEXT_DOMAIN ),
+                'description' => __( 'Personalize a tela interna de listagem de pedidos com cabecalho, textos operacionais e identidade visual propria.', EOP_TEXT_DOMAIN ),
+                'renderer' => function () {
+                    EOP_Settings::render_embedded_page( 'orders-list-style' );
                 },
             ),
             'settings-texts' => array(
@@ -866,18 +1049,8 @@ class EOP_Admin_Page {
                     ),
                 ),
                 array(
-                    'key'   => 'eop-view-settings-order-link-style',
-                    'label' => __( 'Estilo do Link do Pedido', EOP_TEXT_DOMAIN ),
-                    'icon'  => 'dashicons-art',
-                    'url'   => self::get_view_url( 'settings-order-link-style' ),
-                    'query' => array(
-                        'page' => 'eop-pedido-expresso',
-                        'view' => 'settings-order-link-style',
-                    ),
-                ),
-                array(
                     'key'   => 'eop-view-settings-proposal-link-style',
-                    'label' => __( 'Estilo do Link de Proposta', EOP_TEXT_DOMAIN ),
+                    'label' => __( 'Visual da Proposta do Cliente', EOP_TEXT_DOMAIN ),
                     'icon'  => 'dashicons-format-image',
                     'url'   => self::get_view_url( 'settings-proposal-link-style' ),
                     'query' => array(
@@ -886,13 +1059,23 @@ class EOP_Admin_Page {
                     ),
                 ),
                 array(
-                    'key'   => 'eop-view-settings-customer-experience',
-                    'label' => __( 'Experiencia do Cliente', EOP_TEXT_DOMAIN ),
-                    'icon'  => 'dashicons-format-gallery',
-                    'url'   => self::get_view_url( 'settings-customer-experience' ),
+                    'key'   => 'eop-view-settings-new-order-style',
+                    'label' => __( 'Visual de Criar Pedido', EOP_TEXT_DOMAIN ),
+                    'icon'  => 'dashicons-cart',
+                    'url'   => self::get_view_url( 'settings-new-order-style' ),
                     'query' => array(
                         'page' => 'eop-pedido-expresso',
-                        'view' => 'settings-customer-experience',
+                        'view' => 'settings-new-order-style',
+                    ),
+                ),
+                array(
+                    'key'   => 'eop-view-settings-orders-list-style',
+                    'label' => __( 'Visual da Listagem de Pedidos', EOP_TEXT_DOMAIN ),
+                    'icon'  => 'dashicons-list-view',
+                    'url'   => self::get_view_url( 'settings-orders-list-style' ),
+                    'query' => array(
+                        'page' => 'eop-pedido-expresso',
+                        'view' => 'settings-orders-list-style',
                     ),
                 ),
                 array(
@@ -1155,6 +1338,11 @@ class EOP_Admin_Page {
     public static function render_page() {
         if ( ! current_user_can( 'edit_shop_orders' ) ) {
             wp_die( esc_html__( 'Acesso negado.', EOP_TEXT_DOMAIN ) );
+        }
+
+        if ( self::is_preview_frame_request() ) {
+            self::render_preview_frame_page();
+            return;
         }
 
         include EOP_PLUGIN_DIR . 'templates/admin-page.php';

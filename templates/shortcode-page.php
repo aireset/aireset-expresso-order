@@ -1,9 +1,10 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 
-$settings       = EOP_Settings::get_all();
-$font_css       = method_exists( 'EOP_Settings', 'get_font_css_family' ) ? EOP_Settings::get_font_css_family( $settings['font_family'] ) : "'Segoe UI', sans-serif";
-$order_statuses = function_exists( 'wc_get_order_statuses' ) ? wc_get_order_statuses() : array();
+$settings             = EOP_Settings::get_all();
+$font_css             = method_exists( 'EOP_Settings', 'get_font_css_family' ) ? EOP_Settings::get_font_css_family( $settings['font_family'] ) : "'Segoe UI', sans-serif";
+$order_statuses       = function_exists( 'wc_get_order_statuses' ) ? wc_get_order_statuses() : array();
+$eop_is_preview_frame = class_exists( 'EOP_Admin_Page' ) && EOP_Admin_Page::is_preview_frame_request();
 ?>
 <style>
     .eop-pdv {
@@ -15,6 +16,10 @@ $order_statuses = function_exists( 'wc_get_order_statuses' ) ? wc_get_order_stat
         font-family: <?php echo esc_attr( $font_css ); ?>;
     }
 </style>
+
+<?php if ( $eop_is_preview_frame && class_exists( 'EOP_Admin_Page' ) ) : ?>
+    <?php EOP_Admin_Page::render_view_skin_css( isset( $_GET['preview_view'] ) ? wp_unslash( $_GET['preview_view'] ) : 'new-order' ); ?>
+<?php endif; ?>
 
 <div class="eop-pdv">
     <div class="eop-pdv-header">

@@ -857,8 +857,9 @@
         var generalViews = [
             'settings-store-info',
             'settings-general-config',
-            'settings-order-link-style',
             'settings-proposal-link-style',
+            'settings-new-order-style',
+            'settings-orders-list-style',
             'settings-customer-experience',
             'settings-texts'
         ];
@@ -1297,8 +1298,9 @@
             'settings-confirmation-documents',
             'settings-confirmation-preview',
             'settings-confirmation-upload-products-preview',
-            'settings-order-link-style',
             'settings-proposal-link-style',
+            'settings-new-order-style',
+            'settings-orders-list-style',
             'settings-customer-experience',
             'settings-texts',
             'documentation',

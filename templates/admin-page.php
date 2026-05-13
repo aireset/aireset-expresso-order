@@ -15,9 +15,9 @@ $pdf_preview_args    = array(
 $general_views = array(
     'settings-store-info',
     'settings-general-config',
-    'settings-order-link-style',
     'settings-proposal-link-style',
-    'settings-customer-experience',
+    'settings-new-order-style',
+    'settings-orders-list-style',
     'settings-texts',
 );
 $confirmation_views = array(
@@ -37,17 +37,17 @@ $general_nav_items = array(
 		'label' => __( 'Configurações Gerais', EOP_TEXT_DOMAIN ),
         'icon'  => 'dashicons-admin-settings',
     ),
-    'settings-order-link-style' => array(
-        'label' => __( 'Visual do Link do Pedido', EOP_TEXT_DOMAIN ),
-        'icon'  => 'dashicons-art',
-    ),
     'settings-proposal-link-style' => array(
-        'label' => __( 'Visual do Link de Proposta', EOP_TEXT_DOMAIN ),
+        'label' => __( 'Visual da Proposta do Cliente', EOP_TEXT_DOMAIN ),
         'icon'  => 'dashicons-format-image',
     ),
-    'settings-customer-experience' => array(
-        'label' => __( 'Experiencia do Cliente', EOP_TEXT_DOMAIN ),
-        'icon'  => 'dashicons-format-gallery',
+    'settings-new-order-style' => array(
+        'label' => __( 'Visual de Criar Pedido', EOP_TEXT_DOMAIN ),
+        'icon'  => 'dashicons-cart',
+    ),
+    'settings-orders-list-style' => array(
+        'label' => __( 'Visual da Listagem de Pedidos', EOP_TEXT_DOMAIN ),
+        'icon'  => 'dashicons-list-view',
     ),
     'settings-texts' => array(
         'label' => __( 'Textos', EOP_TEXT_DOMAIN ),
@@ -82,9 +82,9 @@ $lazy_views = array(
     'settings-confirmation-documents',
     'settings-confirmation-preview',
     'settings-confirmation-upload-products-preview',
-    'settings-order-link-style',
     'settings-proposal-link-style',
-    'settings-customer-experience',
+    'settings-new-order-style',
+    'settings-orders-list-style',
     'settings-texts',
     'documentation',
     'export-import',
@@ -422,44 +422,44 @@ $performance_initial_metrics = class_exists( 'EOP_Performance_Audit' )
                     </div>
                 </section>
 
-                <section class="eop-pdv-view<?php echo 'settings-order-link-style' === $initial_view ? ' is-active' : ''; ?>" data-eop-view="settings-order-link-style" data-eop-lazy="true" data-eop-lazy-loaded="<?php echo 'settings-order-link-style' === $initial_view ? 'true' : 'false'; ?>"<?php echo 'settings-order-link-style' === $initial_view ? '' : ' hidden'; ?>>
-                    <div class="eop-admin-panel-head">
-                        <h2><?php esc_html_e( 'Visual do Link do Pedido', EOP_TEXT_DOMAIN ); ?></h2>
-                        <p><?php esc_html_e( 'Separe a identidade visual principal do shell e do link do pedido para ajustes rapidos de marca.', EOP_TEXT_DOMAIN ); ?></p>
-                    </div>
-                    <div class="eop-admin-view-main">
-                    <?php if ( 'settings-order-link-style' === $initial_view ) : ?>
-                        <?php EOP_Settings::render_embedded_page( 'order-link-style' ); ?>
-                    <?php else : ?>
-                        <?php $render_lazy_placeholder( __( 'Visual do Link do Pedido', EOP_TEXT_DOMAIN ) ); ?>
-                    <?php endif; ?>
-                    </div>
-                </section>
-
                 <section class="eop-pdv-view<?php echo 'settings-proposal-link-style' === $initial_view ? ' is-active' : ''; ?>" data-eop-view="settings-proposal-link-style" data-eop-lazy="true" data-eop-lazy-loaded="<?php echo 'settings-proposal-link-style' === $initial_view ? 'true' : 'false'; ?>"<?php echo 'settings-proposal-link-style' === $initial_view ? '' : ' hidden'; ?>>
                     <div class="eop-admin-panel-head">
-                        <h2><?php esc_html_e( 'Visual do Link de Proposta', EOP_TEXT_DOMAIN ); ?></h2>
-                        <p><?php esc_html_e( 'Ajuste o visual publico da proposta sem misturar essas opcoes com o restante do admin.', EOP_TEXT_DOMAIN ); ?></p>
+                        <h2><?php esc_html_e( 'Visual da Proposta do Cliente', EOP_TEXT_DOMAIN ); ?></h2>
+                        <p><?php esc_html_e( 'Centralize o visual da proposta publica do cliente em uma unica tela.', EOP_TEXT_DOMAIN ); ?></p>
                     </div>
                     <div class="eop-admin-view-main">
                     <?php if ( 'settings-proposal-link-style' === $initial_view ) : ?>
                         <?php EOP_Settings::render_embedded_page( 'proposal-link-style' ); ?>
                     <?php else : ?>
-                        <?php $render_lazy_placeholder( __( 'Visual do Link de Proposta', EOP_TEXT_DOMAIN ) ); ?>
+                        <?php $render_lazy_placeholder( __( 'Visual da Proposta do Cliente', EOP_TEXT_DOMAIN ) ); ?>
                     <?php endif; ?>
                     </div>
                 </section>
 
-                <section class="eop-pdv-view<?php echo 'settings-customer-experience' === $initial_view ? ' is-active' : ''; ?>" data-eop-view="settings-customer-experience" data-eop-lazy="true" data-eop-lazy-loaded="<?php echo 'settings-customer-experience' === $initial_view ? 'true' : 'false'; ?>"<?php echo 'settings-customer-experience' === $initial_view ? '' : ' hidden'; ?>>
+                <section class="eop-pdv-view<?php echo 'settings-new-order-style' === $initial_view ? ' is-active' : ''; ?>" data-eop-view="settings-new-order-style" data-eop-lazy="true" data-eop-lazy-loaded="<?php echo 'settings-new-order-style' === $initial_view ? 'true' : 'false'; ?>"<?php echo 'settings-new-order-style' === $initial_view ? '' : ' hidden'; ?>>
                     <div class="eop-admin-panel-head">
-                        <h2><?php esc_html_e( 'Experiencia do Cliente', EOP_TEXT_DOMAIN ); ?></h2>
-                        <p><?php esc_html_e( 'Separe o design da pagina confirmada e do fluxo complementar em uma view exclusiva dentro da SPA.', EOP_TEXT_DOMAIN ); ?></p>
+                        <h2><?php esc_html_e( 'Visual de Criar Pedido', EOP_TEXT_DOMAIN ); ?></h2>
+                        <p><?php esc_html_e( 'Personalize a tela interna de criacao de pedido com identidade visual propria.', EOP_TEXT_DOMAIN ); ?></p>
                     </div>
                     <div class="eop-admin-view-main">
-                    <?php if ( 'settings-customer-experience' === $initial_view ) : ?>
-                        <?php EOP_Settings::render_embedded_page( 'customer-experience' ); ?>
+                    <?php if ( 'settings-new-order-style' === $initial_view ) : ?>
+                        <?php EOP_Settings::render_embedded_page( 'new-order-style' ); ?>
                     <?php else : ?>
-                        <?php $render_lazy_placeholder( __( 'Experiencia do Cliente', EOP_TEXT_DOMAIN ) ); ?>
+                        <?php $render_lazy_placeholder( __( 'Visual de Criar Pedido', EOP_TEXT_DOMAIN ) ); ?>
+                    <?php endif; ?>
+                    </div>
+                </section>
+
+                <section class="eop-pdv-view<?php echo 'settings-orders-list-style' === $initial_view ? ' is-active' : ''; ?>" data-eop-view="settings-orders-list-style" data-eop-lazy="true" data-eop-lazy-loaded="<?php echo 'settings-orders-list-style' === $initial_view ? 'true' : 'false'; ?>"<?php echo 'settings-orders-list-style' === $initial_view ? '' : ' hidden'; ?>>
+                    <div class="eop-admin-panel-head">
+                        <h2><?php esc_html_e( 'Visual da Listagem de Pedidos', EOP_TEXT_DOMAIN ); ?></h2>
+                        <p><?php esc_html_e( 'Personalize a tela interna de listagem de pedidos com textos e identidade visual propria.', EOP_TEXT_DOMAIN ); ?></p>
+                    </div>
+                    <div class="eop-admin-view-main">
+                    <?php if ( 'settings-orders-list-style' === $initial_view ) : ?>
+                        <?php EOP_Settings::render_embedded_page( 'orders-list-style' ); ?>
+                    <?php else : ?>
+                        <?php $render_lazy_placeholder( __( 'Visual da Listagem de Pedidos', EOP_TEXT_DOMAIN ) ); ?>
                     <?php endif; ?>
                     </div>
                 </section>

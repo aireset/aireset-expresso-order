@@ -52,6 +52,9 @@ node_modules/
 dist/
 *.zip
 
+# Patches de recuperacao (nao versionar)
+*.patch
+
 # OS files
 .DS_Store
 Thumbs.db

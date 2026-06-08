@@ -1028,6 +1028,20 @@ class EOP_Admin_SPA {
 						)
 					);
 
+					// Produtos bloqueados: multiselect com busca (apenas na tela de upload/produtos).
+					if ( 'confirmation-upload-products' === $section && in_array( 'post_confirmation_locked_products', $allowed_keys, true ) ) {
+						$schema[] = array(
+							'key'          => 'post_confirmation_locked_products',
+							'type'         => 'multiselect',
+							'group'        => __( 'Produtos bloqueados', EOP_TEXT_DOMAIN ),
+							'searchSource' => 'products',
+							'minChars'     => 3,
+							'selected'     => self::format_selector_options( EOP_Settings::get_post_confirmation_locked_product_selector_state() ),
+							'label'        => __( 'Produtos bloqueados', EOP_TEXT_DOMAIN ),
+							'help'         => __( 'Produtos cujo nome nao pode ser alterado pelo cliente na etapa final de personalizacao.', EOP_TEXT_DOMAIN ),
+						);
+					}
+
 					if ( ! empty( $schema ) ) {
 						return $schema;
 					}

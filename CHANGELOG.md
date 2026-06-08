@@ -2,6 +2,11 @@
 
 Todas as alteracoes relevantes do plugin `Aireset Expresso Order` devem ser registradas aqui.
 
+## 1.2.26 - 2026-06-08
+
+- adiciona o seletor de produtos bloqueados (multiselect com busca) na tela Confirmacao - Upload e Produtos, reaproveitando o estado de selecao do admin legado
+- remove o patch de recuperacao do versionamento e passa a ignorar arquivos `.patch`
+
 ## 1.2.25 - 2026-06-08
 
 - migra as telas de configuracao para React nativo no admin SPA: Loja, Gerais, Visual do Pedido, Visual da Listagem, Visual da Proposta e Confirmacao, reaproveitando as definicoes de campos do admin legado como fonte unica

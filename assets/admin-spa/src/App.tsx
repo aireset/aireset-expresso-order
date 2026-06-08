@@ -14,6 +14,7 @@ import type {
   ShippingPackage,
 } from './app/types';
 import { adminApi, getAdminSpaConfig, getInlineBootstrap } from './app/api';
+import DocumentsManager from './DocumentsManager';
 import {
   labels,
   navGroups,
@@ -1357,21 +1358,7 @@ function App() {
           {viewError ? <p className="eop-react-error">{viewError}</p> : null}
 
           {!viewLoading && !viewError && selectedView === 'settings-confirmation-documents' ? (
-            <div className="eop-react-block">
-              <div className="eop-react-block__head">
-                <div>
-                  <h4>Documentos do contrato</h4>
-                  <p>
-                    O gerenciador de documentos — cadastro, edicao e upload de arquivos para conversao
-                    automatica em documentos de assinatura — ainda e operado pelo admin legado. Esta tela
-                    sera migrada para o novo admin em uma etapa dedicada.
-                  </p>
-                </div>
-                <a className="eop-react-link" href={currentUrl}>
-                  Abrir gerenciador no legado
-                </a>
-              </div>
-            </div>
+            <DocumentsManager />
           ) : null}
 
           {!viewLoading && !viewError && selectedView === 'new-order' ? (

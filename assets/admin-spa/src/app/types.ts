@@ -69,6 +69,24 @@ export type SettingsField = {
   }>;
 };
 
+export type ConfirmationDocument = {
+  key: string;
+  title: string;
+  description: string;
+  source_type: 'editor' | 'attachment';
+  body: string;
+  attachment_id: number;
+  attachment_name?: string;
+  attachment_url?: string;
+  button_label: string;
+  view_label: string;
+};
+
+export type ConfirmationDocumentsPayload = {
+  documents: ConfirmationDocument[];
+  placeholderTokens: string[];
+};
+
 export type SettingsMeta = {
   title: string;
   description: string;

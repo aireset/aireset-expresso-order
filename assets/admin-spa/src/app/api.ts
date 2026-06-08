@@ -1,6 +1,8 @@
 import type {
   AdminSpaConfig,
   BootstrapPayload,
+  ConfirmationDocument,
+  ConfirmationDocumentsPayload,
   CustomerSearchResult,
   NewOrderDraft,
   OrderCreateResponse,
@@ -81,6 +83,12 @@ export const adminApi = {
       body: JSON.stringify({ values }),
     }),
   getPreview: (surface: string) => request<PreviewPayload>(`previews/${surface}`),
+  getConfirmationDocuments: () => request<ConfirmationDocumentsPayload>('confirmation-documents'),
+  saveConfirmationDocuments: (documents: ConfirmationDocument[]) =>
+    request<ConfirmationDocumentsPayload>('confirmation-documents', {
+      method: 'POST',
+      body: JSON.stringify({ documents }),
+    }),
   getOrders: () => request<OrdersPayload>('orders'),
   getOrder: (id: number) => request<OrderDetailResponse>(`orders/${id}`),
   createOrder: (order: NewOrderDraft) =>

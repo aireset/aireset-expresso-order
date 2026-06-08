@@ -183,6 +183,23 @@ class EOP_Admin_SPA {
 
 		register_rest_route(
 			self::REST_NAMESPACE,
+			'/confirmation-documents',
+			array(
+				array(
+					'methods'             => WP_REST_Server::READABLE,
+					'permission_callback' => array( __CLASS__, 'can_manage_settings' ),
+					'callback'            => array( __CLASS__, 'handle_get_confirmation_documents_request' ),
+				),
+				array(
+					'methods'             => WP_REST_Server::CREATABLE,
+					'permission_callback' => array( __CLASS__, 'can_manage_settings' ),
+					'callback'            => array( __CLASS__, 'handle_save_confirmation_documents_request' ),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::REST_NAMESPACE,
 			'/views/(?P<view_name>[a-z0-9-]+)',
 			array(
 				'methods'             => WP_REST_Server::READABLE,
@@ -415,6 +432,87 @@ class EOP_Admin_SPA {
 			'eop_admin_spa_preview_unavailable',
 			__( 'Preview indisponivel para esta superficie.', EOP_TEXT_DOMAIN ),
 			array( 'status' => 404 )
+		);
+	}
+
+	public static function handle_get_confirmation_documents_request() {
+		return rest_ensure_response( self::get_confirmation_documents_payload() );
+	}
+
+	public static function handle_save_confirmation_documents_request( WP_REST_Request $request ) {
+		$body     = $request->get_json_params();
+		$body     = is_array( $body ) ? $body : array();
+		$incoming = isset( $body['documents'] ) && is_array( $body['documents'] ) ? $body['documents'] : array();
+
+		$normalized = array();
+
+		foreach ( $incoming as $document ) {
+			if ( ! is_array( $document ) ) {
+				continue;
+			}
+
+			$normalized[] = array(
+				'key'           => (string) ( $document['key'] ?? '' ),
+				'title'         => (string) ( $document['title'] ?? '' ),
+				'description'   => (string) ( $document['description'] ?? '' ),
+				'source_type'   => (string) ( $document['source_type'] ?? 'editor' ),
+				'body'          => (string) ( $document['body'] ?? '' ),
+				'attachment_id' => absint( $document['attachment_id'] ?? 0 ),
+				'button_label'  => (string) ( $document['button_label'] ?? '' ),
+				'view_label'    => (string) ( $document['view_label'] ?? '' ),
+			);
+		}
+
+		// Reaproveita o sanitizador oficial (mesmo caminho do save legado por options.php).
+		$sanitized = EOP_Settings::sanitize_settings( array( 'post_confirmation_signature_documents' => $normalized ) );
+		update_option( EOP_Settings::OPTION_KEY, $sanitized );
+
+		return self::handle_get_confirmation_documents_request();
+	}
+
+	private static function get_confirmation_documents_payload() {
+		if ( method_exists( 'EOP_Settings', 'get_post_confirmation_contract_documents' ) ) {
+			$documents = EOP_Settings::get_post_confirmation_contract_documents();
+		} elseif ( method_exists( 'EOP_Settings', 'get_post_confirmation_signature_documents' ) ) {
+			$documents = EOP_Settings::get_post_confirmation_signature_documents();
+		} else {
+			$documents = array();
+		}
+
+		$items = array();
+
+		foreach ( (array) $documents as $document ) {
+			$attachment_id   = absint( $document['attachment_id'] ?? 0 );
+			$attachment_name = '';
+			$attachment_url  = '';
+
+			if ( $attachment_id > 0 ) {
+				$file            = get_attached_file( $attachment_id );
+				$attachment_name = $file ? wp_basename( $file ) : (string) get_the_title( $attachment_id );
+				$attachment_url  = (string) wp_get_attachment_url( $attachment_id );
+			}
+
+			$items[] = array(
+				'key'             => (string) ( $document['key'] ?? '' ),
+				'title'           => (string) ( $document['title'] ?? '' ),
+				'description'     => (string) ( $document['description'] ?? '' ),
+				'source_type'     => in_array( $document['source_type'] ?? 'editor', array( 'editor', 'attachment' ), true ) ? (string) $document['source_type'] : 'editor',
+				'body'            => (string) ( $document['body'] ?? '' ),
+				'attachment_id'   => $attachment_id,
+				'attachment_name' => $attachment_name,
+				'attachment_url'  => $attachment_url,
+				'button_label'    => (string) ( $document['button_label'] ?? '' ),
+				'view_label'      => (string) ( $document['view_label'] ?? '' ),
+			);
+		}
+
+		$tokens = ( class_exists( 'EOP_Post_Confirmation_Flow' ) && method_exists( 'EOP_Post_Confirmation_Flow', 'get_contract_placeholder_tokens' ) )
+			? (array) EOP_Post_Confirmation_Flow::get_contract_placeholder_tokens()
+			: array();
+
+		return array(
+			'documents'         => $items,
+			'placeholderTokens' => array_values( $tokens ),
 		);
 	}
 

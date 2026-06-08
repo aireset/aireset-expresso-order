@@ -590,6 +590,73 @@ body.eop-admin-react-shell #eop-admin-app {
   display: none;
 }
 
+/* Gerenciador de documentos do contrato. */
+.eop-react-docs-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.eop-react-doc__type-tag {
+  margin-right: auto;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #eef3fb;
+  color: #5f6f86;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.eop-react-doc__attachment {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border: 1px solid #d9e2f1;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.eop-react-doc__attachment-name {
+  color: #42556f;
+}
+
+.eop-react-doc__attachment-actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.eop-react-doc__tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.eop-react-doc__token {
+  border: 1px solid #c5d3e6;
+  border-radius: 999px;
+  padding: 3px 10px;
+  background: #f8fbff;
+  color: #17284a;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.eop-react-doc__token:hover {
+  background: #eef3fb;
+}
+
+.eop-react-doc__remove {
+  margin-top: 14px;
+}
+
 /* Telas de settings: campos sem o cartao de fundo azul, so o input. */
 .eop-react-form--settings .eop-react-form__field {
   background: transparent;

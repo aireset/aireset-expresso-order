@@ -286,10 +286,10 @@ class EOP_Post_Confirmation_Flow {
 			'payment'               => __( 'Pagamento pendente', EOP_TEXT_DOMAIN ),
 			'contract'              => __( 'Aceite contratual', EOP_TEXT_DOMAIN ),
 			'documents'             => __( 'Dados do pedido', EOP_TEXT_DOMAIN ),
-			'upload'                => __( 'Upload e personalizacao', EOP_TEXT_DOMAIN ),
-			'products'              => __( 'Upload e personalizacao', EOP_TEXT_DOMAIN ),
-			'completed'             => __( 'Fluxo concluido', EOP_TEXT_DOMAIN ),
-			'awaiting_confirmation' => __( 'Aguardando confirmacao', EOP_TEXT_DOMAIN ),
+			'upload'                => __( 'Upload e personalização', EOP_TEXT_DOMAIN ),
+			'products'              => __( 'Upload e personalização', EOP_TEXT_DOMAIN ),
+			'completed'             => __( 'Fluxo concluído', EOP_TEXT_DOMAIN ),
+			'awaiting_confirmation' => __( 'Aguardando confirmação', EOP_TEXT_DOMAIN ),
 			'inactive'              => __( 'Fluxo inativo', EOP_TEXT_DOMAIN ),
 		);
 
@@ -328,7 +328,7 @@ class EOP_Post_Confirmation_Flow {
 		return array(
 			array(
 				'value' => 'auto',
-				'label' => __( 'Automatico', EOP_TEXT_DOMAIN ),
+				'label' => __( 'Automático', EOP_TEXT_DOMAIN ),
 			),
 			array(
 				'value' => 'awaiting_confirmation',
@@ -665,7 +665,7 @@ class EOP_Post_Confirmation_Flow {
 
 	public static function can_access_rest_collection_request( WP_REST_Request $request ) {
 		if ( ! current_user_can( 'edit_shop_orders' ) ) {
-			return new WP_Error( 'eop_post_confirmation_rest_collection_forbidden', __( 'Voce nao tem permissao para consultar a colecao do fluxo complementar.', EOP_TEXT_DOMAIN ), array( 'status' => rest_authorization_required_code() ) );
+			return new WP_Error( 'eop_post_confirmation_rest_collection_forbidden', __( 'Você não tem permissão para consultar a coleção do fluxo complementar.', EOP_TEXT_DOMAIN ), array( 'status' => rest_authorization_required_code() ) );
 		}
 
 		return true;
@@ -673,7 +673,7 @@ class EOP_Post_Confirmation_Flow {
 
 	public static function can_access_rest_export_request( WP_REST_Request $request ) {
 		if ( ! current_user_can( 'edit_shop_orders' ) ) {
-			return new WP_Error( 'eop_post_confirmation_rest_forbidden', __( 'Voce nao tem permissao para consultar este pedido.', EOP_TEXT_DOMAIN ), array( 'status' => rest_authorization_required_code() ) );
+			return new WP_Error( 'eop_post_confirmation_rest_forbidden', __( 'Você não tem permissão para consultar este pedido.', EOP_TEXT_DOMAIN ), array( 'status' => rest_authorization_required_code() ) );
 		}
 
 		$order = self::get_rest_order( $request );
@@ -683,7 +683,7 @@ class EOP_Post_Confirmation_Flow {
 		}
 
 		if ( ! self::current_user_can_access_order( $order ) ) {
-			return new WP_Error( 'eop_post_confirmation_rest_forbidden_order', __( 'Voce nao pode acessar os dados complementares deste pedido.', EOP_TEXT_DOMAIN ), array( 'status' => 403 ) );
+			return new WP_Error( 'eop_post_confirmation_rest_forbidden_order', __( 'Você não pode acessar os dados complementares deste pedido.', EOP_TEXT_DOMAIN ), array( 'status' => 403 ) );
 		}
 
 		return true;
@@ -704,7 +704,7 @@ class EOP_Post_Confirmation_Flow {
 
 	public static function handle_rest_collection_request( WP_REST_Request $request ) {
 		if ( ! class_exists( 'EOP_Orders_Page' ) ) {
-			return new WP_Error( 'eop_post_confirmation_rest_collection_unavailable', __( 'A colecao do fluxo complementar nao esta disponivel neste ambiente.', EOP_TEXT_DOMAIN ), array( 'status' => 500 ) );
+			return new WP_Error( 'eop_post_confirmation_rest_collection_unavailable', __( 'A coleção do fluxo complementar não está disponível neste ambiente.', EOP_TEXT_DOMAIN ), array( 'status' => 500 ) );
 		}
 
 		$page        = max( 1, absint( $request->get_param( 'page' ) ) );
@@ -777,15 +777,15 @@ class EOP_Post_Confirmation_Flow {
 			'contract_saved'  => array( 'type' => 'success', 'message' => __( 'Aceite contratual registrado com sucesso.', EOP_TEXT_DOMAIN ) ),
 			'documents_saved' => array( 'type' => 'success', 'message' => __( 'Dados do pedido sincronizados com sucesso.', EOP_TEXT_DOMAIN ) ),
 			'upload_saved'    => array( 'type' => 'success', 'message' => __( 'Arquivo enviado com sucesso.', EOP_TEXT_DOMAIN ) ),
-			'products_saved'  => array( 'type' => 'success', 'message' => __( 'Personalizacao dos produtos salva com sucesso.', EOP_TEXT_DOMAIN ) ),
-			'flow_completed'  => array( 'type' => 'success', 'message' => __( 'Etapa complementar concluida com sucesso.', EOP_TEXT_DOMAIN ) ),
-			'invalid_file'    => array( 'type' => 'error', 'message' => __( 'Nao foi possivel enviar o arquivo agora.', EOP_TEXT_DOMAIN ) ),
-			'invalid_file_type' => array( 'type' => 'error', 'message' => __( 'Formato invalido. Use JPG, JPEG, PNG ou PDF.', EOP_TEXT_DOMAIN ) ),
+			'products_saved'  => array( 'type' => 'success', 'message' => __( 'Personalização dos produtos salva com sucesso.', EOP_TEXT_DOMAIN ) ),
+			'flow_completed'  => array( 'type' => 'success', 'message' => __( 'Etapa complementar concluída com sucesso.', EOP_TEXT_DOMAIN ) ),
+			'invalid_file'    => array( 'type' => 'error', 'message' => __( 'Não foi possível enviar o arquivo agora.', EOP_TEXT_DOMAIN ) ),
+			'invalid_file_type' => array( 'type' => 'error', 'message' => __( 'Formato inválido. Use JPG, JPEG, PNG ou PDF.', EOP_TEXT_DOMAIN ) ),
 			'file_too_large'  => array( 'type' => 'error', 'message' => sprintf( __( 'O arquivo ultrapassa o limite permitido de %s.', EOP_TEXT_DOMAIN ), size_format( self::get_max_attachment_upload_size() ) ) ),
-			'upload_failed'   => array( 'type' => 'error', 'message' => __( 'Nao foi possivel concluir o upload do arquivo.', EOP_TEXT_DOMAIN ) ),
+			'upload_failed'   => array( 'type' => 'error', 'message' => __( 'Não foi possível concluir o upload do arquivo.', EOP_TEXT_DOMAIN ) ),
 			'missing_file'    => array( 'type' => 'error', 'message' => __( 'Selecione um arquivo antes de continuar.', EOP_TEXT_DOMAIN ) ),
-			'missing_data'    => array( 'type' => 'error', 'message' => __( 'Preencha todos os campos obrigatorios antes de continuar.', EOP_TEXT_DOMAIN ) ),
-			'invalid_request' => array( 'type' => 'error', 'message' => __( 'Nao foi possivel processar sua solicitacao.', EOP_TEXT_DOMAIN ) ),
+			'missing_data'    => array( 'type' => 'error', 'message' => __( 'Preencha todos os campos obrigatórios antes de continuar.', EOP_TEXT_DOMAIN ) ),
+			'invalid_request' => array( 'type' => 'error', 'message' => __( 'Não foi possível processar sua solicitação.', EOP_TEXT_DOMAIN ) ),
 		);
 
 		return $map[ $notice ] ?? null;
@@ -838,7 +838,7 @@ class EOP_Post_Confirmation_Flow {
 		}
 
 		if ( ! $order instanceof WC_Order || ! self::is_enabled_for_order( $order ) ) {
-			wp_die( esc_html__( 'Documento complementar indisponivel para este pedido.', EOP_TEXT_DOMAIN ) );
+			wp_die( esc_html__( 'Documento complementar indisponível para este pedido.', EOP_TEXT_DOMAIN ) );
 		}
 
 		if ( '' !== $token ) {
@@ -849,7 +849,7 @@ class EOP_Post_Confirmation_Flow {
 			$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
 
 			if ( ! wp_verify_nonce( $nonce, 'eop_download_post_confirmation_pdf_' . $order->get_id() ) ) {
-				wp_die( esc_html__( 'Link do PDF complementar invalido.', EOP_TEXT_DOMAIN ) );
+				wp_die( esc_html__( 'Link do PDF complementar inválido.', EOP_TEXT_DOMAIN ) );
 			}
 
 			if ( ! current_user_can( 'edit_shop_orders' ) || ! self::current_user_can_access_order( $order ) ) {
@@ -860,13 +860,13 @@ class EOP_Post_Confirmation_Flow {
 		$state = self::get_state( $order );
 
 		if ( ! self::has_pdf_payload( $state, $order ) ) {
-			wp_die( esc_html__( 'Os dados complementares ainda nao foram preenchidos.', EOP_TEXT_DOMAIN ) );
+			wp_die( esc_html__( 'Os dados complementares ainda não foram preenchidos.', EOP_TEXT_DOMAIN ) );
 		}
 
 		$binary = self::build_pdf_binary( $order, $state );
 
 		if ( '' === $binary ) {
-			wp_die( esc_html__( 'Nao foi possivel gerar o PDF complementar neste ambiente.', EOP_TEXT_DOMAIN ) );
+			wp_die( esc_html__( 'Não foi possível gerar o PDF complementar neste ambiente.', EOP_TEXT_DOMAIN ) );
 		}
 
 		nocache_headers();
@@ -891,29 +891,29 @@ class EOP_Post_Confirmation_Flow {
 		}
 
 		if ( ! $order instanceof WC_Order || ! self::is_enabled_for_order( $order ) ) {
-			wp_die( esc_html__( 'PDF final da personalizacao indisponivel para este pedido.', EOP_TEXT_DOMAIN ) );
+			wp_die( esc_html__( 'PDF final da personalização indisponível para este pedido.', EOP_TEXT_DOMAIN ) );
 		}
 
 		if ( '' !== $token ) {
 			if ( ! self::public_token_matches_order( $order, $token ) ) {
-				wp_die( esc_html__( 'Acesso negado ao PDF final da personalizacao.', EOP_TEXT_DOMAIN ) );
+				wp_die( esc_html__( 'Acesso negado ao PDF final da personalização.', EOP_TEXT_DOMAIN ) );
 			}
 		} else {
 			$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
 
 			if ( ! wp_verify_nonce( $nonce, 'eop_download_post_confirmation_final_pdf_' . $order->get_id() ) ) {
-				wp_die( esc_html__( 'Link do PDF final da personalizacao invalido.', EOP_TEXT_DOMAIN ) );
+				wp_die( esc_html__( 'Link do PDF final da personalização inválido.', EOP_TEXT_DOMAIN ) );
 			}
 
 			if ( ! current_user_can( 'edit_shop_orders' ) || ! self::current_user_can_access_order( $order ) ) {
-				wp_die( esc_html__( 'Acesso negado ao PDF final da personalizacao.', EOP_TEXT_DOMAIN ) );
+				wp_die( esc_html__( 'Acesso negado ao PDF final da personalização.', EOP_TEXT_DOMAIN ) );
 			}
 		}
 
 		$record = self::get_final_customization_pdf_record( $order, null, false, true );
 
 		if ( empty( $record['attachment_id'] ) ) {
-			wp_die( esc_html__( 'O PDF final da personalizacao ainda nao foi gerado.', EOP_TEXT_DOMAIN ) );
+			wp_die( esc_html__( 'O PDF final da personalização ainda não foi gerado.', EOP_TEXT_DOMAIN ) );
 		}
 
 		self::stream_attachment_file( absint( $record['attachment_id'] ), $force_download, (string) ( $record['filename'] ?? self::get_final_customization_pdf_filename( $order ) ) );
@@ -943,7 +943,7 @@ class EOP_Post_Confirmation_Flow {
 		}
 
 		if ( ! $order instanceof WC_Order || ! self::is_enabled_for_order( $order ) || '' === $document_key ) {
-			wp_die( esc_html__( 'Documento de assinatura indisponivel para este pedido.', EOP_TEXT_DOMAIN ) );
+			wp_die( esc_html__( 'Documento de assinatura indisponível para este pedido.', EOP_TEXT_DOMAIN ) );
 		}
 
 		if ( '' !== $token ) {
@@ -954,7 +954,7 @@ class EOP_Post_Confirmation_Flow {
 			$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
 
 			if ( ! wp_verify_nonce( $nonce, 'eop_download_post_confirmation_signature_document_' . $order->get_id() . '_' . $document_key ) ) {
-				wp_die( esc_html__( 'Link do documento para assinatura invalido.', EOP_TEXT_DOMAIN ) );
+				wp_die( esc_html__( 'Link do documento para assinatura inválido.', EOP_TEXT_DOMAIN ) );
 			}
 
 			if ( ! current_user_can( 'edit_shop_orders' ) || ! self::current_user_can_access_order( $order ) ) {
@@ -966,7 +966,7 @@ class EOP_Post_Confirmation_Flow {
 		$document  = self::find_signature_document_record( $documents, $document_key );
 
 		if ( empty( $document['attachment_id'] ) ) {
-			wp_die( esc_html__( 'Este documento para assinatura ainda nao foi gerado.', EOP_TEXT_DOMAIN ) );
+			wp_die( esc_html__( 'Este documento para assinatura ainda não foi gerado.', EOP_TEXT_DOMAIN ) );
 		}
 
 		self::stream_attachment_file( absint( $document['attachment_id'] ), $force_download, (string) ( $document['filename'] ?? '' ) );
@@ -1038,7 +1038,7 @@ class EOP_Post_Confirmation_Flow {
 			$logo_url = esc_url_raw( (string) EOP_PDF_Settings::get( 'shop_logo_url', '' ) );
 		}
 		$heading_note = 'contract' === $stage
-			? __( 'A proposta ja foi confirmada. Agora basta registrar o aceite do contrato para liberar as proximas etapas.', EOP_TEXT_DOMAIN )
+			? __( 'A proposta já foi confirmada. Agora basta registrar o aceite do contrato para liberar as próximas etapas.', EOP_TEXT_DOMAIN )
 			: __( 'Conclua a etapa atual para o fluxo continuar sem precisar voltar para esta proposta depois.', EOP_TEXT_DOMAIN );
 		$final_intro_title       = 'upload' === $stage ? trim( (string) ( $settings['post_confirmation_upload_title'] ?? '' ) ) : trim( (string) ( $settings['post_confirmation_products_title'] ?? '' ) );
 		$final_intro_description = 'upload' === $stage ? trim( (string) ( $settings['post_confirmation_upload_description'] ?? '' ) ) : trim( (string) ( $settings['post_confirmation_products_description'] ?? '' ) );
@@ -1124,7 +1124,7 @@ class EOP_Post_Confirmation_Flow {
 					<?php endif; ?>
 
 					<?php if ( 'payment' === $stage ) : ?>
-						<p class="eop-post-flow__text"><?php esc_html_e( 'Finalize o pagamento para liberar o contrato, o envio do anexo e a personalizacao dos produtos.', EOP_TEXT_DOMAIN ); ?></p>
+						<p class="eop-post-flow__text"><?php esc_html_e( 'Finalize o pagamento para liberar o contrato, o envio do anexo e a personalização dos produtos.', EOP_TEXT_DOMAIN ); ?></p>
 						<div class="eop-post-flow__actions">
 							<a class="eop-proposal-button" href="<?php echo esc_url( $order->get_checkout_payment_url() ); ?>"><?php echo esc_html( EOP_Settings::get( 'proposal_pay_button_label', __( 'Ir para pagamento', EOP_TEXT_DOMAIN ) ) ); ?></a>
 							<a class="eop-proposal-button eop-proposal-button--secondary" href="<?php echo esc_url( EOP_Public_Proposal::get_public_link( $order ) ); ?>"><?php esc_html_e( 'Voltar para este fluxo depois do pagamento', EOP_TEXT_DOMAIN ); ?></a>
@@ -1229,17 +1229,17 @@ class EOP_Post_Confirmation_Flow {
 
 	public static function get_admin_stage_update_payload( $order_id, $stage ) {
 		if ( ! current_user_can( 'edit_shop_orders' ) ) {
-			return new WP_Error( 'eop_post_flow_stage_forbidden', __( 'Sem permissao para alterar a etapa do fluxo complementar.', EOP_TEXT_DOMAIN ), array( 'status' => rest_authorization_required_code() ) );
+			return new WP_Error( 'eop_post_flow_stage_forbidden', __( 'Sem permissão para alterar a etapa do fluxo complementar.', EOP_TEXT_DOMAIN ), array( 'status' => rest_authorization_required_code() ) );
 		}
 
 		$order = absint( $order_id ) ? wc_get_order( absint( $order_id ) ) : false;
 
 		if ( ! $order instanceof WC_Order ) {
-			return new WP_Error( 'eop_post_flow_stage_order_not_found', __( 'Pedido nao encontrado.', EOP_TEXT_DOMAIN ), array( 'status' => 404 ) );
+			return new WP_Error( 'eop_post_flow_stage_order_not_found', __( 'Pedido não encontrado.', EOP_TEXT_DOMAIN ), array( 'status' => 404 ) );
 		}
 
 		if ( ! self::current_user_can_access_order( $order ) ) {
-			return new WP_Error( 'eop_post_flow_stage_order_forbidden', __( 'Voce nao pode alterar a etapa deste pedido.', EOP_TEXT_DOMAIN ), array( 'status' => 403 ) );
+			return new WP_Error( 'eop_post_flow_stage_order_forbidden', __( 'Você não pode alterar a etapa deste pedido.', EOP_TEXT_DOMAIN ), array( 'status' => 403 ) );
 		}
 
 		return self::update_order_stage_from_admin( $order, $stage );
@@ -1247,18 +1247,18 @@ class EOP_Post_Confirmation_Flow {
 
 	public static function handle_admin_post_confirmation_stage_update() {
 		if ( ! current_user_can( 'edit_shop_orders' ) ) {
-			wp_die( esc_html__( 'Sem permissao para alterar a etapa do fluxo complementar.', EOP_TEXT_DOMAIN ) );
+			wp_die( esc_html__( 'Sem permissão para alterar a etapa do fluxo complementar.', EOP_TEXT_DOMAIN ) );
 		}
 
 		$order_id = absint( $_POST['order_id'] ?? 0 );
 		$order    = $order_id ? wc_get_order( $order_id ) : false;
 
 		if ( ! $order instanceof WC_Order ) {
-			wp_die( esc_html__( 'Pedido nao encontrado.', EOP_TEXT_DOMAIN ) );
+			wp_die( esc_html__( 'Pedido não encontrado.', EOP_TEXT_DOMAIN ) );
 		}
 
 		if ( ! self::current_user_can_access_order( $order ) ) {
-			wp_die( esc_html__( 'Voce nao pode alterar a etapa deste pedido.', EOP_TEXT_DOMAIN ) );
+			wp_die( esc_html__( 'Você não pode alterar a etapa deste pedido.', EOP_TEXT_DOMAIN ) );
 		}
 
 		check_admin_referer( 'eop_set_post_confirmation_stage_' . $order->get_id() );
@@ -1286,13 +1286,13 @@ class EOP_Post_Confirmation_Flow {
 
 	private static function update_order_stage_from_admin( WC_Order $order, $requested_stage ) {
 		if ( ! self::is_enabled_for_order( $order ) ) {
-			return new WP_Error( 'eop_post_flow_disabled', __( 'O fluxo complementar esta desativado para este pedido.', EOP_TEXT_DOMAIN ) );
+			return new WP_Error( 'eop_post_flow_disabled', __( 'O fluxo complementar está desativado para este pedido.', EOP_TEXT_DOMAIN ) );
 		}
 
 		$requested_stage = self::normalize_stage_control_value( $requested_stage, true );
 
 		if ( '' === $requested_stage ) {
-			return new WP_Error( 'eop_post_flow_invalid_stage', __( 'A etapa informada nao e valida.', EOP_TEXT_DOMAIN ) );
+			return new WP_Error( 'eop_post_flow_invalid_stage', __( 'A etapa informada não é válida.', EOP_TEXT_DOMAIN ) );
 		}
 
 		$state = self::get_state( $order );
@@ -1416,7 +1416,7 @@ class EOP_Post_Confirmation_Flow {
 		?>
 		<section class="woocommerce-order eop-post-flow-thankyou">
 			<h2><?php esc_html_e( 'Continue a etapa complementar do pedido', EOP_TEXT_DOMAIN ); ?></h2>
-			<p><?php esc_html_e( 'Seu pagamento foi identificado. Use o mesmo link publico para concluir contrato, envio de anexo e personalizacao dos produtos.', EOP_TEXT_DOMAIN ); ?></p>
+			<p><?php esc_html_e( 'Seu pagamento foi identificado. Use o mesmo link público para concluir contrato, envio de anexo e personalização dos produtos.', EOP_TEXT_DOMAIN ); ?></p>
 			<p><a class="button" href="<?php echo esc_url( $link ); ?>"><?php esc_html_e( 'Continuar agora', EOP_TEXT_DOMAIN ); ?></a></p>
 		</section>
 		<?php
@@ -1493,14 +1493,14 @@ class EOP_Post_Confirmation_Flow {
 		$order = $post_or_order_object instanceof WC_Order ? $post_or_order_object : wc_get_order( is_object( $post_or_order_object ) && isset( $post_or_order_object->ID ) ? $post_or_order_object->ID : 0 );
 
 		if ( ! $order instanceof WC_Order || ! self::is_enabled_for_order( $order ) ) {
-			echo '<p>' . esc_html__( 'O fluxo complementar esta desativado para este pedido.', EOP_TEXT_DOMAIN ) . '</p>';
+			echo '<p>' . esc_html__( 'O fluxo complementar está desativado para este pedido.', EOP_TEXT_DOMAIN ) . '</p>';
 			return;
 		}
 
 		$flow = self::get_export_data( $order, 'admin' );
 
 		if ( empty( $flow['active_for_order'] ) ) {
-			echo '<p>' . esc_html__( 'O fluxo complementar esta desativado para este pedido.', EOP_TEXT_DOMAIN ) . '</p>';
+			echo '<p>' . esc_html__( 'O fluxo complementar está desativado para este pedido.', EOP_TEXT_DOMAIN ) . '</p>';
 			return;
 		}
 
@@ -1526,7 +1526,7 @@ class EOP_Post_Confirmation_Flow {
 			<div class="eop-post-flow-card__head">
 				<div>
 					<h2><?php esc_html_e( 'Resumo operacional do fluxo complementar', EOP_TEXT_DOMAIN ); ?></h2>
-					<p><?php esc_html_e( 'Consulta rapida do contrato salvo, documentos, logo enviada, personalizacao e downloads deste pedido.', EOP_TEXT_DOMAIN ); ?></p>
+					<p><?php esc_html_e( 'Consulta rápida do contrato salvo, documentos, logo enviada, personalização e downloads deste pedido.', EOP_TEXT_DOMAIN ); ?></p>
 				</div>
 				<span class="eop-post-flow-badge is-active"><?php echo esc_html( $flow['status']['current_stage_label'] ?? __( 'Fluxo', EOP_TEXT_DOMAIN ) ); ?></span>
 			</div>
@@ -1549,7 +1549,7 @@ class EOP_Post_Confirmation_Flow {
 						</div>
 						<button type="submit" class="button button-secondary"><?php esc_html_e( 'Atualizar etapa', EOP_TEXT_DOMAIN ); ?></button>
 					</form>
-					<p class="eop-post-flow-stage-hint"><?php esc_html_e( 'Use Automatico para voltar ao fluxo calculado pelo sistema.', EOP_TEXT_DOMAIN ); ?></p>
+					<p class="eop-post-flow-stage-hint"><?php esc_html_e( 'Use Automático para voltar ao fluxo calculado pelo sistema.', EOP_TEXT_DOMAIN ); ?></p>
 				</div>
 			<?php endif; ?>
 
@@ -1587,7 +1587,7 @@ class EOP_Post_Confirmation_Flow {
 									<?php if ( ! empty( $document['admin_view_url'] ) ) : ?>
 										<a href="<?php echo esc_url( (string) $document['admin_view_url'] ); ?>" target="_blank" rel="noopener"><?php echo esc_html( (string) ( $document['filename'] ?? $document['title'] ?? __( 'Documento', EOP_TEXT_DOMAIN ) ) ); ?></a>
 									<?php else : ?>
-										<?php esc_html_e( 'Documento ainda nao disponivel.', EOP_TEXT_DOMAIN ); ?>
+										<?php esc_html_e( 'Documento ainda não disponível.', EOP_TEXT_DOMAIN ); ?>
 									<?php endif; ?>
 								</span>
 							</div>
@@ -1613,7 +1613,7 @@ class EOP_Post_Confirmation_Flow {
 						</div>
 					<?php endforeach; ?>
 					<?php if ( ! $has_order_data ) : ?>
-						<p><?php esc_html_e( 'Nenhum dado do pedido preenchido no WooCommerce ate agora.', EOP_TEXT_DOMAIN ); ?></p>
+						<p><?php esc_html_e( 'Nenhum dado do pedido preenchido no WooCommerce até agora.', EOP_TEXT_DOMAIN ); ?></p>
 					<?php endif; ?>
 				</div>
 			</div>
@@ -1642,8 +1642,8 @@ class EOP_Post_Confirmation_Flow {
 				<div class="eop-post-flow-list">
 					<?php if ( ! empty( $links['public_url'] ) ) : ?>
 						<div class="eop-post-flow-row">
-							<strong><?php esc_html_e( 'Jornada publica', EOP_TEXT_DOMAIN ); ?></strong>
-							<span><a href="<?php echo esc_url( (string) $links['public_url'] ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Abrir link publico', EOP_TEXT_DOMAIN ); ?></a></span>
+							<strong><?php esc_html_e( 'Jornada pública', EOP_TEXT_DOMAIN ); ?></strong>
+							<span><a href="<?php echo esc_url( (string) $links['public_url'] ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Abrir link público', EOP_TEXT_DOMAIN ); ?></a></span>
 						</div>
 					<?php endif; ?>
 					<?php if ( ! empty( $links['admin_pdf_url'] ) ) : ?>
@@ -1654,9 +1654,9 @@ class EOP_Post_Confirmation_Flow {
 					<?php endif; ?>
 					<?php if ( ! empty( $links['admin_final_pdf_url'] ) ) : ?>
 						<div class="eop-post-flow-row">
-							<strong><?php esc_html_e( 'PDF final da personalizacao', EOP_TEXT_DOMAIN ); ?></strong>
+							<strong><?php esc_html_e( 'PDF final da personalização', EOP_TEXT_DOMAIN ); ?></strong>
 							<span>
-								<a href="<?php echo esc_url( (string) $links['admin_final_pdf_url'] ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Baixar PDF final da personalizacao', EOP_TEXT_DOMAIN ); ?></a>
+								<a href="<?php echo esc_url( (string) $links['admin_final_pdf_url'] ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Baixar PDF final da personalização', EOP_TEXT_DOMAIN ); ?></a>
 								<?php if ( ! empty( $final_pdf['generated_at'] ) ) : ?>
 									<small><?php echo esc_html( sprintf( __( 'Gerado em %s', EOP_TEXT_DOMAIN ), (string) $final_pdf['generated_at'] ) ); ?></small>
 								<?php endif; ?>
@@ -1664,7 +1664,7 @@ class EOP_Post_Confirmation_Flow {
 						</div>
 					<?php endif; ?>
 					<?php if ( empty( $links['public_url'] ) && empty( $links['admin_pdf_url'] ) && empty( $links['admin_final_pdf_url'] ) ) : ?>
-						<p><?php esc_html_e( 'Nenhum download complementar disponivel ainda.', EOP_TEXT_DOMAIN ); ?></p>
+						<p><?php esc_html_e( 'Nenhum download complementar disponível ainda.', EOP_TEXT_DOMAIN ); ?></p>
 					<?php endif; ?>
 				</div>
 			</div>
@@ -1691,7 +1691,7 @@ class EOP_Post_Confirmation_Flow {
 							</div>
 						<?php endforeach; ?>
 					<?php else : ?>
-						<p><?php esc_html_e( 'Nenhuma personalizacao registrada ate agora.', EOP_TEXT_DOMAIN ); ?></p>
+						<p><?php esc_html_e( 'Nenhuma personalização registrada até agora.', EOP_TEXT_DOMAIN ); ?></p>
 					<?php endif; ?>
 				</div>
 			</div>
@@ -1716,7 +1716,7 @@ class EOP_Post_Confirmation_Flow {
 					return $upload_title;
 				}
 
-				return __( 'Upload e personalizacao dos produtos', EOP_TEXT_DOMAIN );
+				return __( 'Upload e personalização dos produtos', EOP_TEXT_DOMAIN );
 			case 'completed':
 				return (string) $settings['post_confirmation_completion_title'];
 			default:
@@ -1734,11 +1734,11 @@ class EOP_Post_Confirmation_Flow {
 		$panel_note  = trim( (string) ( $settings['customer_experience_progress_note'] ?? '' ) );
 
 		if ( '' === $panel_label ) {
-			$panel_label = 'contract' === $current_stage ? __( 'Contrato e proximas etapas', EOP_TEXT_DOMAIN ) : __( 'Progresso da jornada', EOP_TEXT_DOMAIN );
+			$panel_label = 'contract' === $current_stage ? __( 'Contrato e próximas etapas', EOP_TEXT_DOMAIN ) : __( 'Progresso da jornada', EOP_TEXT_DOMAIN );
 		}
 
 		if ( '' === $panel_note && 'contract' === $current_stage ) {
-			$panel_note = __( 'Depois do aceite, o restante do fluxo aparece em sequencia para o cliente.', EOP_TEXT_DOMAIN );
+			$panel_note = __( 'Depois do aceite, o restante do fluxo aparece em sequência para o cliente.', EOP_TEXT_DOMAIN );
 		}
 		?>
 		<div class="eop-post-flow__panel eop-post-flow__panel--progress">
@@ -1860,7 +1860,7 @@ class EOP_Post_Confirmation_Flow {
 		}
 
 		if ( '' === $summary_note ) {
-			$summary_note = __( 'Depois do aceite, as proximas etapas sao liberadas automaticamente.', EOP_TEXT_DOMAIN );
+			$summary_note = __( 'Depois do aceite, as próximas etapas são liberadas automaticamente.', EOP_TEXT_DOMAIN );
 		}
 		?>
 		<div class="eop-post-flow__panel eop-post-flow__panel--summary">
@@ -2032,19 +2032,19 @@ class EOP_Post_Confirmation_Flow {
 		$products_sku_empty = trim( (string) ( $settings['post_confirmation_products_sku_empty_label'] ?? '' ) );
 		$products_locked_message = trim( (string) ( $settings['post_confirmation_products_locked_message'] ?? '' ) );
 		$upload_title   = '' !== $upload_title ? $upload_title : __( 'Anexo do cliente', EOP_TEXT_DOMAIN );
-		$upload_text    = '' !== $upload_text ? $upload_text : __( 'Selecione um arquivo em PDF ou PNG. Se ja houver um anexo salvo, voce pode visualiza-lo abaixo ou enviar outro para substituir.', EOP_TEXT_DOMAIN );
+		$upload_text    = '' !== $upload_text ? $upload_text : __( 'Selecione um arquivo em PDF ou PNG. Se já houver um anexo salvo, você pode visualizá-lo abaixo ou enviar outro para substituir.', EOP_TEXT_DOMAIN );
 		$products_title = '' !== $products_title ? $products_title : __( 'Produtos do pedido', EOP_TEXT_DOMAIN );
 		$products_text  = '' !== $products_text ? $products_text : __( 'Defina como cada produto deve aparecer para os itens liberados.', EOP_TEXT_DOMAIN );
 		$field_label    = '' !== $field_label ? $field_label : __( 'Arquivo', EOP_TEXT_DOMAIN );
 		$upload_saved_date_prefix = '' !== $upload_saved_date_prefix ? $upload_saved_date_prefix : __( 'Enviado em', EOP_TEXT_DOMAIN );
-		$upload_saved_status_text = '' !== $upload_saved_status_text ? $upload_saved_status_text : __( 'Arquivo ja salvo no pedido.', EOP_TEXT_DOMAIN );
+		$upload_saved_status_text = '' !== $upload_saved_status_text ? $upload_saved_status_text : __( 'Arquivo já salvo no pedido.', EOP_TEXT_DOMAIN );
 		$upload_view_button_label = '' !== $upload_view_button_label ? $upload_view_button_label : __( 'Ver anexo enviado', EOP_TEXT_DOMAIN );
 		$products_heading_sequence = '' !== $products_heading_sequence ? $products_heading_sequence : __( 'Seq.', EOP_TEXT_DOMAIN );
 		$products_heading_original = '' !== $products_heading_original ? $products_heading_original : __( 'Produto original', EOP_TEXT_DOMAIN );
 		$products_heading_custom = '' !== $products_heading_custom ? $products_heading_custom : __( 'Novo nome', EOP_TEXT_DOMAIN );
 		$products_sku_prefix = '' !== $products_sku_prefix ? $products_sku_prefix : __( 'SKU:', EOP_TEXT_DOMAIN );
-		$products_sku_empty = '' !== $products_sku_empty ? $products_sku_empty : __( 'SKU nao informado', EOP_TEXT_DOMAIN );
-		$products_locked_message = '' !== $products_locked_message ? $products_locked_message : __( 'Este item esta bloqueado para alteracao de nome.', EOP_TEXT_DOMAIN );
+		$products_sku_empty = '' !== $products_sku_empty ? $products_sku_empty : __( 'SKU não informado', EOP_TEXT_DOMAIN );
+		$products_locked_message = '' !== $products_locked_message ? $products_locked_message : __( 'Este item está bloqueado para alteração de nome.', EOP_TEXT_DOMAIN );
 		$attachment_id  = absint( $context['attachment_id'] ?? 0 );
 		$attachment_url = trim( (string) ( $context['attachment_url'] ?? '' ) );
 		$filename       = trim( (string) ( $context['filename'] ?? '' ) );
@@ -2193,7 +2193,7 @@ class EOP_Post_Confirmation_Flow {
 		$sample_items     = array(
 			array(
 				'item_id'   => 1,
-				'item_name' => __( 'Serum Magico', EOP_TEXT_DOMAIN ),
+				'item_name' => __( 'Sérum Mágico', EOP_TEXT_DOMAIN ),
 				'sku'       => 'SERMAG0002',
 				'value'     => '',
 				'image_url' => $sample_image_url,
@@ -2201,9 +2201,9 @@ class EOP_Post_Confirmation_Flow {
 			),
 			array(
 				'item_id'   => 2,
-				'item_name' => __( 'Servico de personalizacao', EOP_TEXT_DOMAIN ),
+				'item_name' => __( 'Serviço de personalização', EOP_TEXT_DOMAIN ),
 				'sku'       => '',
-				'value'     => __( 'Nao editavel no preview', EOP_TEXT_DOMAIN ),
+				'value'     => __( 'Não editável no preview', EOP_TEXT_DOMAIN ),
 				'image_url' => $sample_image_url,
 				'locked'    => true,
 			),
@@ -2368,7 +2368,7 @@ class EOP_Post_Confirmation_Flow {
 		$uploaded_at    = (string) ( $state['attachment']['uploaded_at'] ?? '' );
 		$action         = 'upload' === $current_stage ? 'upload' : 'products';
 		$button_label   = 'upload' === $action ? trim( (string) ( $settings['post_confirmation_upload_button_label'] ?? '' ) ) : trim( (string) ( $settings['post_confirmation_products_button_label'] ?? '' ) );
-		$button_label   = '' !== $button_label ? $button_label : __( 'Salvar personalizacao', EOP_TEXT_DOMAIN );
+		$button_label   = '' !== $button_label ? $button_label : __( 'Salvar personalização', EOP_TEXT_DOMAIN );
 		?>
 		<?php if ( $notice ) : ?>
 			<div class="eop-notice <?php echo 'error' === $notice['type'] ? 'eop-notice-error' : 'eop-notice-success'; ?>">
@@ -2412,7 +2412,7 @@ class EOP_Post_Confirmation_Flow {
 		$final_pdf    = self::get_final_customization_pdf_record( $order, $state, true, true );
 		?>
 		<p class="eop-post-flow__text"><?php echo esc_html( $settings['post_confirmation_completion_description'] ); ?></p>
-		<p class="eop-post-flow__helper"><?php esc_html_e( 'Seu contrato, os dados do pedido, o anexo e a personalizacao dos produtos ja foram consolidados para a equipe.', EOP_TEXT_DOMAIN ); ?></p>
+		<p class="eop-post-flow__helper"><?php esc_html_e( 'Seu contrato, os dados do pedido, o anexo e a personalização dos produtos já foram consolidados para a equipe.', EOP_TEXT_DOMAIN ); ?></p>
 		<?php if ( ! empty( $line_items ) ) : ?>
 			<div class="eop-post-flow__completion-grid">
 				<?php foreach ( $line_items as $line_item ) : ?>
@@ -2438,7 +2438,7 @@ class EOP_Post_Confirmation_Flow {
 		<?php endif; ?>
 		<div class="eop-post-flow__actions">
 			<?php if ( ! empty( $final_pdf['public_download_url'] ) ) : ?>
-				<a class="eop-proposal-button" href="<?php echo esc_url( $final_pdf['public_download_url'] ); ?>" download="<?php echo esc_attr( $final_pdf['filename'] ); ?>"><?php esc_html_e( 'Baixar PDF final da personalizacao', EOP_TEXT_DOMAIN ); ?></a>
+				<a class="eop-proposal-button" href="<?php echo esc_url( $final_pdf['public_download_url'] ); ?>" download="<?php echo esc_attr( $final_pdf['filename'] ); ?>"><?php esc_html_e( 'Baixar PDF final da personalização', EOP_TEXT_DOMAIN ); ?></a>
 			<?php endif; ?>
 			<?php if ( $flow_pdf_url ) : ?>
 				<a class="eop-proposal-button eop-proposal-button--secondary" href="<?php echo esc_url( $flow_pdf_url ); ?>" download="<?php echo esc_attr( self::get_pdf_filename( $order ) ); ?>"><?php esc_html_e( 'Baixar PDF complementar', EOP_TEXT_DOMAIN ); ?></a>
@@ -2964,7 +2964,7 @@ class EOP_Post_Confirmation_Flow {
 		$steps[] = array(
 			'key'         => 'contract',
 			'label'       => self::get_stage_label( 'contract' ),
-			'description' => __( 'Aceite do contrato e identificacao do cliente.', EOP_TEXT_DOMAIN ),
+			'description' => __( 'Aceite do contrato e identificação do cliente.', EOP_TEXT_DOMAIN ),
 		);
 
 		if ( self::requires_attachment() || 'upload' === $current_stage ) {
@@ -2979,14 +2979,14 @@ class EOP_Post_Confirmation_Flow {
 		// 	$steps[] = array(
 		// 		'key'         => 'products',
 		// 		'label'       => self::get_stage_label( 'products' ),
-		// 		'description' => __( 'Definicao do nome desejado para os itens liberados.', EOP_TEXT_DOMAIN ),
+		// 		'description' => __( 'Definição do nome desejado para os itens liberados.', EOP_TEXT_DOMAIN ),
 		// 	);
 		// }
 
 		$steps[] = array(
 			'key'         => 'completed',
 			'label'       => self::get_stage_label( 'completed' ),
-			'description' => __( 'Resumo final, documentos e proximo repasse interno.', EOP_TEXT_DOMAIN ),
+			'description' => __( 'Resumo final, documentos e próximo repasse interno.', EOP_TEXT_DOMAIN ),
 		);
 
 		$reached_current = false;
@@ -3024,8 +3024,8 @@ class EOP_Post_Confirmation_Flow {
 			),
 			array(
 				'label'       => __( 'Dados do pedido', EOP_TEXT_DOMAIN ),
-				'value'       => $documents_total > 0 ? $documents_done . '/' . $documents_total : __( 'Nao se aplica', EOP_TEXT_DOMAIN ),
-				'description' => $documents_total > 0 ? __( 'Dados aproveitados diretamente do cadastro do pedido.', EOP_TEXT_DOMAIN ) : __( 'Nenhum dado preenchido no pedido ate agora.', EOP_TEXT_DOMAIN ),
+				'value'       => $documents_total > 0 ? $documents_done . '/' . $documents_total : __( 'Não se aplica', EOP_TEXT_DOMAIN ),
+				'description' => $documents_total > 0 ? __( 'Dados aproveitados diretamente do cadastro do pedido.', EOP_TEXT_DOMAIN ) : __( 'Nenhum dado preenchido no pedido até agora.', EOP_TEXT_DOMAIN ),
 			),
 			array(
 				'label'       => __( 'Anexo', EOP_TEXT_DOMAIN ),
@@ -3035,7 +3035,7 @@ class EOP_Post_Confirmation_Flow {
 			array(
 				'label'       => __( 'Produtos', EOP_TEXT_DOMAIN ),
 				'value'       => $product_counts['completed'] . '/' . $product_counts['editable'],
-				'description' => $product_counts['locked'] > 0 ? sprintf( __( '%d item(ns) bloqueado(s) para edicao.', EOP_TEXT_DOMAIN ), $product_counts['locked'] ) : __( 'Todos os itens podem ser personalizados.', EOP_TEXT_DOMAIN ),
+				'description' => $product_counts['locked'] > 0 ? sprintf( __( '%d item(ns) bloqueado(s) para edição.', EOP_TEXT_DOMAIN ), $product_counts['locked'] ) : __( 'Todos os itens podem ser personalizados.', EOP_TEXT_DOMAIN ),
 			),
 		);
 	}
@@ -3129,7 +3129,7 @@ class EOP_Post_Confirmation_Flow {
 		$order    = $order_id ? wc_get_order( $order_id ) : false;
 
 		if ( ! $order instanceof WC_Order ) {
-			return new WP_Error( 'eop_post_confirmation_rest_order_not_found', __( 'Pedido nao encontrado.', EOP_TEXT_DOMAIN ), array( 'status' => 404 ) );
+			return new WP_Error( 'eop_post_confirmation_rest_order_not_found', __( 'Pedido não encontrado.', EOP_TEXT_DOMAIN ), array( 'status' => 404 ) );
 		}
 
 		return $order;
@@ -3331,9 +3331,9 @@ class EOP_Post_Confirmation_Flow {
 		</head>
 		<body>
 			<section class="eop-final-pdf__header">
-				<span class="eop-final-pdf__eyebrow"><?php esc_html_e( 'Fluxo complementar concluido', EOP_TEXT_DOMAIN ); ?></span>
-				<h1 class="eop-final-pdf__title"><?php esc_html_e( 'Resumo final da personalizacao', EOP_TEXT_DOMAIN ); ?></h1>
-				<p class="eop-final-pdf__lead"><?php esc_html_e( 'Documento consolidado com o anexo enviado e a relacao de itens originais e personalizados para a equipe interna.', EOP_TEXT_DOMAIN ); ?></p>
+				<span class="eop-final-pdf__eyebrow"><?php esc_html_e( 'Fluxo complementar concluído', EOP_TEXT_DOMAIN ); ?></span>
+				<h1 class="eop-final-pdf__title"><?php esc_html_e( 'Resumo final da personalização', EOP_TEXT_DOMAIN ); ?></h1>
+				<p class="eop-final-pdf__lead"><?php esc_html_e( 'Documento consolidado com o anexo enviado e a relação de itens originais e personalizados para a equipe interna.', EOP_TEXT_DOMAIN ); ?></p>
 				<table class="eop-final-pdf__meta">
 					<tr>
 						<td><?php esc_html_e( 'Pedido', EOP_TEXT_DOMAIN ); ?></td>
@@ -3341,15 +3341,15 @@ class EOP_Post_Confirmation_Flow {
 					</tr>
 					<tr>
 						<td><?php esc_html_e( 'Cliente', EOP_TEXT_DOMAIN ); ?></td>
-						<td><?php echo esc_html( '' !== $customer_name ? $customer_name : __( 'Nao informado', EOP_TEXT_DOMAIN ) ); ?></td>
+						<td><?php echo esc_html( '' !== $customer_name ? $customer_name : __( 'Não informado', EOP_TEXT_DOMAIN ) ); ?></td>
 					</tr>
 					<tr>
 						<td><?php esc_html_e( 'Data do pedido', EOP_TEXT_DOMAIN ); ?></td>
-						<td><?php echo esc_html( $order_date ? wc_format_datetime( $order_date ) : __( 'Nao informada', EOP_TEXT_DOMAIN ) ); ?></td>
+						<td><?php echo esc_html( $order_date ? wc_format_datetime( $order_date ) : __( 'Não informada', EOP_TEXT_DOMAIN ) ); ?></td>
 					</tr>
 					<tr>
-						<td><?php esc_html_e( 'Fluxo concluido em', EOP_TEXT_DOMAIN ); ?></td>
-						<td><?php echo esc_html( ! empty( $state['completed_at'] ) ? (string) $state['completed_at'] : __( 'Nao informado', EOP_TEXT_DOMAIN ) ); ?></td>
+						<td><?php esc_html_e( 'Fluxo concluído em', EOP_TEXT_DOMAIN ); ?></td>
+						<td><?php echo esc_html( ! empty( $state['completed_at'] ) ? (string) $state['completed_at'] : __( 'Não informado', EOP_TEXT_DOMAIN ) ); ?></td>
 					</tr>
 				</table>
 			</section>
@@ -3362,7 +3362,7 @@ class EOP_Post_Confirmation_Flow {
 					<?php endif; ?>
 					<p><strong><?php echo esc_html( '' !== $attachment_label ? $attachment_label : __( 'Nenhum anexo enviado', EOP_TEXT_DOMAIN ) ); ?></strong></p>
 					<?php if ( 'file' === $attachment_preview['type'] ) : ?>
-						<p class="eop-final-pdf__upload-note"><?php esc_html_e( 'O arquivo enviado foi registrado no pedido, mas nao pode ser incorporado visualmente neste PDF porque nao e uma imagem.', EOP_TEXT_DOMAIN ); ?></p>
+						<p class="eop-final-pdf__upload-note"><?php esc_html_e( 'O arquivo enviado foi registrado no pedido, mas não pode ser incorporado visualmente neste PDF porque não é uma imagem.', EOP_TEXT_DOMAIN ); ?></p>
 					<?php elseif ( '' === $attachment_label ) : ?>
 						<p class="eop-final-pdf__upload-note"><?php esc_html_e( 'Nenhum arquivo complementar foi anexado nesta etapa.', EOP_TEXT_DOMAIN ); ?></p>
 					<?php endif; ?>
@@ -3389,7 +3389,7 @@ class EOP_Post_Confirmation_Flow {
 										<small><?php echo esc_html( sprintf( __( 'SKU: %s', EOP_TEXT_DOMAIN ), $row['sku'] ) ); ?></small>
 									<?php endif; ?>
 								</td>
-								<td><?php echo esc_html( '' !== $row['custom_name'] ? $row['custom_name'] : __( 'Nao informado', EOP_TEXT_DOMAIN ) ); ?></td>
+								<td><?php echo esc_html( '' !== $row['custom_name'] ? $row['custom_name'] : __( 'Não informado', EOP_TEXT_DOMAIN ) ); ?></td>
 								<td><?php echo esc_html( $row['quantity'] ); ?></td>
 								<td><?php echo esc_html( $row['locked'] ? __( 'Bloqueado', EOP_TEXT_DOMAIN ) : __( 'Personalizado', EOP_TEXT_DOMAIN ) ); ?></td>
 							</tr>
@@ -3459,7 +3459,7 @@ class EOP_Post_Confirmation_Flow {
 		$attachment_id = wp_insert_attachment(
 			array(
 				'post_mime_type' => 'application/pdf',
-				'post_title'     => __( 'PDF final da personalizacao', EOP_TEXT_DOMAIN ),
+				'post_title'     => __( 'PDF final da personalização', EOP_TEXT_DOMAIN ),
 				'post_content'   => '',
 				'post_status'    => 'inherit',
 				'post_parent'    => $order->get_id(),
@@ -3820,7 +3820,7 @@ class EOP_Post_Confirmation_Flow {
 		}
 
 		if ( '' === $summary_note ) {
-			$summary_note = __( 'Depois do aceite, as proximas etapas sao liberadas automaticamente.', EOP_TEXT_DOMAIN );
+			$summary_note = __( 'Depois do aceite, as próximas etapas são liberadas automaticamente.', EOP_TEXT_DOMAIN );
 		}
 
 		$summary_rows = array(
@@ -3985,7 +3985,7 @@ class EOP_Post_Confirmation_Flow {
 		<div class="eop-proposal-preview-card" data-eop-proposal-preview-card data-preview-viewport="desktop">
 			<div class="eop-proposal-preview-card__copy">
 				<div class="eop-proposal-preview-card__eyebrow"><?php esc_html_e( 'Preview ao vivo', EOP_TEXT_DOMAIN ); ?></div>
-				<h3><?php esc_html_e( 'Veja a pagina publica antes de salvar', EOP_TEXT_DOMAIN ); ?></h3>
+				<h3><?php esc_html_e( 'Veja a página pública antes de salvar', EOP_TEXT_DOMAIN ); ?></h3>
 				<p><?php esc_html_e( 'Este preview usa o mesmo renderer do fluxo do cliente, agora isolado em iframe e com dados de exemplo.', EOP_TEXT_DOMAIN ); ?></p>
 				<div class="eop-proposal-preview-card__status is-ready" aria-live="polite">
 					<span class="eop-proposal-preview-card__status-dot" aria-hidden="true"></span>
@@ -3998,7 +3998,7 @@ class EOP_Post_Confirmation_Flow {
 			</div>
 			<div class="eop-proposal-preview-card__stage">
 				<div class="eop-proposal-preview-card__shell">
-					<iframe class="eop-proposal-preview-render" title="<?php esc_attr_e( 'Preview da pagina do cliente', EOP_TEXT_DOMAIN ); ?>" srcdoc="<?php echo esc_attr( $srcdoc ); ?>"></iframe>
+					<iframe class="eop-proposal-preview-render" title="<?php esc_attr_e( 'Preview da página do cliente', EOP_TEXT_DOMAIN ); ?>" srcdoc="<?php echo esc_attr( $srcdoc ); ?>"></iframe>
 				</div>
 			</div>
 		</div>
@@ -4103,15 +4103,15 @@ class EOP_Post_Confirmation_Flow {
 
 		return array(
 			array(
-				'label'  => __( 'Aguardando confirmacao do pedido', EOP_TEXT_DOMAIN ),
+				'label'  => __( 'Aguardando confirmação do pedido', EOP_TEXT_DOMAIN ),
 				'value'  => $proposal_done ? __( 'Confirmado', EOP_TEXT_DOMAIN ) : __( 'Pendente', EOP_TEXT_DOMAIN ),
-				'detail' => $proposal_done ? __( 'Pedido confirmado pelo cliente', EOP_TEXT_DOMAIN ) : __( 'Cliente ainda nao confirmou', EOP_TEXT_DOMAIN ),
+				'detail' => $proposal_done ? __( 'Pedido confirmado pelo cliente', EOP_TEXT_DOMAIN ) : __( 'Cliente ainda não confirmou', EOP_TEXT_DOMAIN ),
 				'tone'   => $proposal_done ? 'success' : 'warning',
 			),
 			array(
 				'label'  => __( 'Pagamento', EOP_TEXT_DOMAIN ),
 				'value'  => $current_rank > ( $stage_rank_map['payment'] ?? 2 ) || ( $proposal_done && ! $payment_needed ) ? __( 'Confirmado', EOP_TEXT_DOMAIN ) : __( 'Pendente', EOP_TEXT_DOMAIN ),
-				'detail' => ! $payment_needed && $proposal_done ? __( 'Nao necessario', EOP_TEXT_DOMAIN ) : ( $current_rank > ( $stage_rank_map['payment'] ?? 2 ) ? __( 'Pagamento aprovado', EOP_TEXT_DOMAIN ) : __( 'Aguardando pagamento', EOP_TEXT_DOMAIN ) ),
+				'detail' => ! $payment_needed && $proposal_done ? __( 'Não necessário', EOP_TEXT_DOMAIN ) : ( $current_rank > ( $stage_rank_map['payment'] ?? 2 ) ? __( 'Pagamento aprovado', EOP_TEXT_DOMAIN ) : __( 'Aguardando pagamento', EOP_TEXT_DOMAIN ) ),
 				'tone'   => ! $payment_needed && $proposal_done ? 'neutral' : ( $current_rank > ( $stage_rank_map['payment'] ?? 2 ) ? 'success' : 'warning' ),
 			),
 			array(
@@ -4121,9 +4121,9 @@ class EOP_Post_Confirmation_Flow {
 				'tone'   => $contract_done ? 'success' : 'warning',
 			),
 			array(
-				'label'  => __( 'Upload e personalizacao', EOP_TEXT_DOMAIN ),
+				'label'  => __( 'Upload e personalização', EOP_TEXT_DOMAIN ),
 				'value'  => $upload_done ? __( 'Confirmado', EOP_TEXT_DOMAIN ) : __( 'Pendente', EOP_TEXT_DOMAIN ),
-				'detail' => $upload_done ? __( 'Arquivo e personalizacao concluidos', EOP_TEXT_DOMAIN ) : self::get_admin_upload_stage_detail_label( $summary ),
+				'detail' => $upload_done ? __( 'Arquivo e personalização concluídos', EOP_TEXT_DOMAIN ) : self::get_admin_upload_stage_detail_label( $summary ),
 				'tone'   => $upload_done ? 'success' : 'info',
 			),
 		);
@@ -4143,7 +4143,7 @@ class EOP_Post_Confirmation_Flow {
 		if ( $products_editable > 0 && $products_completed < $products_editable ) {
 			return sprintf(
 				/* translators: 1: completed products, 2: editable products */
-				__( 'Personalizacao pendente (%1$d/%2$d)', EOP_TEXT_DOMAIN ),
+				__( 'Personalização pendente (%1$d/%2$d)', EOP_TEXT_DOMAIN ),
 				$products_completed,
 				$products_editable
 			);
@@ -4370,7 +4370,7 @@ class EOP_Post_Confirmation_Flow {
 		<div class="eop-proposal-preview-card" data-eop-proposal-preview-card data-preview-viewport="desktop">
 			<div class="eop-proposal-preview-card__copy">
 				<div class="eop-proposal-preview-card__eyebrow"><?php esc_html_e( 'Preview ao vivo', EOP_TEXT_DOMAIN ); ?></div>
-				<h3><?php esc_html_e( 'Veja a pagina publica antes de salvar', EOP_TEXT_DOMAIN ); ?></h3>
+				<h3><?php esc_html_e( 'Veja a página pública antes de salvar', EOP_TEXT_DOMAIN ); ?></h3>
 				<p><?php esc_html_e( 'Este preview usa o mesmo renderer do fluxo do cliente, agora isolado em iframe e com dados de exemplo.', EOP_TEXT_DOMAIN ); ?></p>
 				<div class="eop-proposal-preview-card__status is-ready" aria-live="polite">
 					<span class="eop-proposal-preview-card__status-dot" aria-hidden="true"></span>
@@ -4383,7 +4383,7 @@ class EOP_Post_Confirmation_Flow {
 			</div>
 			<div class="eop-proposal-preview-card__stage">
 				<div class="eop-proposal-preview-card__shell">
-					<iframe class="eop-proposal-preview-render" title="<?php esc_attr_e( 'Preview da pagina do cliente', EOP_TEXT_DOMAIN ); ?>" srcdoc="<?php echo esc_attr( $srcdoc ); ?>"></iframe>
+					<iframe class="eop-proposal-preview-render" title="<?php esc_attr_e( 'Preview da página do cliente', EOP_TEXT_DOMAIN ); ?>" srcdoc="<?php echo esc_attr( $srcdoc ); ?>"></iframe>
 				</div>
 			</div>
 		</div>
@@ -5049,17 +5049,17 @@ class EOP_Post_Confirmation_Flow {
 			),
 			array(
 				'key'   => 'billing_ie',
-				'label' => __( 'Inscricao estadual', EOP_TEXT_DOMAIN ),
+				'label' => __( 'Inscrição estadual', EOP_TEXT_DOMAIN ),
 				'value' => self::get_order_meta_value( $order, array( '_billing_ie', 'billing_ie' ) ),
 			),
 			array(
 				'key'   => 'billing_address',
-				'label' => __( 'Endereco de cobranca', EOP_TEXT_DOMAIN ),
+				'label' => __( 'Endereço de cobrança', EOP_TEXT_DOMAIN ),
 				'value' => self::get_order_address_label( $order, 'billing' ),
 			),
 			array(
 				'key'   => 'shipping_address',
-				'label' => __( 'Endereco de entrega', EOP_TEXT_DOMAIN ),
+				'label' => __( 'Endereço de entrega', EOP_TEXT_DOMAIN ),
 				'value' => self::get_order_address_label( $order, 'shipping' ),
 			),
 			array(
@@ -5171,7 +5171,7 @@ class EOP_Post_Confirmation_Flow {
 		$detected_type = isset( $file_check['type'] ) ? (string) $file_check['type'] : '';
 
 		if ( '' === $detected_type || ! in_array( $detected_type, array_values( $allowed_mimes ), true ) ) {
-			return new WP_Error( 'invalid_file_type', __( 'Formato de arquivo nao permitido.', EOP_TEXT_DOMAIN ) );
+			return new WP_Error( 'invalid_file_type', __( 'Formato de arquivo não permitido.', EOP_TEXT_DOMAIN ) );
 		}
 
 		$uploaded = wp_handle_upload(
@@ -5183,7 +5183,7 @@ class EOP_Post_Confirmation_Flow {
 		);
 
 		if ( isset( $uploaded['error'] ) || empty( $uploaded['file'] ) ) {
-			return new WP_Error( 'upload_failed', __( 'Arquivo invalido.', EOP_TEXT_DOMAIN ) );
+			return new WP_Error( 'upload_failed', __( 'Arquivo inválido.', EOP_TEXT_DOMAIN ) );
 		}
 
 		$attachment = array(
@@ -5196,7 +5196,7 @@ class EOP_Post_Confirmation_Flow {
 		$attachment_id = wp_insert_attachment( $attachment, $uploaded['file'] );
 
 		if ( is_wp_error( $attachment_id ) || ! $attachment_id ) {
-			return new WP_Error( 'invalid_file', __( 'Nao foi possivel registrar o arquivo.', EOP_TEXT_DOMAIN ) );
+			return new WP_Error( 'invalid_file', __( 'Não foi possível registrar o arquivo.', EOP_TEXT_DOMAIN ) );
 		}
 
 		$metadata = wp_generate_attachment_metadata( $attachment_id, $uploaded['file'] );

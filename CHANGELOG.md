@@ -2,6 +2,15 @@
 
 Todas as alteracoes relevantes do plugin `Aireset Expresso Order` devem ser registradas aqui.
 
+## 1.2.28 - 2026-06-08
+
+- redesenha a pagina publica da proposta para mobile (hero mais leve, card de item compacto, logo responsiva que nao estoura mais a caixa) mantendo o layout do desktop
+- reorganiza o card de item em lista de detalhes (rotulo -> valor) com todos os dados que o cliente precisa: quantidade, preco unitario, desconto em percentual e em valor, preco unitario com desconto e SKU, com o total destacado
+- oculta o bloco "Cliente" no hero e no resumo quando o pedido nao tem nome de cliente informado
+- trava o text-size-adjust do iOS para o Safari mobile nao inflar as fontes da proposta
+- corrige acentuacao e ortografia dos textos exibidos ao cliente: proposta, paginas de confirmacao/contrato/upload/personalizacao, mensagens de erro/download e PDF gerado
+- adiciona migracao automatica unica que corrige textos ja salvos no banco que ainda batem com o padrao antigo sem acento, preservando textos personalizados pela loja
+
 ## 1.2.27 - 2026-06-08
 
 - reconstroi a tela Fluxo de Confirmacao > Documentos em React nativo: repetidor de documentos de assinatura com titulo, tipo (conteudo HTML ou arquivo), corpo, anexo via wp.media (PDF/Word) e textos dos botoes, com insercao de variaveis de placeholder

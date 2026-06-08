@@ -12,6 +12,69 @@ class EOP_Settings {
         add_action( 'admin_menu', array( __CLASS__, 'register_submenu' ) );
         add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
         add_filter( 'admin_body_class', array( __CLASS__, 'filter_admin_body_class' ) );
+        add_action( 'init', array( __CLASS__, 'maybe_migrate_accents' ) );
+    }
+
+    /**
+     * Migracao one-shot: corrige textos da proposta salvos sem acento.
+     *
+     * So altera valores que batem EXATAMENTE com o texto antigo (padrao sem
+     * acento). Se a loja personalizou o texto, nada e tocado. Roda uma unica
+     * vez (controlada por flag) e tambem no front, para corrigir a pagina
+     * publica sem precisar abrir o admin.
+     */
+    public static function maybe_migrate_accents() {
+        if ( 'done' === get_option( 'eop_accents_migrated_v2' ) ) {
+            return;
+        }
+
+        $map = array(
+            'customer_experience_eyebrow'             => array( 'Experiencia do cliente', 'Experiência do cliente' ),
+            'customer_experience_title'               => array( 'Sua proposta esta pronta para seguir', 'Sua proposta está pronta para seguir' ),
+            'customer_experience_description'         => array( 'Confira os detalhes finais, valide os documentos e conclua a etapa atual em uma unica jornada.', 'Confira os detalhes finais, valide os documentos e conclua a etapa atual em uma única jornada.' ),
+            'customer_experience_total_note'          => array( 'Assim que a etapa atual for concluida, o pedido segue para o time responsavel.', 'Assim que a etapa atual for concluída, o pedido segue para o time responsável.' ),
+            'customer_experience_summary_eyebrow'     => array( 'Contexto rapido', 'Contexto rápido' ),
+            'customer_experience_summary_title'       => array( 'Visao do pedido', 'Visão do pedido' ),
+            'customer_experience_actions_eyebrow'     => array( 'Proxima acao', 'Próxima ação' ),
+            'customer_experience_progress_note'       => array( 'As proximas etapas sao liberadas em sequencia para evitar retrabalho.', 'As próximas etapas são liberadas em sequência para evitar retrabalho.' ),
+            'customer_experience_notes_label'         => array( 'Observacoes', 'Observações' ),
+            'customer_experience_pending_status_text' => array( 'Aguardando confirmacao', 'Aguardando confirmação' ),
+            'customer_experience_meta_status_value_preview' => array( 'Aguardando confirmacao', 'Aguardando confirmação' ),
+            'customer_experience_meta_deadline_value_preview' => array( 'Entrega em ate 3 dias uteis', 'Entrega em até 3 dias úteis' ),
+            'proposal_title'                          => array( 'Sua proposta esta pronta', 'Sua proposta está pronta' ),
+            'post_confirmation_contract_body'         => array( 'Use este espaco para inserir o texto contratual que o cliente precisa ler e aceitar antes de continuar.', 'Use este espaço para inserir o texto contratual que o cliente precisa ler e aceitar antes de continuar.' ),
+            'post_confirmation_stage_upload_label'    => array( 'Upload e personalizacao', 'Upload e personalização' ),
+            'post_confirmation_stage_completed_label' => array( 'Fluxo concluido', 'Fluxo concluído' ),
+            'post_confirmation_documents_description' => array( 'Os dados do cliente, documento e endereco sao aproveitados automaticamente do pedido WooCommerce.', 'Os dados do cliente, documento e endereço são aproveitados automaticamente do pedido WooCommerce.' ),
+            'post_confirmation_upload_saved_status_text' => array( 'Arquivo ja salvo no pedido.', 'Arquivo já salvo no pedido.' ),
+            'post_confirmation_products_sku_empty_label' => array( 'SKU nao informado', 'SKU não informado' ),
+            'post_confirmation_products_locked_message' => array( 'Este item esta bloqueado para alteracao de nome.', 'Este item está bloqueado para alteração de nome.' ),
+            'post_confirmation_products_button_label' => array( 'Salvar personalizacao', 'Salvar personalização' ),
+            'post_confirmation_completion_title'      => array( 'Etapa complementar concluida', 'Etapa complementar concluída' ),
+            'post_confirmation_completion_description' => array( 'Recebemos suas informacoes e o pedido segue para a equipe responsavel.', 'Recebemos suas informações e o pedido segue para a equipe responsável.' ),
+            'new_order_shipping_button_label'         => array( 'Buscar opcoes de frete', 'Buscar opções de frete' ),
+        );
+
+        $settings = get_option( self::OPTION_KEY, array() );
+
+        if ( ! is_array( $settings ) ) {
+            $settings = array();
+        }
+
+        $changed = false;
+
+        foreach ( $map as $key => $pair ) {
+            if ( isset( $settings[ $key ] ) && $pair[0] === $settings[ $key ] ) {
+                $settings[ $key ] = $pair[1];
+                $changed          = true;
+            }
+        }
+
+        if ( $changed ) {
+            update_option( self::OPTION_KEY, $settings );
+        }
+
+        update_option( 'eop_accents_migrated_v2', 'done' );
     }
 
     public static function get_defaults() {
@@ -56,27 +119,27 @@ class EOP_Settings {
             'customer_experience_muted_color'        => '#66768d',
             'customer_experience_title_size'         => '46px',
             'customer_experience_text_size'          => '16px',
-            'customer_experience_eyebrow'            => 'Experiencia do cliente',
-            'customer_experience_title'              => 'Sua proposta esta pronta para seguir',
-            'customer_experience_description'        => 'Confira os detalhes finais, valide os documentos e conclua a etapa atual em uma unica jornada.',
+            'customer_experience_eyebrow'            => 'Experiência do cliente',
+            'customer_experience_title'              => 'Sua proposta está pronta para seguir',
+            'customer_experience_description'        => 'Confira os detalhes finais, valide os documentos e conclua a etapa atual em uma única jornada.',
             'customer_experience_total_label'        => 'Investimento aprovado',
-            'customer_experience_total_note'         => 'Assim que a etapa atual for concluida, o pedido segue para o time responsavel.',
+            'customer_experience_total_note'         => 'Assim que a etapa atual for concluída, o pedido segue para o time responsável.',
             'customer_experience_items_eyebrow'      => '',
             'customer_experience_items_title'        => 'Itens',
-            'customer_experience_summary_eyebrow'    => 'Contexto rapido',
-            'customer_experience_summary_title'      => 'Visao do pedido',
+            'customer_experience_summary_eyebrow'    => 'Contexto rápido',
+            'customer_experience_summary_title'      => 'Visão do pedido',
             'customer_experience_summary_enabled'    => 'yes',
             'customer_experience_financial_eyebrow'  => '',
             'customer_experience_financial_title'    => 'Resumo',
             'customer_experience_financial_enabled'  => 'yes',
-            'customer_experience_actions_eyebrow'    => 'Proxima acao',
+            'customer_experience_actions_eyebrow'    => 'Próxima ação',
             'customer_experience_actions_title'      => 'Como seguir agora',
             'customer_experience_actions_enabled'    => 'yes',
             'customer_experience_progress_label'     => 'Mapa da jornada',
-            'customer_experience_progress_note'      => 'As proximas etapas sao liberadas em sequencia para evitar retrabalho.',
+            'customer_experience_progress_note'      => 'As próximas etapas são liberadas em sequência para evitar retrabalho.',
             'panel_title'                            => 'Pedido Expresso',
             'panel_subtitle'                         => 'Monte o pedido, gere a proposta e compartilhe com o cliente.',
-            'proposal_title'                         => 'Sua proposta esta pronta',
+            'proposal_title'                         => 'Sua proposta está pronta',
             'proposal_description'                   => 'Revise os itens e confirme para continuar.',
             'proposal_button_enabled'                => 'yes',
             'proposal_button_label'                  => 'Confirmar proposta',
@@ -100,17 +163,17 @@ class EOP_Settings {
             array(
                 'enable_post_confirmation_flow'             => 'no',
                 'post_confirmation_contract_title'          => __( 'Leia e confirme o contrato abaixo', EOP_TEXT_DOMAIN ),
-                'post_confirmation_contract_body'           => __( 'Use este espaco para inserir o texto contratual que o cliente precisa ler e aceitar antes de continuar.', EOP_TEXT_DOMAIN ),
+                'post_confirmation_contract_body'           => __( 'Use este espaço para inserir o texto contratual que o cliente precisa ler e aceitar antes de continuar.', EOP_TEXT_DOMAIN ),
                 'post_confirmation_contract_document_description' => __( 'Documento principal exibido na etapa de aceite.', EOP_TEXT_DOMAIN ),
                 'post_confirmation_stage_contract_label'    => __( 'Aceite contratual', EOP_TEXT_DOMAIN ),
-                'post_confirmation_stage_upload_label'      => __( 'Upload e personalizacao', EOP_TEXT_DOMAIN ),
-                'post_confirmation_stage_completed_label'   => __( 'Fluxo concluido', EOP_TEXT_DOMAIN ),
+                'post_confirmation_stage_upload_label'      => __( 'Upload e personalização', EOP_TEXT_DOMAIN ),
+                'post_confirmation_stage_completed_label'   => __( 'Fluxo concluído', EOP_TEXT_DOMAIN ),
                 'post_confirmation_contract_checkbox_label' => __( 'Li e aceito o contrato acima.', EOP_TEXT_DOMAIN ),
                 'post_confirmation_contract_button_label'   => __( 'Confirmar e continuar', EOP_TEXT_DOMAIN ),
                 'post_confirmation_contract_shipping_label' => __( 'Frete', EOP_TEXT_DOMAIN ),
                 'post_confirmation_signature_documents'     => array(),
                 'post_confirmation_documents_title'         => __( 'Dados do pedido', EOP_TEXT_DOMAIN ),
-                'post_confirmation_documents_description'   => __( 'Os dados do cliente, documento e endereco sao aproveitados automaticamente do pedido WooCommerce.', EOP_TEXT_DOMAIN ),
+                'post_confirmation_documents_description'   => __( 'Os dados do cliente, documento e endereço são aproveitados automaticamente do pedido WooCommerce.', EOP_TEXT_DOMAIN ),
                 'post_confirmation_documents_button_label'  => __( 'Atualizar dados', EOP_TEXT_DOMAIN ),
                 'post_confirmation_require_attachment'      => 'yes',
                 'post_confirmation_upload_title'            => __( 'Envie o arquivo solicitado', EOP_TEXT_DOMAIN ),
@@ -119,7 +182,7 @@ class EOP_Settings {
                 'post_confirmation_upload_field_label'      => __( 'Arquivo', EOP_TEXT_DOMAIN ),
                 'post_confirmation_upload_button_label'     => __( 'Enviar arquivo', EOP_TEXT_DOMAIN ),
                 'post_confirmation_upload_saved_date_prefix' => __( 'Enviado em', EOP_TEXT_DOMAIN ),
-                'post_confirmation_upload_saved_status_text' => __( 'Arquivo ja salvo no pedido.', EOP_TEXT_DOMAIN ),
+                'post_confirmation_upload_saved_status_text' => __( 'Arquivo já salvo no pedido.', EOP_TEXT_DOMAIN ),
                 'post_confirmation_upload_view_button_label' => __( 'Ver anexo enviado', EOP_TEXT_DOMAIN ),
                 'post_confirmation_products_title'          => __( 'Personalize os nomes dos produtos', EOP_TEXT_DOMAIN ),
                 'post_confirmation_products_description'    => __( 'Informe como cada nome deve aparecer para os itens liberados.', EOP_TEXT_DOMAIN ),
@@ -127,12 +190,12 @@ class EOP_Settings {
                 'post_confirmation_products_heading_original_label' => __( 'Produto original', EOP_TEXT_DOMAIN ),
                 'post_confirmation_products_heading_custom_label' => __( 'Novo nome', EOP_TEXT_DOMAIN ),
                 'post_confirmation_products_sku_prefix'    => __( 'SKU:', EOP_TEXT_DOMAIN ),
-                'post_confirmation_products_sku_empty_label' => __( 'SKU nao informado', EOP_TEXT_DOMAIN ),
-                'post_confirmation_products_locked_message' => __( 'Este item esta bloqueado para alteracao de nome.', EOP_TEXT_DOMAIN ),
-                'post_confirmation_products_button_label'   => __( 'Salvar personalizacao', EOP_TEXT_DOMAIN ),
+                'post_confirmation_products_sku_empty_label' => __( 'SKU não informado', EOP_TEXT_DOMAIN ),
+                'post_confirmation_products_locked_message' => __( 'Este item está bloqueado para alteração de nome.', EOP_TEXT_DOMAIN ),
+                'post_confirmation_products_button_label'   => __( 'Salvar personalização', EOP_TEXT_DOMAIN ),
                 'post_confirmation_locked_products'         => '',
-                'post_confirmation_completion_title'        => __( 'Etapa complementar concluida', EOP_TEXT_DOMAIN ),
-                'post_confirmation_completion_description'  => __( 'Recebemos suas informacoes e o pedido segue para a equipe responsavel.', EOP_TEXT_DOMAIN ),
+                'post_confirmation_completion_title'        => __( 'Etapa complementar concluída', EOP_TEXT_DOMAIN ),
+                'post_confirmation_completion_description'  => __( 'Recebemos suas informações e o pedido segue para a equipe responsável.', EOP_TEXT_DOMAIN ),
             )
         );
 
@@ -972,8 +1035,8 @@ class EOP_Settings {
                 'customer_experience_sidebar_background_color' => array( 'label' => __( 'Cor principal da lateral', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#f6f8fc' ),
                 'customer_experience_sidebar_background_secondary_color' => array( 'label' => __( 'Segunda cor da lateral', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff' ),
                 'post_confirmation_stage_contract_label' => array( 'label' => __( 'Texto do breadcrumb 1', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Aceite contratual', EOP_TEXT_DOMAIN ) ),
-                'post_confirmation_stage_upload_label' => array( 'label' => __( 'Texto do breadcrumb 2', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Upload e personalizacao', EOP_TEXT_DOMAIN ) ),
-                'post_confirmation_stage_completed_label' => array( 'label' => __( 'Texto do breadcrumb 3', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Fluxo concluido', EOP_TEXT_DOMAIN ) ),
+                'post_confirmation_stage_upload_label' => array( 'label' => __( 'Texto do breadcrumb 2', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Upload e personalização', EOP_TEXT_DOMAIN ) ),
+                'post_confirmation_stage_completed_label' => array( 'label' => __( 'Texto do breadcrumb 3', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Fluxo concluído', EOP_TEXT_DOMAIN ) ),
                 'post_confirmation_contract_title' => array( 'label' => __( 'Titulo do documento', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Leia e confirme o contrato abaixo', EOP_TEXT_DOMAIN ), 'full' => true ),
                 'post_confirmation_contract_document_description' => array( 'label' => __( 'Descricao do documento', EOP_TEXT_DOMAIN ), 'type' => 'textarea', 'default' => __( 'Documento principal exibido na etapa de aceite.', EOP_TEXT_DOMAIN ), 'full' => true ),
                 'post_confirmation_contract_checkbox_label' => array( 'label' => __( 'Texto do aceite', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Li e aceito o contrato acima.', EOP_TEXT_DOMAIN ), 'full' => true ),
@@ -983,7 +1046,7 @@ class EOP_Settings {
                 'customer_experience_subtotal_label' => array( 'label' => __( 'Label do subtotal', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Subtotal', EOP_TEXT_DOMAIN ) ),
                 'post_confirmation_contract_shipping_label' => array( 'label' => __( 'Label do frete', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Frete', EOP_TEXT_DOMAIN ) ),
                 'customer_experience_discount_label' => array( 'label' => __( 'Label do desconto', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Desconto', EOP_TEXT_DOMAIN ) ),
-                'customer_experience_progress_note' => array( 'label' => __( 'Texto final do resumo', EOP_TEXT_DOMAIN ), 'type' => 'textarea', 'default' => 'As proximas etapas sao liberadas em sequencia para evitar retrabalho.', 'full' => true ),
+                'customer_experience_progress_note' => array( 'label' => __( 'Texto final do resumo', EOP_TEXT_DOMAIN ), 'type' => 'textarea', 'default' => 'As próximas etapas são liberadas em sequência para evitar retrabalho.', 'full' => true ),
             ),
             self::get_post_confirmation_contract_style_field_registry()
         );
@@ -1374,8 +1437,8 @@ class EOP_Settings {
                 'customer_experience_panel_background_color' => array( 'label' => __( 'Cor principal do bloco principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff' ),
                 'customer_experience_panel_background_secondary_color' => array( 'label' => __( 'Segunda cor do bloco principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#f7f9fc' ),
                 'post_confirmation_stage_contract_label' => array( 'label' => __( 'Texto do breadcrumb 1', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Aceite contratual', EOP_TEXT_DOMAIN ) ),
-                'post_confirmation_stage_upload_label' => array( 'label' => __( 'Texto do breadcrumb 2', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Upload e personalizacao', EOP_TEXT_DOMAIN ) ),
-                'post_confirmation_stage_completed_label' => array( 'label' => __( 'Texto do breadcrumb 3', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Fluxo concluido', EOP_TEXT_DOMAIN ) ),
+                'post_confirmation_stage_upload_label' => array( 'label' => __( 'Texto do breadcrumb 2', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Upload e personalização', EOP_TEXT_DOMAIN ) ),
+                'post_confirmation_stage_completed_label' => array( 'label' => __( 'Texto do breadcrumb 3', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Fluxo concluído', EOP_TEXT_DOMAIN ) ),
                 'post_confirmation_final_intro_eyebrow' => array( 'label' => __( 'Texto auxiliar superior', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Etapa final do pedido', EOP_TEXT_DOMAIN ) ),
                 'post_confirmation_upload_title' => array( 'label' => __( 'Titulo principal da etapa', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Envie o arquivo solicitado', EOP_TEXT_DOMAIN ), 'full' => true ),
                 'post_confirmation_upload_description' => array( 'label' => __( 'Descricao principal da etapa', EOP_TEXT_DOMAIN ), 'type' => 'textarea', 'default' => __( 'Aceitamos arquivos JPG, PNG ou PDF.', EOP_TEXT_DOMAIN ), 'full' => true ),
@@ -1390,9 +1453,9 @@ class EOP_Settings {
                 'post_confirmation_products_heading_original_label' => array( 'label' => __( 'Texto da coluna 2', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Produto original', EOP_TEXT_DOMAIN ) ),
                 'post_confirmation_products_heading_custom_label' => array( 'label' => __( 'Texto da coluna 3', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Novo nome', EOP_TEXT_DOMAIN ) ),
                 'post_confirmation_products_sku_prefix' => array( 'label' => __( 'Prefixo do SKU', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'SKU:', EOP_TEXT_DOMAIN ) ),
-                'post_confirmation_products_sku_empty_label' => array( 'label' => __( 'Texto sem SKU', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'SKU nao informado', EOP_TEXT_DOMAIN ) ),
+                'post_confirmation_products_sku_empty_label' => array( 'label' => __( 'Texto sem SKU', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'SKU não informado', EOP_TEXT_DOMAIN ) ),
                 'post_confirmation_products_locked_message' => array( 'label' => __( 'Aviso do item bloqueado', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Este item esta bloqueado para alteracao de nome.', EOP_TEXT_DOMAIN ), 'full' => true ),
-                'post_confirmation_products_button_label' => array( 'label' => __( 'Texto do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Salvar personalizacao', EOP_TEXT_DOMAIN ) ),
+                'post_confirmation_products_button_label' => array( 'label' => __( 'Texto do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Salvar personalização', EOP_TEXT_DOMAIN ) ),
             ),
             self::get_post_confirmation_upload_products_style_field_registry()
         );
@@ -1817,7 +1880,7 @@ class EOP_Settings {
                 'fields'      => array(
                     'new_order_submit_label' => array( 'label' => __( 'Botao finalizar', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Finalizar e Gerar PDF', EOP_TEXT_DOMAIN ), 'group' => __( 'Botoes', EOP_TEXT_DOMAIN ) ),
                     'new_order_mass_apply_label' => array( 'label' => __( 'Botao aplicar em massa', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Aplicar', EOP_TEXT_DOMAIN ), 'group' => __( 'Botoes', EOP_TEXT_DOMAIN ) ),
-                    'new_order_shipping_button_label' => array( 'label' => __( 'Botao do frete', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Buscar opcoes de frete', EOP_TEXT_DOMAIN ), 'group' => __( 'Botoes', EOP_TEXT_DOMAIN ) ),
+                    'new_order_shipping_button_label' => array( 'label' => __( 'Botão do frete', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Buscar opções de frete', EOP_TEXT_DOMAIN ), 'group' => __( 'Botões', EOP_TEXT_DOMAIN ) ),
                 ),
             ),
             array(

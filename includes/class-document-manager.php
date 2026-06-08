@@ -317,9 +317,9 @@ class EOP_Document_Manager {
             : array(
                 'product'               => __( 'Produto', EOP_TEXT_DOMAIN ),
                 'quantity'              => __( 'Quantidade', EOP_TEXT_DOMAIN ),
-                'unit_price'            => __( 'Valor unitario', EOP_TEXT_DOMAIN ),
+                'unit_price'            => __( 'Valor unitário', EOP_TEXT_DOMAIN ),
                 'discount'              => __( 'Desconto aplicado', EOP_TEXT_DOMAIN ),
-                'discounted_unit_price' => __( 'Valor unitario com desconto', EOP_TEXT_DOMAIN ),
+                'discounted_unit_price' => __( 'Valor unitário com desconto', EOP_TEXT_DOMAIN ),
                 'line_total'            => __( 'Total', EOP_TEXT_DOMAIN ),
             );
 
@@ -460,7 +460,7 @@ class EOP_Document_Manager {
         if ( $services_total > 0.0 ) {
             $rows[] = array(
                 'key'   => 'services',
-                'label' => __( 'Servicos', EOP_TEXT_DOMAIN ),
+                'label' => __( 'Serviços', EOP_TEXT_DOMAIN ),
                 'raw'   => $services_total,
                 'value' => wc_price( $services_total ),
                 'class' => '',
@@ -721,7 +721,7 @@ class EOP_Document_Manager {
                     </div>
                     <div class="eop-pdf-preview__meta">
                         <h3><?php echo esc_html( 'proposal' === $document_type ? __( 'PROPOSTA', EOP_TEXT_DOMAIN ) : __( 'PEDIDO', EOP_TEXT_DOMAIN ) ); ?></h3>
-                        <div><?php esc_html_e( 'Numero do documento:', EOP_TEXT_DOMAIN ); ?> <strong><?php echo esc_html( $document_number ); ?></strong></div>
+                        <div><?php esc_html_e( 'Número do documento:', EOP_TEXT_DOMAIN ); ?> <strong><?php echo esc_html( $document_number ); ?></strong></div>
                         <div><?php esc_html_e( 'Data:', EOP_TEXT_DOMAIN ); ?> <?php echo esc_html( $date ? $date->date_i18n( 'd/m/Y' ) : '—' ); ?></div>
                         <div><?php esc_html_e( 'Pedido WooCommerce:', EOP_TEXT_DOMAIN ); ?> #<?php echo esc_html( $order->get_id() ); ?></div>
                     </div>
@@ -730,7 +730,7 @@ class EOP_Document_Manager {
                 <div class="eop-pdf-preview__summary">
                     <div>
                         <span><?php esc_html_e( 'Cliente', EOP_TEXT_DOMAIN ); ?></span>
-                        <strong><?php echo esc_html( $customer_name ?: __( 'Nao informado', EOP_TEXT_DOMAIN ) ); ?></strong>
+                        <strong><?php echo esc_html( $customer_name ?: __( 'Não informado', EOP_TEXT_DOMAIN ) ); ?></strong>
                         <?php if ( $show_email && $order->get_billing_email() ) : ?>
                             <small><?php echo esc_html( $order->get_billing_email() ); ?></small>
                         <?php endif; ?>
@@ -746,7 +746,7 @@ class EOP_Document_Manager {
                     <?php endif; ?>
                     <?php if ( $show_billing && '' !== $billing_label ) : ?>
                         <div>
-                            <span><?php esc_html_e( 'Cobranca', EOP_TEXT_DOMAIN ); ?></span>
+                            <span><?php esc_html_e( 'Cobrança', EOP_TEXT_DOMAIN ); ?></span>
                             <strong><?php echo esc_html( $billing_label ); ?></strong>
                         </div>
                     <?php endif; ?>
@@ -826,7 +826,7 @@ class EOP_Document_Manager {
 
                 <?php if ( $show_notes && $order->get_customer_note() ) : ?>
                     <div class="eop-pdf-preview__notes">
-                        <span><?php esc_html_e( 'Observacoes', EOP_TEXT_DOMAIN ); ?></span>
+                        <span><?php esc_html_e( 'Observações', EOP_TEXT_DOMAIN ); ?></span>
                         <p><?php echo esc_html( $order->get_customer_note() ); ?></p>
                     </div>
                 <?php endif; ?>
@@ -853,11 +853,11 @@ class EOP_Document_Manager {
         }
 
         if ( ! $order instanceof WC_Order ) {
-            wp_die( esc_html__( 'Documento nao encontrado.', EOP_TEXT_DOMAIN ) );
+            wp_die( esc_html__( 'Documento não encontrado.', EOP_TEXT_DOMAIN ) );
         }
 
         if ( ! self::is_expresso_order( $order ) ) {
-            wp_die( esc_html__( 'Documento indisponivel para este pedido.', EOP_TEXT_DOMAIN ) );
+            wp_die( esc_html__( 'Documento indisponível para este pedido.', EOP_TEXT_DOMAIN ) );
         }
 
         $document_type = self::resolve_document_type_for_order( $order, $document_type );
@@ -866,14 +866,14 @@ class EOP_Document_Manager {
 
         if ( $is_public ) {
             if ( ! self::can_access_via_token( $order, $document_type, $token ) ) {
-                wp_die( esc_html__( 'Documento indisponivel.', EOP_TEXT_DOMAIN ) );
+                wp_die( esc_html__( 'Documento indisponível.', EOP_TEXT_DOMAIN ) );
             }
         } else {
             if ( self::requires_private_nonce() ) {
                 $nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
 
                 if ( ! wp_verify_nonce( $nonce, 'eop_download_pdf_' . $order->get_id() . '_' . $document_type ) ) {
-                    wp_die( esc_html__( 'Link de documento invalido.', EOP_TEXT_DOMAIN ) );
+                    wp_die( esc_html__( 'Link de documento inválido.', EOP_TEXT_DOMAIN ) );
                 }
             }
 
@@ -910,7 +910,7 @@ class EOP_Document_Manager {
                 $document_type,
                 sprintf(
                     /* translators: %d: number of discarded bytes before the PDF response */
-                    __( 'Saida inesperada descartada antes do PDF (%d bytes).', EOP_TEXT_DOMAIN ),
+                    __( 'Saída inesperada descartada antes do PDF (%d bytes).', EOP_TEXT_DOMAIN ),
                     strlen( $discarded_output )
                 )
             );
@@ -1153,7 +1153,7 @@ class EOP_Document_Manager {
 
         $summary_blocks[] = array(
             'label' => __( 'Cliente', EOP_TEXT_DOMAIN ),
-            'value' => $customer_name ?: __( 'Nao informado', EOP_TEXT_DOMAIN ),
+            'value' => $customer_name ?: __( 'Não informado', EOP_TEXT_DOMAIN ),
             'extra' => array_filter(
                 array(
                     'yes' === $document_config['show_email'] ? $order->get_billing_email() : '',
@@ -1172,7 +1172,7 @@ class EOP_Document_Manager {
 
         if ( 'yes' === $document_config['show_billing'] && '' !== $billing_label ) {
             $summary_blocks[] = array(
-                'label' => __( 'Cobranca', EOP_TEXT_DOMAIN ),
+                'label' => __( 'Cobrança', EOP_TEXT_DOMAIN ),
                 'value' => $billing_label,
                 'extra' => array(),
             );
@@ -1190,7 +1190,7 @@ class EOP_Document_Manager {
         if ( $test_mode ) {
             $add_text_at( __( 'MODO DE TESTE', EOP_TEXT_DOMAIN ), $page_right, $y - 16, 'F2', max( 10, $meta_font_size ), 'right', '#c93535' );
         }
-        $add_text_at( sprintf( __( 'Numero do documento: %s', EOP_TEXT_DOMAIN ), $document_number ), $page_right, $y - 24, 'F1', $meta_font_size, 'right', $muted_text_color );
+        $add_text_at( sprintf( __( 'Número do documento: %s', EOP_TEXT_DOMAIN ), $document_number ), $page_right, $y - 24, 'F1', $meta_font_size, 'right', $muted_text_color );
         $add_text_at( sprintf( __( 'Data: %s', EOP_TEXT_DOMAIN ), $date ? $date->date_i18n( 'd/m/Y' ) : '—' ), $page_right, $y - 40, 'F1', $meta_font_size, 'right', $muted_text_color );
         $add_text_at( sprintf( __( 'Pedido WooCommerce: #%s', EOP_TEXT_DOMAIN ), $order->get_id() ), $page_right, $y - 56, 'F1', $meta_font_size, 'right', $muted_text_color );
 
@@ -1356,14 +1356,14 @@ class EOP_Document_Manager {
         }
 
         if ( 'proposal' === $document_type ) {
-            $confirmation = 'yes' === $order->get_meta( '_eop_proposal_confirmed', true ) ? __( 'Situacao da proposta: Confirmada', EOP_TEXT_DOMAIN ) : __( 'Situacao da proposta: Aguardando confirmacao', EOP_TEXT_DOMAIN );
+            $confirmation = 'yes' === $order->get_meta( '_eop_proposal_confirmed', true ) ? __( 'Situação da proposta: Confirmada', EOP_TEXT_DOMAIN ) : __( 'Situação da proposta: Aguardando confirmação', EOP_TEXT_DOMAIN );
             $add_text_at( $confirmation, $page_left, $y, 'F1', $note_font_size, 'left', $muted_text_color );
             $y -= 18;
         }
 
         $notes = trim( (string) $order->get_customer_note() );
         if ( $show_notes && '' !== $notes ) {
-            $add_text_at( __( 'Observacoes', EOP_TEXT_DOMAIN ), $page_left, $y, 'F2', max( 10, $note_font_size + 1 ), 'left', $body_text_color );
+            $add_text_at( __( 'Observações', EOP_TEXT_DOMAIN ), $page_left, $y, 'F2', max( 10, $note_font_size + 1 ), 'left', $body_text_color );
             $y -= 16;
 
             foreach ( self::wrap_text( $notes, 78 ) as $note_line ) {
@@ -1395,7 +1395,7 @@ class EOP_Document_Manager {
             return $binary;
         }
 
-        self::log_document_event( $order, $document_type, __( 'Fallback para browser headless acionado apos falha ou indisponibilidade do Dompdf.', EOP_TEXT_DOMAIN ) );
+        self::log_document_event( $order, $document_type, __( 'Fallback para browser headless acionado após falha ou indisponibilidade do Dompdf.', EOP_TEXT_DOMAIN ) );
 
         return self::maybe_build_headless_browser_pdf_document( $order, $document_type );
     }
@@ -1517,7 +1517,7 @@ class EOP_Document_Manager {
         @exec( $command, $output, $status );
 
         if ( 0 !== (int) $status || ! file_exists( $pdf_file ) ) {
-            self::log_document_event( $order, $document_type, __( 'Headless browser nao conseguiu gerar o PDF.', EOP_TEXT_DOMAIN ) );
+            self::log_document_event( $order, $document_type, __( 'Headless browser não conseguiu gerar o PDF.', EOP_TEXT_DOMAIN ) );
             @unlink( $html_file );
             @unlink( $pdf_file );
             return '';
@@ -2235,7 +2235,7 @@ class EOP_Document_Manager {
 
         $xml[] = '</Invoice>';
 
-        self::maybe_log_edocument_event( $order, __( 'XML eletronico UBL/Peppol gerado no admin.', EOP_TEXT_DOMAIN ) );
+        self::maybe_log_edocument_event( $order, __( 'XML eletrônico UBL/Peppol gerado no admin.', EOP_TEXT_DOMAIN ) );
 
         return implode( "\n", $xml );
     }
@@ -2281,7 +2281,7 @@ class EOP_Document_Manager {
         $xml[] = '  </SupplyChainTradeTransaction>';
         $xml[] = '</CrossIndustryInvoice>';
 
-        self::maybe_log_edocument_event( $order, __( 'XML eletronico CII gerado no admin.', EOP_TEXT_DOMAIN ) );
+        self::maybe_log_edocument_event( $order, __( 'XML eletrônico CII gerado no admin.', EOP_TEXT_DOMAIN ) );
 
         return implode( "\n", $xml );
     }
@@ -2465,7 +2465,7 @@ class EOP_Document_Manager {
         );
 
         if ( empty( $parts ) ) {
-            return __( 'Nao informado', EOP_TEXT_DOMAIN );
+            return __( 'Não informado', EOP_TEXT_DOMAIN );
         }
 
         return implode( ', ', array_map( 'wp_strip_all_tags', $parts ) );

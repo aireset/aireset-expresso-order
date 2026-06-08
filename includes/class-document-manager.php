@@ -1549,11 +1549,11 @@ class EOP_Document_Manager {
             return '';
         }
 
-        $css .= "\n@page { size: {$paper_size}; margin: 12mm; }\n";
+        $css .= "\n@page { size: {$paper_size}; margin: 6mm; }\n";
         $css .= "html, body { margin: 0; padding: 0; background: #ffffff; font-family: {$font_css}; }\n";
         $css .= "body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }\n";
         $css .= ".eop-pdf-preview { padding: 0 !important; }\n";
-        $css .= ".eop-pdf-preview__sheet { max-width: none !important; width: auto !important; margin: 0 auto !important; box-shadow: none !important; }\n";
+        $css .= ".eop-pdf-preview__sheet { max-width: none !important; width: auto !important; margin: 0 auto !important; padding: 18px 0 !important; box-shadow: none !important; }\n";
         $css .= ".eop-pdf-preview__sheet--a4 { max-width: none !important; }\n";
         $css .= ".eop-pdf-preview__sheet--letter { max-width: none !important; }\n";
         $css .= ".eop-pdf-preview__table thead th { background-color: " . $visual['header_background_color'] . " !important; color: " . $visual['header_text_color'] . " !important; }\n";

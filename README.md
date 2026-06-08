@@ -1,109 +1,59 @@
-# Aireset - Expresso Order
+# Aireset Expresso Order
 
-Plugin WordPress para operacao comercial com WooCommerce, focado em criacao rapida de pedidos, propostas publicas e administracao em uma interface SPA no painel.
+Plugin WordPress/WooCommerce privado da Aireset para operacao comercial interna, criacao rapida de pedidos, proposta publica por token e fluxo complementar pos-proposta.
 
 ## Versao atual
 
-`1.1.92`
+`1.2.25`
 
-## Principais recursos
+## Ownership e licenca
 
-- criacao rapida de pedidos expresso com busca de produtos e cliente
-- painel administrativo SPA em `Aireset > Pedido Expresso`
-- navegacao interna para `Novo pedido`, `Pedidos`, `Configuracoes` e `Licenca`
-- tela publica de proposta para compartilhamento com o cliente
-- calculo de frete e descontos integrados ao WooCommerce
-- controle de identidade visual da proposta e do painel
-- sistema de licenca integrado ao Elite Licenser
-- suporte ao perfil `vendedor_expresso`
+- Titularidade documental e operacional: `Felipe Almeman + Aireset`
+- Licenca: proprietaria
+- Termos legais e politica para IA: [`docs/LEGAL_AND_AI_POLICY.md`](./docs/LEGAL_AND_AI_POLICY.md)
+- Texto integral da licenca: [`LICENSE`](./LICENSE)
 
-## Modulo PDF nativo
+## Documentacao canonica
 
-O modulo PDF agora inclui uma central propria em `Aireset > Pedido Expresso > PDF` com:
+- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md): arquitetura atual, arquitetura alvo, contratos do admin e limites do legado
+- [`docs/ROADMAP.md`](./docs/ROADMAP.md): backlog consolidado, matriz por superficie e criterio de aceite
+- [`docs/OPERATIONS.md`](./docs/OPERATIONS.md): build, release, empacotamento e smoke tests
+- [`docs/LEGAL_AND_AI_POLICY.md`](./docs/LEGAL_AND_AI_POLICY.md): titularidade, restricoes de uso, politica para IA e fluxo de autorizacao
+- [`AGENT.md`](./AGENT.md): instrucoes operacionais curtas para agentes
+- [`CHANGELOG.md`](./CHANGELOG.md): historico de alteracoes
 
-- configuracoes gerais da identidade da loja, layout e comportamento de download
-- configuracoes independentes para pedido e proposta
-- documentacao embutida dentro do admin e tooltips por campo
-- politica de acesso ao link por nonce, token ou dono do pedido
-- numeracao com reset anual opcional e marcacao de impressao
-- preview HTML do documento e exportacao XML experimental para UBL, CII e Peppol
-- danger zone com limpeza de cache e reset de contadores
+## Estrutura principal
+
+- [`aireset-expresso-order.php`](./aireset-expresso-order.php): bootstrap principal, constantes e gate de licenca
+- [`includes/`](./includes): classes de admin, settings, pedidos, PDF, AJAX, licenca e fluxo complementar
+- [`templates/`](./templates): renderers PHP do admin e das superficies publicas
+- [`assets/`](./assets): CSS, JS legado, imagens e base do novo admin SPA
+- [`docs/`](./docs): documentacao canonica do plugin
+
+## Estado tecnico atual
+
+- O admin React/Vite e a superficie administrativa principal quando o bundle esta compilado
+- O admin legado fica como fallback tecnico via `eop_admin_legacy=1`
+- Os previews publicos continuam sendo a fonte de verdade funcional
+
+## Arquivo historico
+
+Os documentos extensos que deixaram de ser fonte canonica foram movidos para [`docs/archive/2026-05/`](./docs/archive/2026-05/).
 
 ## Requisitos
 
 - WordPress
 - WooCommerce ativo
-- licenca valida do plugin para liberar o carregamento completo
-
-## Estrutura do plugin
-
-- [`aireset-expresso-order.php`](./aireset-expresso-order.php): bootstrap principal e gate de licenca
-- [`includes/`](./includes): regras de negocio, admin, licenca, AJAX, pedidos e configuracoes
-- [`templates/`](./templates): templates do admin SPA, listagens e shortcode
-- [`assets/js/`](./assets/js): comportamento do admin, configuracoes e flyout
-- [`assets/scss/`](./assets/scss): fonte SCSS do frontend e do admin
-- [`assets/css/`](./assets/css): CSS compilado distribuido com o plugin
-
-## Planos e arquitetura
-
-- [`POST_CONFIRMATION_FLOW_PLAN.md`](./POST_CONFIRMATION_FLOW_PLAN.md): planejamento completo do fluxo documental pos-proposta, com status atual, backlog e caminhos mapeados
-- [`ARCHITECTURE_MODERNIZATION_ROADMAP.md`](./ARCHITECTURE_MODERNIZATION_ROADMAP.md): diagnostico tecnico do plugin, arquitetura futura recomendada, stack ideal, migracao para API-first/SPA e metas de performance
-
-## Identidade do admin
-
-O shell visual administrativo segue o padrao documentado em [`ADMIN_UI_BRAND.md`](./ADMIN_UI_BRAND.md), com hero proprio do plugin e navegacao lateral compartilhada com a linha Aireset.
+- Licenca valida do plugin
 
 ## Desenvolvimento
-
-Instale as dependencias de front-end e use os scripts abaixo para compilar os estilos:
 
 ```bash
 npm install
 npm run build:css
-npm run watch:css
+npm run build:admin-spa
+npm run smoke:admin-browser
 ```
 
-Os estilos sao compilados a partir de:
-
-- `assets/scss/frontend/style.scss` -> `assets/css/frontend.css`
-- `assets/scss/admin/style.scss` -> `assets/css/admin.css`
-- `assets/scss/admin/settings.scss` -> `assets/css/settings-admin.css`
-
-## Fluxo administrativo
-
-Com a licenca ativa, o plugin opera a partir da ancora:
-
-- `wp-admin/admin.php?page=eop-pedido-expresso`
-
-Views SPA disponiveis:
-
-- `?view=new-order`
-- `?view=orders`
-- `?view=settings`
-- `?view=license`
-
-Sem licenca ativa, o plugin mantem apenas a tela de ativacao e nao exibe submenu proprio de licenca.
-
-## Licenca e Integridade
-
-O plugin usa integracao proprietaria com Elite Licenser.
-
-- classe base: [`includes/class-eop-license-base.php`](./includes/class-eop-license-base.php)
-- manager: [`includes/class-eop-license-manager.php`](./includes/class-eop-license-manager.php)
-- integridade: [`includes/class-eop-integrity.php`](./includes/class-eop-integrity.php)
-- guard de carregamento: [`includes/trait-eop-license-guard.php`](./includes/trait-eop-license-guard.php)
-
-## Changelog
-
-O historico completo de alteracoes esta em [`CHANGELOG.md`](./CHANGELOG.md).
-
-Destaques recentes da serie `1.1.40`:
-
-- acoes em massa para aplicar quantidade e desconto padrao aos itens no admin e no shortcode
-- valor unitario com desconto visivel nos cards e persistencia correta do modo de desconto ao recarregar pedidos
-- ajuste das acoes e caixas de PDF para respeitar o tipo real do documento em cada pedido
-
-## Autor
-
-Aireset Agencia Web  
-[aireset.com.br](https://aireset.com.br)
+O admin legado continua compilando CSS a partir de `assets/scss/`.
+O novo admin SPA usa a stack documentada em [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).

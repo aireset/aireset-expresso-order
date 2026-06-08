@@ -27,10 +27,21 @@ class EOP_Ajax_Handlers {
         }
 
         $document = sanitize_text_field( wp_unslash( $_POST['document'] ?? '' ) );
+        $result   = self::find_customer_by_document( $document );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+        }
+
+        wp_send_json_success( $result );
+    }
+
+    public static function find_customer_by_document( $document ) {
+        $document = sanitize_text_field( $document );
         $document = preg_replace( '/[^0-9]/', '', $document );
 
         if ( empty( $document ) ) {
-            wp_send_json_error( array( 'message' => __( 'CPF/CNPJ nao informado.', EOP_TEXT_DOMAIN ) ) );
+            return new WP_Error( 'eop_customer_document_required', __( 'CPF/CNPJ nao informado.', EOP_TEXT_DOMAIN ) );
         }
 
         // Search in user meta (_billing_cpf and _billing_cnpj).
@@ -60,17 +71,20 @@ class EOP_Ajax_Handlers {
             $name  = get_user_meta( $user->ID, 'billing_first_name', true ) . ' ' . get_user_meta( $user->ID, 'billing_last_name', true );
             $name  = trim( $name ) ?: $user->display_name;
 
-            wp_send_json_success( array(
+            return array(
                 'found'    => true,
                 'user_id'  => (int) $user->ID,
                 'name'     => $name,
                 'email'    => $user->user_email,
                 'phone'    => $phone,
                 'document' => $document,
-            ) );
+            );
         }
 
-        wp_send_json_success( array( 'found' => false ) );
+        return array(
+            'found'    => false,
+            'document' => $document,
+        );
     }
 
     /**
@@ -83,10 +97,17 @@ class EOP_Ajax_Handlers {
             wp_send_json_error( array( 'message' => __( 'Sem permissao.', EOP_TEXT_DOMAIN ) ) );
         }
 
-        $term = sanitize_text_field( wp_unslash( $_GET['term'] ?? '' ) );
+        $term    = sanitize_text_field( wp_unslash( $_GET['term'] ?? '' ) );
+        $payload = self::search_products_payload( $term );
+
+        wp_send_json( $payload );
+    }
+
+    public static function search_products_payload( $term ) {
+        $term = sanitize_text_field( $term );
 
         if ( empty( $term ) ) {
-            wp_send_json( array( 'results' => array() ) );
+            return array( 'results' => array() );
         }
 
         $results = array();
@@ -140,7 +161,7 @@ class EOP_Ajax_Handlers {
             );
         }
 
-        wp_send_json( array( 'results' => $results ) );
+        return array( 'results' => $results );
     }
 
     /**
@@ -154,9 +175,16 @@ class EOP_Ajax_Handlers {
         }
 
         $term = sanitize_text_field( wp_unslash( $_GET['term'] ?? '' ) );
+        $payload = self::search_product_categories_payload( $term );
+
+        wp_send_json( $payload );
+    }
+
+    public static function search_product_categories_payload( $term ) {
+        $term = sanitize_text_field( $term );
 
         if ( empty( $term ) ) {
-            wp_send_json( array( 'results' => array() ) );
+            return array( 'results' => array() );
         }
 
         $terms = get_terms(
@@ -171,7 +199,7 @@ class EOP_Ajax_Handlers {
         );
 
         if ( is_wp_error( $terms ) || empty( $terms ) ) {
-            wp_send_json( array( 'results' => array() ) );
+            return array( 'results' => array() );
         }
 
         $results = array();
@@ -203,7 +231,7 @@ class EOP_Ajax_Handlers {
             );
         }
 
-        wp_send_json( array( 'results' => $results ) );
+        return array( 'results' => $results );
     }
 
     /**
@@ -223,12 +251,16 @@ class EOP_Ajax_Handlers {
             wp_send_json_error( array( 'message' => __( 'Dados invalidos.', EOP_TEXT_DOMAIN ) ) );
         }
 
-        $result = EOP_Order_Creator::create( $data );
+        $result = self::create_order_from_payload( $data );
 
         if ( is_wp_error( $result ) ) {
             wp_send_json_error( array( 'message' => $result->get_error_message() ) );
         }
 
         wp_send_json_success( $result );
+    }
+
+    public static function create_order_from_payload( array $data ) {
+        return EOP_Order_Creator::create( $data );
     }
 }

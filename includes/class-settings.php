@@ -1676,10 +1676,10 @@ class EOP_Settings {
         $iframe_url = class_exists( 'EOP_Admin_Page' ) ? EOP_Admin_Page::get_preview_frame_url( 'new-order' ) : '';
 
         self::render_admin_real_view_preview(
-            __( 'Tela real de criar pedido', EOP_TEXT_DOMAIN ),
-            __( 'Este preview usa a propria tela original de novo pedido em um iframe pre-preenchido para manter o layout DRY.', EOP_TEXT_DOMAIN ),
+            __( 'Formulario publico de pedido', EOP_TEXT_DOMAIN ),
+            __( 'Este preview usa o mesmo template do shortcode [expresso_order] exibido na pagina publica de pedido.', EOP_TEXT_DOMAIN ),
             $iframe_url,
-            __( 'Preview da tela real de criar pedido', EOP_TEXT_DOMAIN )
+            __( 'Preview do formulario publico de pedido', EOP_TEXT_DOMAIN )
         );
     }
 
@@ -1694,21 +1694,125 @@ class EOP_Settings {
         );
     }
 
+    /**
+     * Converte as secoes do editor visual legado no schema de campos do admin SPA.
+     *
+     * Fonte unica de verdade: reaproveita as definicoes declarativas (label PT,
+     * tipo, choices) ja existentes, evitando duplicar campos. Tipos nao suportados
+     * pelo SPA caem para 'text' (ex.: 'font' editado como texto com ajuda).
+     *
+     * @param string $domain new-order|orders-list|proposal
+     * @return array[]
+     */
+    public static function get_spa_field_schema( $domain ) {
+        switch ( $domain ) {
+            case 'new-order':
+                $sections = self::get_new_order_visual_sections();
+                break;
+            case 'orders-list':
+                $sections = self::get_orders_list_visual_sections();
+                break;
+            case 'proposal':
+                $sections = self::get_order_link_visual_sections();
+                break;
+            case 'confirmation-contract':
+                $sections = self::get_post_confirmation_contract_editor_sections();
+                break;
+            case 'confirmation-upload-products':
+                $sections = self::get_post_confirmation_upload_products_editor_sections();
+                break;
+            default:
+                return array();
+        }
+
+        $allowed = array( 'text', 'textarea', 'color', 'number', 'select' );
+        $fields  = array();
+        $seen    = array();
+
+        foreach ( (array) $sections as $section ) {
+            $section_fields = isset( $section['fields'] ) && is_array( $section['fields'] ) ? $section['fields'] : array();
+            $section_label  = isset( $section['label'] ) ? (string) $section['label'] : '';
+
+            foreach ( $section_fields as $key => $def ) {
+                $key = (string) $key;
+
+                if ( '' === $key || isset( $seen[ $key ] ) ) {
+                    continue;
+                }
+
+                $seen[ $key ] = true;
+                $def          = is_array( $def ) ? $def : array();
+                $type     = isset( $def['type'] ) ? (string) $def['type'] : 'text';
+                $spa_type = in_array( $type, $allowed, true ) ? $type : 'text';
+
+                // Select com escolhas Sim/Nao (yes/no) vira switch (toggle) no SPA.
+                if ( 'select' === $spa_type && ! empty( $def['choices'] ) && is_array( $def['choices'] ) ) {
+                    $choice_keys = array_map( 'strval', array_keys( $def['choices'] ) );
+                    sort( $choice_keys );
+
+                    if ( array( 'no', 'yes' ) === $choice_keys ) {
+                        $spa_type = 'toggle';
+                    }
+                }
+
+                $field = array(
+                    'key'      => $key,
+                    'type'     => $spa_type,
+                    'label'    => isset( $def['label'] ) ? (string) $def['label'] : $key,
+                    'group'    => $section_label,
+                    'subgroup' => isset( $def['group'] ) ? (string) $def['group'] : '',
+                );
+
+                if ( 'select' === $spa_type && ! empty( $def['choices'] ) && is_array( $def['choices'] ) ) {
+                    $options = array();
+                    foreach ( $def['choices'] as $value => $label ) {
+                        $options[] = array(
+                            'value' => (string) $value,
+                            'label' => (string) $label,
+                        );
+                    }
+                    $field['options'] = $options;
+                }
+
+                if ( 'color' === $spa_type && isset( $def['default'] ) ) {
+                    $field['default'] = (string) $def['default'];
+                }
+
+                // "?" nos campos cujo formato CSS pode confundir o usuario.
+                $help_by_type = array(
+                    'font'   => __( 'Formato Fonte:pesos, ex.: Montserrat:400,700. O seletor visual de fonte segue no admin legado.', EOP_TEXT_DOMAIN ),
+                    'box'    => __( 'Espacamento CSS no formato cima/lados/baixo, ex.: 10px 6px 24px. Aceita 1 a 4 valores.', EOP_TEXT_DOMAIN ),
+                    'size'   => __( 'Tamanho CSS, ex.: 18px, 0px ou 1.2rem.', EOP_TEXT_DOMAIN ),
+                    'shadow' => __( 'Valor de box-shadow CSS, ex.: 0 8px 16px rgba(0,0,0,.2). Use "none" para remover.', EOP_TEXT_DOMAIN ),
+                );
+
+                if ( isset( $help_by_type[ $type ] ) ) {
+                    $field['help'] = $help_by_type[ $type ];
+                } elseif ( false !== strpos( $key, 'line_height' ) ) {
+                    $field['help'] = __( 'Altura da linha (line-height), ex.: 1.2 ou 24px.', EOP_TEXT_DOMAIN );
+                }
+
+                $fields[] = $field;
+            }
+        }
+
+        return $fields;
+    }
+
     private static function get_new_order_visual_sections() {
         return array(
             array(
-                'label'       => __( 'Cabecalho da tela', EOP_TEXT_DOMAIN ),
-                'description' => __( 'Controle os textos principais da tela interna de criar pedido.', EOP_TEXT_DOMAIN ),
+                'label'       => __( 'Cabecalho do formulario', EOP_TEXT_DOMAIN ),
+                'description' => __( 'Controle os textos principais exibidos em /pedido-expresso/.', EOP_TEXT_DOMAIN ),
                 'expanded'    => true,
                 'fields'      => array(
-                    'new_order_kicker' => array( 'label' => __( 'Etiqueta superior', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Operacao comercial', EOP_TEXT_DOMAIN ), 'group' => __( 'Cabecalho', EOP_TEXT_DOMAIN ) ),
-                    'new_order_title' => array( 'label' => __( 'Titulo', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Novo pedido', EOP_TEXT_DOMAIN ), 'group' => __( 'Cabecalho', EOP_TEXT_DOMAIN ) ),
-                    'new_order_description' => array( 'label' => __( 'Descricao', EOP_TEXT_DOMAIN ), 'type' => 'textarea', 'default' => __( 'Monte o pedido, ajuste cliente, frete e descontos sem sair do fluxo principal do painel.', EOP_TEXT_DOMAIN ), 'full' => true, 'group' => __( 'Cabecalho', EOP_TEXT_DOMAIN ) ),
+                    'panel_title'    => array( 'label' => __( 'Titulo', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Pedido Expresso', EOP_TEXT_DOMAIN ), 'group' => __( 'Cabecalho', EOP_TEXT_DOMAIN ) ),
+                    'panel_subtitle' => array( 'label' => __( 'Descricao', EOP_TEXT_DOMAIN ), 'type' => 'textarea', 'default' => __( 'Monte o pedido, gere a proposta e compartilhe com o cliente.', EOP_TEXT_DOMAIN ), 'full' => true, 'group' => __( 'Cabecalho', EOP_TEXT_DOMAIN ) ),
                 ),
             ),
             array(
                 'label'       => __( 'Acoes e botoes', EOP_TEXT_DOMAIN ),
-                'description' => __( 'Personalize os principais botoes da tela de criar pedido.', EOP_TEXT_DOMAIN ),
+                'description' => __( 'Personalize os principais botoes do formulario publico de pedido.', EOP_TEXT_DOMAIN ),
                 'expanded'    => false,
                 'fields'      => array(
                     'new_order_submit_label' => array( 'label' => __( 'Botao finalizar', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => __( 'Finalizar e Gerar PDF', EOP_TEXT_DOMAIN ), 'group' => __( 'Botoes', EOP_TEXT_DOMAIN ) ),
@@ -1718,15 +1822,14 @@ class EOP_Settings {
             ),
             array(
                 'label'       => __( 'Identidade visual', EOP_TEXT_DOMAIN ),
-                'description' => __( 'Defina fonte, cores, fundo e radius da tela de criar pedido.', EOP_TEXT_DOMAIN ),
+                'description' => __( 'Defina fonte, cores e radius usados pelo formulario publico.', EOP_TEXT_DOMAIN ),
                 'expanded'    => false,
                 'fields'      => array(
-                    'new_order_font_family' => array( 'label' => __( 'Fonte', EOP_TEXT_DOMAIN ), 'type' => 'font', 'default' => 'Montserrat:400,700', 'full' => true, 'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ) ),
-                    'new_order_primary_color' => array( 'label' => __( 'Cor principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#00034b', 'group' => __( 'Cores', EOP_TEXT_DOMAIN ) ),
-                    'new_order_surface_color' => array( 'label' => __( 'Fundo dos cards', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'group' => __( 'Cores', EOP_TEXT_DOMAIN ) ),
-                    'new_order_border_color' => array( 'label' => __( 'Cor das bordas', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#dbe3f0', 'group' => __( 'Cores', EOP_TEXT_DOMAIN ) ),
-                    'new_order_background_color' => array( 'label' => __( 'Fundo da tela', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#f5f7ff', 'group' => __( 'Container', EOP_TEXT_DOMAIN ) ),
-                    'new_order_radius' => array( 'label' => __( 'Radius base', EOP_TEXT_DOMAIN ), 'type' => 'number', 'min' => 0, 'max' => 48, 'default' => '18', 'group' => __( 'Container', EOP_TEXT_DOMAIN ) ),
+                    'font_family'   => array( 'label' => __( 'Fonte', EOP_TEXT_DOMAIN ), 'type' => 'font', 'default' => 'Montserrat:400,700', 'full' => true, 'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ) ),
+                    'primary_color' => array( 'label' => __( 'Cor principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#00034b', 'group' => __( 'Cores', EOP_TEXT_DOMAIN ) ),
+                    'surface_color' => array( 'label' => __( 'Fundo dos cards', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'group' => __( 'Cores', EOP_TEXT_DOMAIN ) ),
+                    'border_color'  => array( 'label' => __( 'Cor das bordas', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#dbe3f0', 'group' => __( 'Cores', EOP_TEXT_DOMAIN ) ),
+                    'border_radius' => array( 'label' => __( 'Radius base', EOP_TEXT_DOMAIN ), 'type' => 'number', 'min' => 0, 'max' => 48, 'default' => '18', 'group' => __( 'Container', EOP_TEXT_DOMAIN ) ),
                 ),
             ),
         );
@@ -1790,8 +1893,8 @@ class EOP_Settings {
                     'customer_experience_background_mode'  => array( 'label' => __( 'Modo do fundo da pagina', EOP_TEXT_DOMAIN ), 'type' => 'select', 'group' => __( 'Fundo da pagina', EOP_TEXT_DOMAIN ), 'default' => 'solid', 'choices' => array( 'solid' => __( 'Cor solida', EOP_TEXT_DOMAIN ), 'gradient' => __( 'Gradiente', EOP_TEXT_DOMAIN ) ) ),
                     'customer_experience_background_color' => array( 'label' => __( 'Cor principal do fundo', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Fundo da pagina', EOP_TEXT_DOMAIN ), 'default' => '#f5f7ff' ),
                     'customer_experience_background_secondary_color' => array( 'label' => __( 'Cor secundaria do fundo', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Fundo da pagina', EOP_TEXT_DOMAIN ), 'default' => '#f7f9fc' ),
-                    'proposal_text_color'                  => array( 'label' => __( 'Texto principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Cores base', EOP_TEXT_DOMAIN ), 'default' => '#172033' ),
-                    'proposal_muted_color'                 => array( 'label' => __( 'Texto auxiliar', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Cores base', EOP_TEXT_DOMAIN ), 'default' => '#5b6474' ),
+                    'customer_experience_text_color'       => array( 'label' => __( 'Texto principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Cores base', EOP_TEXT_DOMAIN ), 'default' => '#16243a' ),
+                    'customer_experience_muted_color'      => array( 'label' => __( 'Texto auxiliar', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Cores base', EOP_TEXT_DOMAIN ), 'default' => '#66768d' ),
                     'customer_experience_accent_color'     => array( 'label' => __( 'Cor de destaque', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Cores base', EOP_TEXT_DOMAIN ), 'default' => '#d78a2f' ),
                     'border_color'                         => array( 'label' => __( 'Cor de borda compartilhada', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Bordas compartilhadas', EOP_TEXT_DOMAIN ), 'default' => '#dbe3f0' ),
                     'customer_experience_shared_border_width' => array( 'label' => __( 'Espessura da borda compartilhada', EOP_TEXT_DOMAIN ), 'type' => 'size', 'group' => __( 'Bordas compartilhadas', EOP_TEXT_DOMAIN ), 'default' => '1px' ),
@@ -2868,6 +2971,8 @@ class EOP_Settings {
             'no_logo'                      => __( 'Nenhum logo selecionado ainda.', EOP_TEXT_DOMAIN ),
             'ajax_url'                     => admin_url( 'admin-ajax.php' ),
             'nonce'                        => wp_create_nonce( 'eop_nonce' ),
+            'admin_rest_url'               => class_exists( 'EOP_Admin_SPA' ) ? esc_url_raw( rest_url( trailingslashit( EOP_Admin_SPA::REST_NAMESPACE ) ) ) : '',
+            'rest_nonce'                   => wp_create_nonce( 'wp_rest' ),
             'locked_placeholder'           => __( 'Busque produtos por nome ou SKU...', EOP_TEXT_DOMAIN ),
             'locked_no_results'            => __( 'Nenhum produto encontrado.', EOP_TEXT_DOMAIN ),
             'document_media_title'         => __( 'Selecionar arquivo do documento', EOP_TEXT_DOMAIN ),
@@ -3100,6 +3205,11 @@ class EOP_Settings {
             'missing_tokens'   => array(),
             'serialized_value' => '',
         );
+        $experimental_admin            = $should_render_general_config && class_exists( 'EOP_Admin_SPA' )
+            ? EOP_Admin_SPA::get_settings()
+            : array(
+                'enabled' => 'no',
+            );
         $locked_selector                = $should_render_confirmation_general ? self::get_post_confirmation_locked_product_selector_state( $settings ) : array(
             'options'          => array(),
             'missing_tokens'   => array(),
@@ -3118,7 +3228,7 @@ class EOP_Settings {
                 <?php endif; ?>
                 <div class="eop-settings-sections">
                     <?php if ( $should_render_general_config ) : ?>
-                        <?php self::render_admin_settings_template( 'embedded/general-config.php', compact( 'settings', 'pages', 'service_selector', 'service_category_selector' ) ); ?>
+                        <?php self::render_admin_settings_template( 'embedded/general-config.php', compact( 'settings', 'pages', 'service_selector', 'service_category_selector', 'experimental_admin' ) ); ?>
                     <?php endif; ?>
 
                     <?php if ( $should_render_confirmation_general ) : ?>

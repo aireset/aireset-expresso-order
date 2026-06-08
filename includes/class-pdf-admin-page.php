@@ -321,19 +321,17 @@ class EOP_PDF_Admin_Page {
         include EOP_PLUGIN_DIR . 'templates/pdf-admin-page.php';
     }
 
-    public static function ajax_load_pdf_tab() {
-        check_ajax_referer( 'eop_nonce', 'nonce' );
-
-        $tab           = isset( $_REQUEST['pdf_tab'] ) ? self::normalize_tab( wp_unslash( $_REQUEST['pdf_tab'] ), 'display' ) : 'display';
-        $document      = isset( $_REQUEST['document'] ) ? sanitize_key( wp_unslash( $_REQUEST['document'] ) ) : 'order';
-        $preview_order = absint( $_REQUEST['preview_order'] ?? 0 );
+    public static function get_pdf_tab_payload( $request = null ) {
+        $source        = $request instanceof WP_REST_Request ? $request : null;
+        $tab           = $source ? self::normalize_tab( (string) $source->get_param( 'pdf_tab' ), 'display' ) : ( isset( $_REQUEST['pdf_tab'] ) ? self::normalize_tab( wp_unslash( $_REQUEST['pdf_tab'] ), 'display' ) : 'display' );
+        $document      = $source ? sanitize_key( (string) $source->get_param( 'document' ) ) : ( isset( $_REQUEST['document'] ) ? sanitize_key( wp_unslash( $_REQUEST['document'] ) ) : 'order' );
+        $preview_order = $source ? absint( $source->get_param( 'preview_order' ) ) : absint( $_REQUEST['preview_order'] ?? 0 );
 
         if ( ! current_user_can( self::get_tab_capability( $tab ) ) ) {
-            wp_send_json_error(
-                array(
-                    'message' => __( 'Acesso negado.', EOP_TEXT_DOMAIN ),
-                ),
-                403
+            return new WP_Error(
+                'eop_pdf_tab_forbidden',
+                __( 'Acesso negado.', EOP_TEXT_DOMAIN ),
+                array( 'status' => 403 )
             );
         }
 
@@ -356,22 +354,37 @@ class EOP_PDF_Admin_Page {
         self::render_page( $tab, true );
         $html = ob_get_clean();
 
-        wp_send_json_success(
-            array(
-                'html' => $html,
-                'tab'  => $tab,
-                '_performance' => class_exists( 'EOP_Performance_Audit' )
-                    ? EOP_Performance_Audit::get_request_metrics(
-                        'pdf_tab',
-                        array(
-                            'tab'            => $tab,
-                            'document'       => $document,
-                            'response_bytes' => strlen( $html ),
-                        )
+        return array(
+            'html' => $html,
+            'tab'  => $tab,
+            '_performance' => class_exists( 'EOP_Performance_Audit' )
+                ? EOP_Performance_Audit::get_request_metrics(
+                    'pdf_tab',
+                    array(
+                        'tab'            => $tab,
+                        'document'       => $document,
+                        'response_bytes' => strlen( $html ),
                     )
-                    : array(),
-            )
+                )
+                : array(),
         );
+    }
+
+    public static function ajax_load_pdf_tab() {
+        check_ajax_referer( 'eop_nonce', 'nonce' );
+
+        $payload = self::get_pdf_tab_payload();
+
+        if ( is_wp_error( $payload ) ) {
+            wp_send_json_error(
+                array(
+                    'message' => $payload->get_error_message(),
+                ),
+                (int) ( $payload->get_error_data()['status'] ?? 400 )
+            );
+        }
+
+        wp_send_json_success( $payload );
     }
 
     public static function handle_purge_cache() {

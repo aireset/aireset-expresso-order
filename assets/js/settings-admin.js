@@ -807,11 +807,26 @@
             return;
         }
 
+        function getSettingsRestUrl(searchAction) {
+            var base = String(getSettingsVar('admin_rest_url', '') || '').replace(/\/+$/, '');
+
+            if (!base) {
+                return '';
+            }
+
+            if (searchAction === 'eop_search_product_categories') {
+                return base + '/product-categories';
+            }
+
+            return base + '/products';
+        }
+
         $scope.find('.eop-settings-product-selector, .eop-settings-category-selector').each(function () {
             var $select = $(this);
             var targetSelector = String($select.data('target-input') || '');
             var $target = targetSelector ? $(targetSelector) : $();
             var searchAction = String($select.data('search-action') || 'eop_search_products');
+            var restUrl = getSettingsRestUrl(searchAction);
             var placeholder = String($select.data('placeholder') || getSettingsVar('locked_placeholder', 'Busque produtos por nome ou SKU...'));
             var noResults = String($select.data('no-results') || getSettingsVar('locked_no_results', 'Nenhum produto encontrado.'));
             var minimumInputLength = parseInt($select.data('minimum-input-length'), 10);
@@ -836,10 +851,21 @@
                     }
                 },
                 ajax: {
-                    url: getSettingsVar('ajax_url', ''),
+                    url: restUrl || getSettingsVar('ajax_url', ''),
                     dataType: 'json',
                     delay: 250,
+                    beforeSend: function (xhr) {
+                        if (restUrl) {
+                            xhr.setRequestHeader('X-WP-Nonce', String(getSettingsVar('rest_nonce', '') || ''));
+                        }
+                    },
                     data: function (params) {
+                        if (restUrl) {
+                            return {
+                                term: params.term || ''
+                            };
+                        }
+
                         return {
                             action: searchAction,
                             nonce: getSettingsVar('nonce', ''),

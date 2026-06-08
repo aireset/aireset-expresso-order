@@ -4,6 +4,7 @@ defined( 'ABSPATH' ) || exit;
 class EOP_Post_Confirmation_Flow {
 
 	use EOP_License_Guard;
+	use EOP_Attachment_Documents;
 
 	const META_KEY  = '_eop_post_confirmation_flow_data';
 	const META_FLAG = '_eop_post_confirmation_flow_completed';
@@ -1214,28 +1215,34 @@ class EOP_Post_Confirmation_Flow {
 	public static function ajax_set_post_confirmation_stage() {
 		check_ajax_referer( 'eop_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'edit_shop_orders' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Sem permissao para alterar a etapa do fluxo complementar.', EOP_TEXT_DOMAIN ) ) );
-		}
-
-		$order_id = absint( $_POST['order_id'] ?? 0 );
-		$order    = $order_id ? wc_get_order( $order_id ) : false;
-
-		if ( ! $order instanceof WC_Order ) {
-			wp_send_json_error( array( 'message' => __( 'Pedido nao encontrado.', EOP_TEXT_DOMAIN ) ) );
-		}
-
-		if ( ! self::current_user_can_access_order( $order ) ) {
-			wp_send_json_error( array( 'message' => __( 'Voce nao pode alterar a etapa deste pedido.', EOP_TEXT_DOMAIN ) ) );
-		}
-
-		$result = self::update_order_stage_from_admin( $order, isset( $_POST['stage'] ) ? wp_unslash( $_POST['stage'] ) : '' );
+		$result = self::get_admin_stage_update_payload(
+			absint( $_POST['order_id'] ?? 0 ),
+			isset( $_POST['stage'] ) ? wp_unslash( $_POST['stage'] ) : ''
+		);
 
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
 		}
 
 		wp_send_json_success( $result );
+	}
+
+	public static function get_admin_stage_update_payload( $order_id, $stage ) {
+		if ( ! current_user_can( 'edit_shop_orders' ) ) {
+			return new WP_Error( 'eop_post_flow_stage_forbidden', __( 'Sem permissao para alterar a etapa do fluxo complementar.', EOP_TEXT_DOMAIN ), array( 'status' => rest_authorization_required_code() ) );
+		}
+
+		$order = absint( $order_id ) ? wc_get_order( absint( $order_id ) ) : false;
+
+		if ( ! $order instanceof WC_Order ) {
+			return new WP_Error( 'eop_post_flow_stage_order_not_found', __( 'Pedido nao encontrado.', EOP_TEXT_DOMAIN ), array( 'status' => 404 ) );
+		}
+
+		if ( ! self::current_user_can_access_order( $order ) ) {
+			return new WP_Error( 'eop_post_flow_stage_order_forbidden', __( 'Voce nao pode alterar a etapa deste pedido.', EOP_TEXT_DOMAIN ), array( 'status' => 403 ) );
+		}
+
+		return self::update_order_stage_from_admin( $order, $stage );
 	}
 
 	public static function handle_admin_post_confirmation_stage_update() {
@@ -2192,6 +2199,14 @@ class EOP_Post_Confirmation_Flow {
 				'image_url' => $sample_image_url,
 				'locked'    => false,
 			),
+			array(
+				'item_id'   => 2,
+				'item_name' => __( 'Servico de personalizacao', EOP_TEXT_DOMAIN ),
+				'sku'       => '',
+				'value'     => __( 'Nao editavel no preview', EOP_TEXT_DOMAIN ),
+				'image_url' => $sample_image_url,
+				'locked'    => true,
+			),
 		);
 		$steps            = array(
 			array(
@@ -2210,7 +2225,19 @@ class EOP_Post_Confirmation_Flow {
 				'status' => 'upcoming',
 			),
 		);
-		$markup           = self::render_final_step_renderer_markup(
+		$upload_markup    = self::render_final_step_renderer_markup(
+			array(
+				'settings'       => $settings,
+				'field_label'    => $settings['post_confirmation_upload_field_label'],
+				'attachment_id'  => 1,
+				'attachment_url' => home_url( '/' ),
+				'filename'       => 'plesk-logo.png',
+				'uploaded_at'    => '2026-05-04 18:33:22',
+				'line_items'     => $sample_items,
+				'state'          => array(),
+			)
+		);
+		$products_markup  = self::render_final_step_renderer_markup(
 			array(
 				'settings'       => $settings,
 				'field_label'    => $settings['post_confirmation_upload_field_label'],
@@ -2285,7 +2312,40 @@ class EOP_Post_Confirmation_Flow {
 							</div>
 					<div class="eop-post-flow__final-step-card">
 						<form method="post" enctype="multipart/form-data" class="eop-post-flow__form eop-post-flow__form--final-step">
-							<?php echo $markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+							<?php echo $upload_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+							<button type="submit" class="eop-proposal-button eop-post-flow__final-submit"><?php echo esc_html( $settings['post_confirmation_upload_button_label'] ); ?></button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="eop-post-flow eop-post-flow--stage-products eop-post-flow--stage-contract eop-post-flow--final-step eop-post-flow--admin-preview eop-post-flow--admin-final-preview">
+			<div class="eop-post-flow__contract-header">
+				<div class="eop-post-flow__contract-header-main">
+					<div class="eop-post-flow__contract-brand">
+						<?php if ( '' !== $logo_url ) : ?>
+							<img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( $brand_name ); ?>">
+						<?php else : ?>
+							<span class="eop-post-flow__contract-brand-fallback"><?php echo esc_html( strtoupper( substr( $brand_name, 0, 1 ) ) ); ?></span>
+						<?php endif; ?>
+					</div>
+					<div class="eop-post-flow__contract-meta">
+						<strong><?php echo esc_html( $brand_name ); ?></strong>
+						<span><?php echo esc_html( sprintf( __( 'Pedido #%d', EOP_TEXT_DOMAIN ), 5238 ) ); ?></span>
+					</div>
+				</div>
+				<?php self::render_stage_breadcrumb( $steps, 'upload' ); ?>
+			</div>
+			<div class="eop-post-flow__layout">
+				<div class="eop-post-flow__main">
+					<div class="eop-post-flow__final-intro">
+						<span class="eop-post-flow__final-intro-eyebrow"><?php echo esc_html( $final_intro_eyebrow ); ?></span>
+						<h2 class="eop-post-flow__final-intro-title"><?php echo esc_html( $settings['post_confirmation_products_title'] ); ?></h2>
+						<p class="eop-post-flow__final-intro-text"><?php echo esc_html( $settings['post_confirmation_products_description'] ); ?></p>
+					</div>
+					<div class="eop-post-flow__final-step-card">
+						<form method="post" enctype="multipart/form-data" class="eop-post-flow__form eop-post-flow__form--final-step">
+							<?php echo $products_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 							<button type="submit" class="eop-proposal-button eop-post-flow__final-submit"><?php echo esc_html( $settings['post_confirmation_products_button_label'] ); ?></button>
 						</form>
 					</div>
@@ -3716,11 +3776,19 @@ class EOP_Post_Confirmation_Flow {
 		$settings  = is_array( $settings ) ? wp_parse_args( $settings, EOP_Settings::get_defaults() ) : EOP_Settings::get_all();
 		$documents = EOP_Settings::get_post_confirmation_contract_documents( $settings );
 		$primary   = ! empty( $documents ) ? self::get_signature_document_preview_payload( $documents[0] ) : array();
+		$secondary = array();
+
+		if ( count( $documents ) > 1 ) {
+			foreach ( array_slice( $documents, 1 ) as $document ) {
+				$secondary[] = self::get_signature_document_preview_payload( $document );
+			}
+		}
 
 		return array(
 			'document_count'       => count( $documents ),
 			'additional_documents' => max( 0, count( $documents ) - 1 ),
 			'primary_document'     => $primary,
+			'secondary_documents'  => $secondary,
 		);
 	}
 
@@ -3728,6 +3796,7 @@ class EOP_Post_Confirmation_Flow {
 		$settings = is_array( $settings ) ? wp_parse_args( $settings, EOP_Settings::get_defaults() ) : EOP_Settings::get_all();
 		$preview  = self::get_admin_contract_preview_payload( $settings );
 		$primary_document = is_array( $preview['primary_document'] ?? null ) ? $preview['primary_document'] : array();
+		$secondary_documents = is_array( $preview['secondary_documents'] ?? null ) ? $preview['secondary_documents'] : array();
 		$contract_title   = trim( (string) ( $settings['post_confirmation_contract_title'] ?? ( $primary_document['title'] ?? '' ) ) );
 		$contract_description = trim( (string) ( $settings['post_confirmation_contract_document_description'] ?? ( $primary_document['description'] ?? '' ) ) );
 		$brand_name       = class_exists( 'EOP_PDF_Settings' ) ? (string) EOP_PDF_Settings::get( 'shop_name', get_bloginfo( 'name' ) ) : get_bloginfo( 'name' );
@@ -3815,6 +3884,8 @@ class EOP_Post_Confirmation_Flow {
 		}
 
 		.eop-final-flow-preview {
+			display: grid;
+			gap: 18px;
 			padding: 18px;
 			background: #f5f7ff;
 		}
@@ -3846,6 +3917,20 @@ class EOP_Post_Confirmation_Flow {
 						<?php self::render_contract_document_reader( $contract_title, $contract_description, 'iframe', (string) $primary_document['preview_url'] ); ?>
 					<?php elseif ( ! empty( $primary_document['preview_html'] ) ) : ?>
 						<?php self::render_contract_document_reader( $contract_title, $contract_description, 'html', (string) $primary_document['preview_html'] ); ?>
+					<?php endif; ?>
+					<?php if ( ! empty( $secondary_documents ) ) : ?>
+						<div class="eop-post-flow__documents-grid">
+							<?php foreach ( $secondary_documents as $document ) : ?>
+								<div class="eop-post-flow__upload-card">
+									<strong><?php echo esc_html( $document['title'] ? $document['title'] : __( 'Documento complementar', EOP_TEXT_DOMAIN ) ); ?></strong>
+									<small><?php echo esc_html( $document['description'] ? $document['description'] : __( 'Documento adicional configurado para leitura e assinatura externa.', EOP_TEXT_DOMAIN ) ); ?></small>
+									<div class="eop-post-flow__actions">
+										<a class="eop-proposal-button eop-proposal-button--secondary" target="_blank" rel="noopener" href="<?php echo esc_url( $document['preview_url'] ? $document['preview_url'] : home_url( '/' ) ); ?>"><?php echo esc_html( $document['view_label'] ); ?></a>
+										<a class="eop-proposal-button eop-proposal-button--secondary" href="<?php echo esc_url( $document['preview_url'] ? $document['preview_url'] : home_url( '/' ) ); ?>"><?php echo esc_html( $document['button_label'] ); ?></a>
+									</div>
+								</div>
+							<?php endforeach; ?>
+						</div>
 					<?php endif; ?>
 					<div class="eop-post-flow__acceptance-card">
 						<div class="eop-post-flow__form eop-post-flow__form--acceptance">
@@ -4669,127 +4754,6 @@ class EOP_Post_Confirmation_Flow {
 		}
 
 		return absint( $attachment_id );
-	}
-
-	private static function stream_attachment_file( $attachment_id, $force_download = false, $filename = '' ) {
-		$file_path = get_attached_file( $attachment_id );
-		$mime_type = (string) get_post_mime_type( $attachment_id );
-
-		if ( empty( $file_path ) || ! file_exists( $file_path ) ) {
-			wp_die( esc_html__( 'Arquivo nao encontrado.', EOP_TEXT_DOMAIN ) );
-		}
-
-		nocache_headers();
-		header( 'Content-Type: ' . ( $mime_type ? $mime_type : 'application/octet-stream' ) );
-		header( 'Content-Disposition: ' . ( $force_download ? 'attachment' : 'inline' ) . '; filename="' . sanitize_file_name( $filename ? $filename : wp_basename( $file_path ) ) . '"' );
-		header( 'Content-Length: ' . filesize( $file_path ) );
-		header( 'Cache-Control: private, max-age=0, must-revalidate' );
-		header( 'Pragma: public' );
-
-		readfile( $file_path );
-		exit;
-	}
-
-	private static function get_attachment_mime_type( $attachment_id ) {
-		$mime_type = (string) get_post_mime_type( $attachment_id );
-		$file_path = get_attached_file( $attachment_id );
-
-		if ( '' === $mime_type && ! empty( $file_path ) ) {
-			$filetype = wp_check_filetype( $file_path );
-			$mime_type = (string) ( $filetype['type'] ?? '' );
-		}
-
-		return $mime_type;
-	}
-
-	private static function extract_text_from_attachment( $attachment_id ) {
-		$file_path = get_attached_file( $attachment_id );
-		$mime_type = self::get_attachment_mime_type( $attachment_id );
-
-		if ( empty( $file_path ) || ! file_exists( $file_path ) ) {
-			return '';
-		}
-
-		if ( false !== strpos( $mime_type, 'wordprocessingml.document' ) || 'docx' === strtolower( pathinfo( $file_path, PATHINFO_EXTENSION ) ) ) {
-			return self::extract_text_from_docx_file( $file_path );
-		}
-
-		if ( false !== strpos( $mime_type, 'msword' ) || 'doc' === strtolower( pathinfo( $file_path, PATHINFO_EXTENSION ) ) ) {
-			return self::extract_text_from_doc_file( $file_path );
-		}
-
-		return '';
-	}
-
-	private static function extract_text_from_docx_file( $file_path ) {
-		if ( ! class_exists( 'ZipArchive' ) ) {
-			return '';
-		}
-
-		$zip = new ZipArchive();
-
-		if ( true !== $zip->open( $file_path ) ) {
-			return '';
-		}
-
-		$xml = $zip->getFromName( 'word/document.xml' );
-		$zip->close();
-
-		if ( false === $xml || '' === $xml ) {
-			return '';
-		}
-
-		$text = str_replace( array( '</w:p>', '</w:tr>', '</w:tc>' ), array( "\n\n", "\n", ' ' ), $xml );
-		$text = preg_replace( '/<w:tab[^>]*\/>/i', "\t", (string) $text );
-		$text = wp_strip_all_tags( $text );
-
-		return self::normalize_extracted_document_text( $text );
-	}
-
-	private static function extract_text_from_doc_file( $file_path ) {
-		$command_path = self::find_cli_binary( array( 'antiword' ) );
-
-		if ( '' === $command_path ) {
-			return '';
-		}
-
-		$output = array();
-		$return = 0;
-		exec( escapeshellarg( $command_path ) . ' ' . escapeshellarg( $file_path ) . ' 2>&1', $output, $return );
-
-		if ( 0 !== $return || empty( $output ) ) {
-			return '';
-		}
-
-		return self::normalize_extracted_document_text( implode( "\n", $output ) );
-	}
-
-	private static function find_cli_binary( $candidates ) {
-		$paths = array_filter( explode( PATH_SEPARATOR, (string) getenv( 'PATH' ) ) );
-
-		foreach ( (array) $candidates as $candidate ) {
-			foreach ( $paths as $path ) {
-				$path = rtrim( (string) $path, DIRECTORY_SEPARATOR );
-
-				foreach ( array( $path . DIRECTORY_SEPARATOR . $candidate, $path . DIRECTORY_SEPARATOR . $candidate . '.exe' ) as $binary ) {
-					if ( is_file( $binary ) && is_readable( $binary ) ) {
-						return $binary;
-					}
-				}
-			}
-		}
-
-		return '';
-	}
-
-	private static function normalize_extracted_document_text( $text ) {
-		$text = html_entity_decode( (string) $text, ENT_QUOTES, get_bloginfo( 'charset' ) ? get_bloginfo( 'charset' ) : 'UTF-8' );
-		$text = preg_replace( '/\r\n|\r/', "\n", $text );
-		$text = preg_replace( '/\n{3,}/', "\n\n", $text );
-		$text = preg_replace( '/[ \t]+/', ' ', $text );
-		$text = preg_replace( '/ ?\n ?/', "\n", $text );
-
-		return trim( wp_strip_all_tags( (string) $text ) );
 	}
 
 	private static function get_document_fields( $settings = null ) {

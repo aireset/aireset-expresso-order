@@ -113,6 +113,12 @@ class EOP_License_Manager {
 	}
 
 	public function set_admin_style() {
+		$current_page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+
+		if ( ! in_array( $current_page, array( $this->license_page_slug, 'eop-license' ), true ) ) {
+			return;
+		}
+
 		wp_register_style(
 			'eop-license-css',
 			plugins_url( 'assets/css/eop-license.css', $this->plugin_file ),

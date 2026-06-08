@@ -1,51 +1,42 @@
-Aireset Expresso Order — Proprietary Software License
+Aireset Expresso Order - Licenca Proprietaria Privada
 
-Copyright (c) 2024-2026 Aireset Agência Web (https://aireset.com.br)
-All Rights Reserved.
+Copyright (c) 2024-2026 Felipe Almeman e Aireset.
+Todos os direitos reservados.
 
-NOTICE: This software and its associated documentation are the exclusive
-property of Aireset Agência Web ("Licensor"). This license grants the
-purchaser ("Licensee") limited, non-exclusive, non-transferable rights
-to use this software subject to the following terms:
+1. Titularidade
+Este software, seu codigo-fonte, codigo objeto, documentacao, assets, mecanismos de licenciamento, protecoes de integridade, fluxos administrativos e materiais associados sao propriedade intelectual privada e exclusiva de Felipe Almeman e Aireset.
 
-1. GRANT OF LICENSE
-   The Licensor grants the Licensee a non-exclusive, non-transferable license
-   to install and use this software on the number of domains specified at the
-   time of purchase.
+2. Licenca de uso
+O adquirente recebe apenas uma licenca limitada, revogavel, nao exclusiva, intransferivel e nao sublicenciavel para instalar e usar o plugin no escopo comercial expressamente autorizado pelo titular.
 
-2. RESTRICTIONS
-   The Licensee SHALL NOT:
-   a) Redistribute, sublicense, sell, lease, or share this software;
-   b) Modify, decompile, reverse engineer, or disassemble the software;
-   c) Remove or alter any proprietary notices, labels, or marks;
-   d) Use the software beyond the licensed number of domains;
-   e) Create derivative works based on this software;
-   f) Circumvent, disable, or tamper with the license verification system.
+3. Restricoes
+Sem autorizacao humana explicita e registrada do titular, e vedado:
+- alterar, adaptar, desbloquear, remover ou contornar o sistema de licenca ou integridade
+- modificar o codigo-fonte ou gerar obras derivadas
+- descompilar, fazer engenharia reversa, desofuscar ou desmontar o software
+- redistribuir, sublicenciar, revender, compartilhar ou disponibilizar copias
+- remover avisos de titularidade, marcas, labels ou avisos proprietarios
+- usar o software fora do escopo licenciado
 
-3. INTELLECTUAL PROPERTY
-   This software, including all source code, object code, documentation,
-   and associated materials, is and shall remain the exclusive property
-   of Aireset Agência Web. No title or intellectual property rights are
-   transferred to the Licensee.
+4. Politica especifica para alteracao nao autorizada
+Qualquer alteracao de codigo, remocao de mecanismos de licenca, desbloqueio, tamper, deobfuscation ou tentativa de neutralizar as protecoes do plugin sem autorizacao humana explicita e registrada do titular constitui violacao contratual e infracao a propriedade intelectual.
 
-4. TERMINATION
-   This license terminates automatically if the Licensee breaches any term.
-   Upon termination, the Licensee must destroy all copies of the software.
+5. Clausula penal contratual
+Sem prejuizo de apuracao de perdas e demais medidas cabiveis, a violacao descrita na secao 4 sujeita o infrator a multa contratual nao compensatoria equivalente a USD 10,000.00 por evento de violacao, alem de cessacao imediata da licenca.
 
-5. WARRANTY DISCLAIMER
-   THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED. THE LICENSOR DISCLAIMS ALL WARRANTIES INCLUDING, WITHOUT
-   LIMITATION, WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-   PURPOSE.
+6. Rescisao
+A licenca sera rescindida automaticamente em caso de violacao desta licenca. Nessa hipotese, o licenciado devera interromper imediatamente o uso e destruir todas as copias sob sua posse ou controle.
 
-6. LIMITATION OF LIABILITY
-   IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY INDIRECT, INCIDENTAL,
-   SPECIAL, OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY
-   TO USE THIS SOFTWARE.
+7. Reserva juridica
+Este documento expressa a politica juridica e comercial do titular, mas a redacao final de exigibilidade, penalidade e execucao deve ser revisada por advogado antes de uso como instrumento contratual definitivo.
 
-7. GOVERNING LAW
-   This license shall be governed by and construed in accordance with the
-   laws of Brazil. Any disputes shall be resolved in the courts of the
-   Licensor's jurisdiction.
+8. Base legal de referencia
+- Lei do Software: Lei no 9.609/1998
+- Lei de Direitos Autorais: Lei no 9.610/1998
+- Clausula penal contratual: artigos 408 a 416 do Codigo Civil brasileiro
 
-For licensing inquiries: contato@aireset.com.br
+9. Jurisdicao
+Aplica-se a legislacao brasileira, com foro a ser definido nos instrumentos comerciais e contratuais oficiais do titular.
+
+10. Contato
+Para licenciamento, autorizacoes e validacao de uso: contato@aireset.com.br

@@ -89,6 +89,10 @@ body.eop-admin-spa-screen.is-plugin-fullscreen {
     margin: 0;
     display: grid;
     gap: 12px;
+
+    &[hidden] {
+      display: none !important;
+    }
   }
 
   .eop-settings-page--embedded {

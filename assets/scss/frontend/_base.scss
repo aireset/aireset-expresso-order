@@ -1,5 +1,11 @@
 @use "tokens" as t;
 
+body .eop-login-wrap,
+body .eop-pdv,
+body .eop-proposal-wrap {
+  border: 0;
+}
+
 @mixin eop-button-base {
   display: inline-flex;
   align-items: center;

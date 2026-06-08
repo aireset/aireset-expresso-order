@@ -1,9 +1,25 @@
 {
   "name": "aireset-expresso-order",
-  "version": "1.1.95",
+  "version": "1.2.25",
   "private": true,
   "scripts": {
     "build:css": "sass.cmd assets/scss/frontend/style.scss assets/css/frontend.css --style=expanded --no-source-map && sass.cmd assets/scss/admin/style.scss assets/css/admin.css --style=expanded --no-source-map && sass.cmd assets/scss/admin/settings.scss assets/css/settings-admin.css --style=expanded --no-source-map",
-    "watch:css": "sass.cmd --watch assets/scss/frontend/style.scss:assets/css/frontend.css assets/scss/admin/style.scss:assets/css/admin.css assets/scss/admin/settings.scss:assets/css/settings-admin.css --style=expanded --no-source-map"
+    "watch:css": "sass.cmd --watch assets/scss/frontend/style.scss:assets/css/frontend.css assets/scss/admin/style.scss:assets/css/admin.css assets/scss/admin/settings.scss:assets/css/settings-admin.css --style=expanded --no-source-map",
+    "build:admin-spa": "vite build",
+    "dev:admin-spa": "vite",
+    "smoke:admin-browser": "node scripts/smoke-admin-browser.mjs",
+    "baseline:admin-performance": "node scripts/performance-admin-baseline.mjs"
+  },
+  "dependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.4",
+    "playwright": "^1.60.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.7"
   }
 }

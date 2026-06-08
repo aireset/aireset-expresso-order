@@ -5,6 +5,9 @@ $settings             = EOP_Settings::get_all();
 $font_css             = method_exists( 'EOP_Settings', 'get_font_css_family' ) ? EOP_Settings::get_font_css_family( $settings['font_family'] ) : "'Segoe UI', sans-serif";
 $order_statuses       = function_exists( 'wc_get_order_statuses' ) ? wc_get_order_statuses() : array();
 $eop_is_preview_frame = class_exists( 'EOP_Admin_Page' ) && EOP_Admin_Page::is_preview_frame_request();
+$eop_mass_apply_label = (string) ( $settings['new_order_mass_apply_label'] ?? __( 'Aplicar', EOP_TEXT_DOMAIN ) );
+$eop_shipping_label   = (string) ( $settings['new_order_shipping_button_label'] ?? __( 'Buscar opcoes de frete', EOP_TEXT_DOMAIN ) );
+$eop_submit_label     = (string) ( $settings['new_order_submit_label'] ?? __( 'Finalizar e Gerar PDF', EOP_TEXT_DOMAIN ) );
 ?>
 <style>
     .eop-pdv {
@@ -17,8 +20,8 @@ $eop_is_preview_frame = class_exists( 'EOP_Admin_Page' ) && EOP_Admin_Page::is_p
     }
 </style>
 
-<?php if ( $eop_is_preview_frame && class_exists( 'EOP_Admin_Page' ) ) : ?>
-    <?php EOP_Admin_Page::render_view_skin_css( isset( $_GET['preview_view'] ) ? wp_unslash( $_GET['preview_view'] ) : 'new-order' ); ?>
+<?php if ( $eop_is_preview_frame && class_exists( 'EOP_Admin_Page' ) && isset( $_GET['preview_view'] ) && 'orders' === sanitize_key( wp_unslash( $_GET['preview_view'] ) ) ) : ?>
+    <?php EOP_Admin_Page::render_view_skin_css( 'orders' ); ?>
 <?php endif; ?>
 
 <div class="eop-pdv">
@@ -73,7 +76,7 @@ $eop_is_preview_frame = class_exists( 'EOP_Admin_Page' ) && EOP_Admin_Page::is_p
                             </div>
                         </div>
                         <div class="eop-field eop-item-defaults__action">
-                            <button type="button" id="eop-apply-item-defaults" class="eop-btn"><?php esc_html_e( 'Aplicar', EOP_TEXT_DOMAIN ); ?></button>
+                            <button type="button" id="eop-apply-item-defaults" class="eop-btn"><?php echo esc_html( $eop_mass_apply_label ); ?></button>
                         </div>
                     </div>
                     <div class="eop-field">
@@ -184,7 +187,7 @@ $eop_is_preview_frame = class_exists( 'EOP_Admin_Page' ) && EOP_Admin_Page::is_p
                                     </div>
 
                                     <div class="eop-field">
-                                        <button type="button" id="eop-calc-shipping" class="eop-btn eop-btn-primary eop-btn-block"><?php esc_html_e( 'Buscar opcoes de frete', EOP_TEXT_DOMAIN ); ?></button>
+                                        <button type="button" id="eop-calc-shipping" class="eop-btn eop-btn-primary eop-btn-block"><?php echo esc_html( $eop_shipping_label ); ?></button>
                                     </div>
 
                                     <div id="eop-shipping-rates" class="eop-shipping-rates"></div>
@@ -235,7 +238,7 @@ $eop_is_preview_frame = class_exists( 'EOP_Admin_Page' ) && EOP_Admin_Page::is_p
                     </div>
 
                     <button type="button" id="eop-submit" class="eop-btn eop-btn-primary eop-btn-block">
-                        <?php esc_html_e( 'Finalizar e Gerar PDF', EOP_TEXT_DOMAIN ); ?>
+                        <?php echo esc_html( $eop_submit_label ); ?>
                     </button>
                 </div>
             </div>

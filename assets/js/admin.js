@@ -22,6 +22,163 @@
     var cachePrefix = 'eop:' + cacheNamespace + ':';
     var sessionStore = null;
     var localStore = null;
+    var select2LoadPromise = null;
+
+    function loadExternalStyle(url, id) {
+        if (!url || (id && document.getElementById(id))) {
+            return Promise.resolve();
+        }
+
+        return new Promise(function (resolve, reject) {
+            var link = document.createElement('link');
+
+            if (id) {
+                link.id = id;
+            }
+
+            link.rel = 'stylesheet';
+            link.href = url;
+            link.onload = resolve;
+            link.onerror = reject;
+            document.head.appendChild(link);
+        });
+    }
+
+    function loadExternalScript(url, id) {
+        if (!url || (id && document.getElementById(id))) {
+            return Promise.resolve();
+        }
+
+        return new Promise(function (resolve, reject) {
+            var script = document.createElement('script');
+
+            if (id) {
+                script.id = id;
+            }
+
+            script.src = url;
+            script.async = true;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    function ensureSelect2Assets() {
+        var assets = eop_vars.select2_assets || {};
+
+        if ($.fn.select2) {
+            return Promise.resolve();
+        }
+
+        if (select2LoadPromise) {
+            return select2LoadPromise;
+        }
+
+        select2LoadPromise = loadExternalStyle(assets.style || '', 'eop-dynamic-select2-css')
+            .then(function () {
+                return loadExternalScript(assets.script || '', 'eop-dynamic-select2-js');
+            })
+            .then(function () {
+                if (!$.fn.select2) {
+                    throw new Error('select2_unavailable');
+                }
+            })
+            .catch(function (error) {
+                select2LoadPromise = null;
+                throw error;
+            });
+
+        return select2LoadPromise;
+    }
+
+    function getAdminRestUrl(path) {
+        var base = String(eop_vars.admin_rest_url || '').replace(/\/+$/, '');
+        var cleanPath = String(path || '').replace(/^\/+/, '');
+
+        if (!base || !cleanPath) {
+            return '';
+        }
+
+        return base + '/' + cleanPath;
+    }
+
+    function requestAdminRest(path, options) {
+        var settings = options || {};
+        var url = getAdminRestUrl(path);
+        var headers = {
+            'Accept': 'application/json',
+            'X-WP-Nonce': String(eop_vars.rest_nonce || '')
+        };
+
+        if (!url || typeof window.fetch !== 'function') {
+            return Promise.reject(new Error('rest_unavailable'));
+        }
+
+        if (settings.query) {
+            url += (url.indexOf('?') === -1 ? '?' : '&') + $.param(settings.query);
+        }
+
+        if (settings.body) {
+            headers['Content-Type'] = 'application/json';
+        }
+
+        return window.fetch(url, {
+            method: settings.method || 'GET',
+            headers: headers,
+            credentials: 'same-origin',
+            body: settings.body ? JSON.stringify(settings.body) : undefined
+        }).then(function (response) {
+            return response.json().catch(function () {
+                return {};
+            }).then(function (data) {
+                if (!response.ok) {
+                    throw {
+                        status: response.status,
+                        data: data,
+                        message: data && data.message ? data.message : 'rest_error'
+                    };
+                }
+
+                return data;
+            });
+        });
+    }
+
+    function getRestErrorMessage(error, fallback) {
+        if (error && error.data && error.data.message) {
+            return error.data.message;
+        }
+
+        if (error && error.message && error.message !== 'rest_unavailable') {
+            return error.message;
+        }
+
+        return fallback || i18n.error || 'Erro ao processar a requisicao.';
+    }
+
+    function normalizeRestOrderCreateResponse(data) {
+        var result = data && data.result ? data.result : data;
+        var order = data && data.order ? data.order : {};
+
+        return $.extend({}, result || {}, {
+            order_id: (result && result.order_id) || order.id || 0,
+            public_url: (result && result.public_url) || order.public_url || '',
+            order_url: (result && result.order_url) || order.edit_url || '',
+            pdf_url: (result && result.pdf_url) || order.pdf_url || '',
+            message: (result && result.message) || (data && data.message) || ''
+        });
+    }
+
+    function normalizeRestOrderUpdateResponse(data, fallbackOrderId) {
+        var order = data && data.order ? data.order : {};
+
+        return {
+            order_id: order.order_id || order.id || fallbackOrderId || 0,
+            message: data && data.message ? data.message : (i18n.saved || 'Pedido atualizado com sucesso!'),
+            order: order
+        };
+    }
 
     function getStorage(type) {
         var storage;
@@ -279,62 +436,90 @@
             return;
         }
 
-        $.ajax({
-            url: eop_vars.ajax_url,
-            method: 'GET',
-            dataType: 'json',
-            data: {
-                action: 'eop_load_admin_view',
-                nonce: eop_vars.nonce,
-                view_name: viewName,
+        function applyLazyViewPayload(data, source) {
+            var completedAt = window.performance && window.performance.now ? window.performance.now() : Date.now();
+            var serverMetrics = {};
+            var responseHtml = '';
+
+            if (requestToken !== lazyViewRequestToken) {
+                return;
+            }
+
+            if (!data || !data.html) {
+                window.location.href = url;
+                return;
+            }
+
+            responseHtml = data.html;
+            serverMetrics = data._performance || {};
+            writeCache(sessionStore, cacheKey, responseHtml);
+
+            recordPerformanceEntry({
+                flow: 'Lazy view',
+                context: viewName,
+                source: source || 'network',
+                totalMs: completedAt - startedAt,
+                phpMs: serverMetrics.php_ms || 0,
+                responseBytes: serverMetrics.response_bytes || responseHtml.length,
+                peakMemoryMb: serverMetrics.peak_memory_mb || 0,
+                queries: serverMetrics.queries || 0
+            });
+
+            if (!hydrateLazyView(viewName, responseHtml, settings)) {
+                window.location.href = url;
+            }
+        }
+
+        function loadLazyViewViaAjax() {
+            $.ajax({
+                url: eop_vars.ajax_url,
+                method: 'GET',
+                dataType: 'json',
+                data: {
+                    action: 'eop_load_admin_view',
+                    nonce: eop_vars.nonce,
+                    view_name: viewName,
+                    pdf_tab: (new URL(url, window.location.origin)).searchParams.get('pdf_tab') || '',
+                    document: (new URL(url, window.location.origin)).searchParams.get('document') || '',
+                    preview_order: (new URL(url, window.location.origin)).searchParams.get('preview_order') || ''
+                }
+            })
+                .done(function (response) {
+                    if (!response || !response.success || !response.data || !response.data.html) {
+                        window.location.href = url;
+                        return;
+                    }
+
+                    applyLazyViewPayload(response.data, 'network-ajax');
+                })
+                .fail(function () {
+                    if (requestToken !== lazyViewRequestToken) {
+                        return;
+                    }
+
+                    window.location.href = url;
+                })
+                .always(function () {
+                    getLazyViewShell(viewName).removeClass('is-loading');
+                });
+        }
+
+        requestAdminRest('views/' + encodeURIComponent(viewName), {
+            query: {
                 pdf_tab: (new URL(url, window.location.origin)).searchParams.get('pdf_tab') || '',
                 document: (new URL(url, window.location.origin)).searchParams.get('document') || '',
                 preview_order: (new URL(url, window.location.origin)).searchParams.get('preview_order') || ''
             }
-        })
-            .done(function (response) {
-                var completedAt = window.performance && window.performance.now ? window.performance.now() : Date.now();
-                var serverMetrics = {};
-                var responseHtml = '';
+        }).then(function (data) {
+            applyLazyViewPayload(data || {}, 'network-rest');
+            getLazyViewShell(viewName).removeClass('is-loading');
+        }).catch(function () {
+            if (requestToken !== lazyViewRequestToken) {
+                return;
+            }
 
-                if (requestToken !== lazyViewRequestToken) {
-                    return;
-                }
-
-                if (!response || !response.success || !response.data || !response.data.html) {
-                    window.location.href = url;
-                    return;
-                }
-
-                responseHtml = response.data.html;
-                serverMetrics = response.data._performance || {};
-                writeCache(sessionStore, cacheKey, responseHtml);
-
-                recordPerformanceEntry({
-                    flow: 'Lazy view',
-                    context: viewName,
-                    source: 'network',
-                    totalMs: completedAt - startedAt,
-                    phpMs: serverMetrics.php_ms || 0,
-                    responseBytes: serverMetrics.response_bytes || responseHtml.length,
-                    peakMemoryMb: serverMetrics.peak_memory_mb || 0,
-                    queries: serverMetrics.queries || 0
-                });
-
-                if (!hydrateLazyView(viewName, responseHtml, settings)) {
-                    window.location.href = url;
-                }
-            })
-            .fail(function () {
-                if (requestToken !== lazyViewRequestToken) {
-                    return;
-                }
-
-                window.location.href = url;
-            })
-            .always(function () {
-                getLazyViewShell(viewName).removeClass('is-loading');
-            });
+            loadLazyViewViaAjax();
+        });
     }
 
     function collectDraftState() {
@@ -428,20 +613,34 @@
             return;
         }
 
+        if (!$.fn.select2) {
+            ensureSelect2Assets().then(function () {
+                initProductSearch($root);
+            }).catch(function () {
+                window.console && window.console.warn && window.console.warn('Select2 indisponivel para busca de produtos do Pedido Expresso.');
+            });
+            return;
+        }
+
         $field.select2({
             placeholder: i18n.search_product,
             minimumInputLength: 3,
             allowClear: true,
             ajax: {
-                url: eop_vars.ajax_url,
+                url: getAdminRestUrl('products') || eop_vars.ajax_url,
                 dataType: 'json',
                 delay: 300,
+                beforeSend: function (xhr) {
+                    if (getAdminRestUrl('products')) {
+                        xhr.setRequestHeader('X-WP-Nonce', String(eop_vars.rest_nonce || ''));
+                    }
+                },
                 data: function (params) {
-                    return {
-                        action: 'eop_search_products',
-                        nonce: eop_vars.nonce,
-                        term: params.term
-                    };
+                    if (getAdminRestUrl('products')) {
+                        return { term: params.term };
+                    }
+
+                    return { action: 'eop_search_products', nonce: eop_vars.nonce, term: params.term };
                 },
                 processResults: function (data) {
                     return data;
@@ -1091,43 +1290,75 @@
 
         setPdfAdminLoading($admin, true);
 
-        $.ajax({
-            url: eop_vars.ajax_url,
-            method: 'GET',
-            dataType: 'json',
-            data: buildPdfAjaxRequest(url)
-        })
-            .done(function (response) {
-                var shellHtml;
-                var perf = {};
-                var completedAt = window.performance && window.performance.now ? window.performance.now() : Date.now();
+        function applyPdfPayload(data, source) {
+            var shellHtml;
+            var perf = {};
+            var completedAt = window.performance && window.performance.now ? window.performance.now() : Date.now();
 
-                if (!response || !response.success || !response.data || !response.data.html) {
-                    window.location.href = url;
-                    return;
-                }
-
-                shellHtml = response.data.html;
-                perf = response.data._performance || {};
-                writeCache(sessionStore, getPdfCacheKey(url), shellHtml);
-                recordPerformanceEntry({
-                    flow: 'PDF tab',
-                    context: response.data.tab || String((new URL(url, window.location.origin)).searchParams.get('pdf_tab') || 'display'),
-                    source: 'network',
-                    totalMs: completedAt - startedAt,
-                    phpMs: perf.php_ms || 0,
-                    responseBytes: perf.response_bytes || shellHtml.length,
-                    peakMemoryMb: perf.peak_memory_mb || 0,
-                    queries: perf.queries || 0
-                });
-                applyPdfShell(shellHtml);
-            })
-            .fail(function () {
+            if (!data || !data.html) {
                 window.location.href = url;
-            })
-            .always(function () {
-                setPdfAdminLoading($admin, false);
+                return;
+            }
+
+            shellHtml = data.html;
+            perf = data._performance || {};
+            writeCache(sessionStore, getPdfCacheKey(url), shellHtml);
+            recordPerformanceEntry({
+                flow: 'PDF tab',
+                context: data.tab || String((new URL(url, window.location.origin)).searchParams.get('pdf_tab') || 'display'),
+                source: source || 'network',
+                totalMs: completedAt - startedAt,
+                phpMs: perf.php_ms || 0,
+                responseBytes: perf.response_bytes || shellHtml.length,
+                peakMemoryMb: perf.peak_memory_mb || 0,
+                queries: perf.queries || 0
             });
+            applyPdfShell(shellHtml);
+        }
+
+        function loadPdfTabViaAjax() {
+            $.ajax({
+                url: eop_vars.ajax_url,
+                method: 'GET',
+                dataType: 'json',
+                data: buildPdfAjaxRequest(url)
+            })
+                .done(function (response) {
+                    if (!response || !response.success || !response.data || !response.data.html) {
+                        window.location.href = url;
+                        return;
+                    }
+
+                    applyPdfPayload(response.data, 'network-ajax');
+                })
+                .fail(function () {
+                    window.location.href = url;
+                })
+                .always(function () {
+                    setPdfAdminLoading($admin, false);
+                });
+        }
+
+        requestAdminRest(
+            'pdf-tabs/' + encodeURIComponent(String((new URL(url, window.location.origin)).searchParams.get('pdf_tab') || 'display')),
+            {
+                query: {
+                    document: (new URL(url, window.location.origin)).searchParams.get('document') || 'order',
+                    preview_order: (new URL(url, window.location.origin)).searchParams.get('preview_order') || ''
+                }
+            }
+        ).then(function (data) {
+            applyPdfPayload(data || {}, 'network-rest');
+            setPdfAdminLoading($admin, false);
+        }).catch(function (error) {
+            if (error && error.message === 'rest_unavailable') {
+                loadPdfTabViaAjax();
+                return;
+            }
+
+            setPdfAdminLoading($admin, false);
+            window.location.href = url;
+        });
     }
 
     function getShippingPanelElements() {
@@ -1584,39 +1815,68 @@
             return;
         }
 
-        $.post(eop_vars.ajax_url, {
-            action: 'eop_list_orders',
-            nonce: eop_vars.nonce,
-            paged: requestedPage,
-            search: search,
-            status: status,
-            post_confirmation_flow: postConfirmationFlow
-        }, function (res) {
-            var perf = (res && res.data && res.data._performance) || {};
+        function applyOrdersResponse(data, source) {
+            var normalized = $.extend({}, data || {}, {
+                orders: (data && (data.orders || data.items)) || [],
+                viewer: (data && data.viewer) || { is_admin: true }
+            });
+            var perf = (data && data._performance) || {};
             var completedAt = window.performance && window.performance.now ? window.performance.now() : Date.now();
 
-            if (!res.success) {
-                $('#eop-orders-list').html('<div class="eop-card eop-orders-empty-state">' + escapeHtml((res.data && res.data.message) || i18n.orders_error || 'Nao foi possivel carregar os pedidos agora.') + '</div>');
-                return;
-            }
-
             ordersLoaded = true;
-            writeCache(sessionStore, getOrdersCacheKey(requestedPage, search, status, postConfirmationFlow), res.data);
+            writeCache(sessionStore, getOrdersCacheKey(requestedPage, search, status, postConfirmationFlow), normalized);
             recordPerformanceEntry({
                 flow: 'Orders list',
                 context: 'page ' + requestedPage,
-                source: 'network',
+                source: source || 'network',
                 totalMs: completedAt - startedAt,
                 phpMs: perf.php_ms || 0,
-                responseBytes: safeJsonLength(res.data),
+                responseBytes: safeJsonLength(normalized),
                 peakMemoryMb: perf.peak_memory_mb || 0,
                 queries: perf.queries || 0
             });
-            renderOrdersSummary(res.data.pagination.total_items, res.data.viewer);
-            renderOrdersList(res.data.orders || [], res.data.viewer || {});
-            renderOrdersPagination(res.data.pagination.page, res.data.pagination.total_pages);
-        }).fail(function () {
-            $('#eop-orders-list').html('<div class="eop-card eop-orders-empty-state">' + escapeHtml(i18n.orders_error || 'Nao foi possivel carregar os pedidos agora.') + '</div>');
+            renderOrdersSummary(normalized.pagination.total_items, normalized.viewer);
+            renderOrdersList(normalized.orders || [], normalized.viewer || {});
+            renderOrdersPagination(normalized.pagination.page, normalized.pagination.total_pages);
+        }
+
+        function loadOrdersViaAjax() {
+            $.post(eop_vars.ajax_url, {
+                action: 'eop_list_orders',
+                nonce: eop_vars.nonce,
+                paged: requestedPage,
+                search: search,
+                status: status,
+                post_confirmation_flow: postConfirmationFlow
+            }, function (res) {
+                if (!res.success) {
+                    $('#eop-orders-list').html('<div class="eop-card eop-orders-empty-state">' + escapeHtml((res.data && res.data.message) || i18n.orders_error || 'Nao foi possivel carregar os pedidos agora.') + '</div>');
+                    return;
+                }
+
+                applyOrdersResponse(res.data || {}, 'network-ajax');
+            }).fail(function () {
+                $('#eop-orders-list').html('<div class="eop-card eop-orders-empty-state">' + escapeHtml(i18n.orders_error || 'Nao foi possivel carregar os pedidos agora.') + '</div>');
+            });
+        }
+
+        requestAdminRest('orders', {
+            query: {
+                page: requestedPage,
+                per_page: 12,
+                search: search,
+                status: status,
+                flow: postConfirmationFlow
+            }
+        }).then(function (data) {
+            applyOrdersResponse(data || {}, 'network-rest');
+        }).catch(function (error) {
+            if (error && error.message === 'rest_unavailable') {
+                loadOrdersViaAjax();
+                return;
+            }
+
+            $('#eop-orders-list').html('<div class="eop-card eop-orders-empty-state">' + escapeHtml(getRestErrorMessage(error, i18n.orders_error || 'Nao foi possivel carregar os pedidos agora.')) + '</div>');
         });
     }
 
@@ -1702,30 +1962,15 @@
             return;
         }
 
-        $.post(eop_vars.ajax_url, {
-            action: 'eop_load_order',
-            nonce: eop_vars.nonce,
-            order_id: orderId
-        }, function (res) {
-            var d;
-            var perf = (res && res.data && res.data._performance) || {};
+        function applyLoadedOrder(d, source) {
+            var perf = (d && d._performance) || {};
             var completedAt = window.performance && window.performance.now ? window.performance.now() : Date.now();
 
-            if (requestToken !== editLoadToken) {
-                return;
-            }
-
-            if (!res.success) {
-                showNotice((res.data && res.data.message) || i18n.edit_error || 'Nao foi possivel abrir este pedido para edicao.', 'error');
-                return;
-            }
-
-            d = res.data || {};
             writeCache(sessionStore, getOrderCacheKey(orderId), d);
             recordPerformanceEntry({
                 flow: 'Order edit',
                 context: 'order #' + orderId,
-                source: 'network',
+                source: source || 'network',
                 totalMs: completedAt - startedAt,
                 phpMs: perf.php_ms || 0,
                 responseBytes: safeJsonLength(d),
@@ -1733,12 +1978,56 @@
                 queries: perf.queries || 0
             });
             applyOrderData(d, orderId);
-        }).fail(function () {
+        }
+
+        function loadOrderViaAjax() {
+            $.post(eop_vars.ajax_url, {
+                action: 'eop_load_order',
+                nonce: eop_vars.nonce,
+                order_id: orderId
+            }, function (res) {
+                var d;
+
+                if (requestToken !== editLoadToken) {
+                    return;
+                }
+
+                if (!res.success) {
+                    showNotice((res.data && res.data.message) || i18n.edit_error || 'Nao foi possivel abrir este pedido para edicao.', 'error');
+                    return;
+                }
+
+                d = res.data || {};
+                applyLoadedOrder(d, 'network-ajax');
+            }).fail(function () {
+                if (requestToken !== editLoadToken) {
+                    return;
+                }
+
+                showNotice(i18n.edit_error || 'Nao foi possivel abrir este pedido para edicao.', 'error');
+            });
+        }
+
+        requestAdminRest('orders/' + encodeURIComponent(orderId)).then(function (data) {
+            var d;
+
             if (requestToken !== editLoadToken) {
                 return;
             }
 
-            showNotice(i18n.edit_error || 'Nao foi possivel abrir este pedido para edicao.', 'error');
+            d = data && data.order ? data.order : (data || {});
+            applyLoadedOrder(d, 'network-rest');
+        }).catch(function (error) {
+            if (requestToken !== editLoadToken) {
+                return;
+            }
+
+            if (error && error.message === 'rest_unavailable') {
+                loadOrderViaAjax();
+                return;
+            }
+
+            showNotice(getRestErrorMessage(error, i18n.edit_error || 'Nao foi possivel abrir este pedido para edicao.'), 'error');
         });
     }
 
@@ -2158,6 +2447,7 @@
 
     function updatePostConfirmationStage(orderId, stageValue, onSuccess, onComplete) {
         var normalizedOrderId = parseInt(orderId, 10) || 0;
+        var normalizedStage = stageValue || 'auto';
 
         if (!normalizedOrderId) {
             showNotice(i18n.error || 'Erro ao criar pedido. Tente novamente.', 'error');
@@ -2167,46 +2457,71 @@
             return;
         }
 
-        $.post(eop_vars.ajax_url, {
-            action: 'eop_set_post_confirmation_stage',
-            nonce: eop_vars.nonce,
-            order_id: normalizedOrderId,
-            stage: stageValue || 'auto'
-        }, function (res) {
-            if (!res || !res.success) {
-                showNotice((res && res.data && res.data.message) ? res.data.message : (i18n.error || 'Erro ao criar pedido. Tente novamente.'), 'error');
-                if (typeof onComplete === 'function') {
-                    onComplete(false, res);
-                }
-                return;
-            }
-
+        function handleSuccess(data, rawResponse) {
             removeCache(sessionStore, getPostFlowCacheKey(normalizedOrderId));
             removeCache(sessionStore, getOrderCacheKey(normalizedOrderId));
             removeCacheByPrefix(sessionStore, getCacheKey('orders-list', ''));
             ordersLoaded = false;
 
             if (typeof onSuccess === 'function') {
-                onSuccess(res.data || {});
+                onSuccess(data || {});
             }
 
             if ($('#eop-orders-list').length) {
                 loadOrdersList(ordersPage || 1);
             }
 
-            if (currentEditingOrderId === normalizedOrderId && res.data && res.data.flow) {
-                renderPostConfirmationFlow(res.data.flow);
+            if (currentEditingOrderId === normalizedOrderId && data && data.flow) {
+                renderPostConfirmationFlow(data.flow);
             }
 
-            showNotice((res.data && res.data.message) ? res.data.message : (i18n.post_flow_stage_apply || 'Atualizar etapa'), 'success');
+            showNotice((data && data.message) ? data.message : (i18n.post_flow_stage_apply || 'Atualizar etapa'), 'success');
 
             if (typeof onComplete === 'function') {
-                onComplete(true, res);
+                onComplete(true, rawResponse || { success: true, data: data });
             }
-        }).fail(function () {
-            showNotice(i18n.error || 'Erro ao criar pedido. Tente novamente.', 'error');
+        }
+
+        function fallbackToAjax() {
+            $.post(eop_vars.ajax_url, {
+                action: 'eop_set_post_confirmation_stage',
+                nonce: eop_vars.nonce,
+                order_id: normalizedOrderId,
+                stage: normalizedStage
+            }, function (res) {
+                if (!res || !res.success) {
+                    showNotice((res && res.data && res.data.message) ? res.data.message : (i18n.error || 'Erro ao criar pedido. Tente novamente.'), 'error');
+                    if (typeof onComplete === 'function') {
+                        onComplete(false, res);
+                    }
+                    return;
+                }
+
+                handleSuccess(res.data || {}, res);
+            }).fail(function () {
+                showNotice(i18n.error || 'Erro ao criar pedido. Tente novamente.', 'error');
+                if (typeof onComplete === 'function') {
+                    onComplete(false);
+                }
+            });
+        }
+
+        requestAdminRest('orders/' + normalizedOrderId + '/post-confirmation/stage', {
+            method: 'POST',
+            body: {
+                stage: normalizedStage
+            }
+        }).then(function (data) {
+            handleSuccess(data || {});
+        }).catch(function (error) {
+            if (error && error.message === 'rest_unavailable') {
+                fallbackToAjax();
+                return;
+            }
+
+            showNotice(getRestErrorMessage(error, i18n.error || 'Erro ao criar pedido. Tente novamente.'), 'error');
             if (typeof onComplete === 'function') {
-                onComplete(false);
+                onComplete(false, error);
             }
         });
     }
@@ -2450,24 +2765,48 @@
         var $status = $('#eop-customer-status');
         $status.text('Buscando...').attr('class', 'eop-status searching');
 
-        $.post(eop_vars.ajax_url, {
-            action: 'eop_search_customer',
-            nonce: eop_vars.nonce,
-            document: doc
-        }, function (res) {
-            if (res.success && res.data.found) {
-                $('#eop-user-id').val(res.data.user_id);
-                $('#eop-name').val(res.data.name);
-                $('#eop-email').val(res.data.email);
-                $('#eop-phone').val(res.data.phone);
+        function applyCustomerResult(data) {
+            if (data && data.found) {
+                $('#eop-user-id').val(data.user_id);
+                $('#eop-name').val(data.name);
+                $('#eop-email').val(data.email);
+                $('#eop-phone').val(data.phone);
                 $status.text('Cliente encontrado!').attr('class', 'eop-status found');
                 return;
             }
 
             $('#eop-user-id').val(0);
             $status.text('Nao encontrado. Preencha manualmente.').attr('class', 'eop-status not-found');
-        }).fail(function () {
-            $status.text('Erro na busca.').attr('class', 'eop-status not-found');
+        }
+
+        function searchCustomerViaAjax() {
+            $.post(eop_vars.ajax_url, {
+                action: 'eop_search_customer',
+                nonce: eop_vars.nonce,
+                document: doc
+            }, function (res) {
+                if (res.success) {
+                    applyCustomerResult(res.data || {});
+                    return;
+                }
+
+                $status.text('Erro na busca.').attr('class', 'eop-status not-found');
+            }).fail(function () {
+                $status.text('Erro na busca.').attr('class', 'eop-status not-found');
+            });
+        }
+
+        requestAdminRest('customers/search', {
+            query: { document: doc }
+        }).then(function (data) {
+            applyCustomerResult(data || {});
+        }).catch(function (error) {
+            if (error && error.message === 'rest_unavailable') {
+                searchCustomerViaAjax();
+                return;
+            }
+
+            $status.text(getRestErrorMessage(error, 'Erro na busca.')).attr('class', 'eop-status not-found');
         });
     });
 
@@ -2623,31 +2962,59 @@
         setShippingAddressStatus(i18n.shipping_loading || 'Calculando frete...', 'loading');
         clearShippingSelection(false);
 
-        $.post(eop_vars.ajax_url, {
-            action: 'eop_calculate_shipping',
-            nonce: eop_vars.nonce,
-            items: JSON.stringify(items.map(function (item) {
-                return {
-                    product_id: item.product_id,
-                    quantity: item.quantity
-                };
-            })),
-            address: JSON.stringify(shippingAddress)
-        }, function (res) {
+        function applyShippingRates(data) {
             $btn.prop('disabled', false).text(i18n.shipping_calculate);
+            setShippingAddressStatus(i18n.shipping_rates_found || 'Opcoes encontradas. Escolha a melhor para o cliente.', 'success');
+            renderShippingRates(data.rates || []);
+        }
 
-            if (!res.success) {
+        function calculateShippingViaAjax() {
+            $.post(eop_vars.ajax_url, {
+                action: 'eop_calculate_shipping',
+                nonce: eop_vars.nonce,
+                items: JSON.stringify(items.map(function (item) {
+                    return {
+                        product_id: item.product_id,
+                        quantity: item.quantity
+                    };
+                })),
+                address: JSON.stringify(shippingAddress)
+            }, function (res) {
+                if (!res.success) {
+                    $btn.prop('disabled', false).text(i18n.shipping_calculate);
+                    setShippingAddressStatus('', '');
+                    showNotice(res.data && res.data.message ? res.data.message : i18n.error, 'error');
+                    return;
+                }
+
+                applyShippingRates(res.data || {});
+            }).fail(function () {
+                $btn.prop('disabled', false).text(i18n.shipping_calculate);
                 setShippingAddressStatus('', '');
-                showNotice(res.data && res.data.message ? res.data.message : i18n.error, 'error');
+                showNotice(i18n.error, 'error');
+            });
+        }
+
+        requestAdminRest('shipping/rates', {
+            method: 'POST',
+            body: {
+                items: items.map(function (item) {
+                    return {
+                        product_id: item.product_id,
+                        quantity: item.quantity
+                    };
+                }),
+                address: shippingAddress
+            }
+        }).then(applyShippingRates).catch(function (error) {
+            if (error && error.message === 'rest_unavailable') {
+                calculateShippingViaAjax();
                 return;
             }
 
-            setShippingAddressStatus(i18n.shipping_rates_found || 'Opcoes encontradas. Escolha a melhor para o cliente.', 'success');
-            renderShippingRates(res.data.rates);
-        }).fail(function () {
             $btn.prop('disabled', false).text(i18n.shipping_calculate);
             setShippingAddressStatus('', '');
-            showNotice(i18n.error, 'error');
+            showNotice(getRestErrorMessage(error, i18n.error), 'error');
         });
     });
 
@@ -2707,22 +3074,11 @@
             status: $('#eop-status').val()
         };
 
-        requestAction = currentEditingOrderId ? 'eop_update_order' : 'eop_create_order';
-
-        $.post(eop_vars.ajax_url, {
-            action: requestAction,
-            nonce: eop_vars.nonce,
-            order_data: JSON.stringify(orderData)
-        }, function (res) {
+        function handleOrderSaved(data) {
             $btn.prop('disabled', false).text(getCurrentSubmitLabel());
 
-            if (!res.success) {
-                showNotice(res.data && res.data.message ? res.data.message : i18n.error, 'error');
-                return;
-            }
-
             if (currentEditingOrderId) {
-                showNotice(res.data && res.data.message ? res.data.message : (i18n.edit_submit || 'Salvar alteracoes'), 'success');
+                showNotice(data && data.message ? data.message : (i18n.edit_submit || 'Salvar alteracoes'), 'success');
                 ordersLoaded = false;
                 removeCache(sessionStore, getOrderCacheKey(currentEditingOrderId));
                 removeCache(sessionStore, getPostFlowCacheKey(currentEditingOrderId));
@@ -2733,27 +3089,67 @@
                 return;
             }
 
-            $('#eop-success-message').text('Pedido #' + res.data.order_id + ' criado com sucesso.');
-            $('#eop-pdf-link').attr('href', res.data.pdf_url);
-            $('#eop-order-link').attr('href', res.data.order_url);
-            if (res.data.public_url) {
-                $('#eop-public-link').attr('href', res.data.public_url).show();
-                $('#eop-success-message').text('Proposta #' + res.data.order_id + ' criada com sucesso.');
+            $('#eop-success-message').text('Pedido #' + data.order_id + ' criado com sucesso.');
+            $('#eop-pdf-link').attr('href', data.pdf_url);
+            $('#eop-order-link').attr('href', data.order_url);
+            if (data.public_url) {
+                $('#eop-public-link').attr('href', data.public_url).show();
+                $('#eop-success-message').text('Proposta #' + data.order_id + ' criada com sucesso.');
             } else {
                 $('#eop-public-link').hide().attr('href', '#');
             }
             $('#eop-success-modal').show();
 
-            if (res.data.pdf_url) {
-                window.open(res.data.pdf_url, '_blank');
+            if (data.pdf_url) {
+                window.open(data.pdf_url, '_blank');
             }
 
             ordersLoaded = false;
             clearDraftState();
             removeCacheByPrefix(sessionStore, getCacheKey('orders-list', ''));
-        }).fail(function () {
+        }
+
+        function saveOrderViaAjax() {
+            $.post(eop_vars.ajax_url, {
+                action: requestAction,
+                nonce: eop_vars.nonce,
+                order_data: JSON.stringify(orderData)
+            }, function (res) {
+                if (!res.success) {
+                    $btn.prop('disabled', false).text(getCurrentSubmitLabel());
+                    showNotice(res.data && res.data.message ? res.data.message : i18n.error, 'error');
+                    return;
+                }
+
+                handleOrderSaved(res.data || {});
+            }).fail(function () {
+                $btn.prop('disabled', false).text(getCurrentSubmitLabel());
+                showNotice(i18n.error, 'error');
+            });
+        }
+
+        requestAction = currentEditingOrderId ? 'eop_update_order' : 'eop_create_order';
+
+        requestAdminRest(
+            currentEditingOrderId ? 'orders/' + encodeURIComponent(currentEditingOrderId) : 'orders',
+            {
+                method: currentEditingOrderId ? 'PUT' : 'POST',
+                body: { order: orderData }
+            }
+        ).then(function (data) {
+            handleOrderSaved(
+                currentEditingOrderId
+                    ? normalizeRestOrderUpdateResponse(data || {}, currentEditingOrderId)
+                    : normalizeRestOrderCreateResponse(data || {})
+            );
+        }).catch(function (error) {
+            if (error && error.message === 'rest_unavailable') {
+                saveOrderViaAjax();
+                return;
+            }
+
             $btn.prop('disabled', false).text(getCurrentSubmitLabel());
-            showNotice(i18n.error, 'error');
+            showNotice(getRestErrorMessage(error, i18n.error), 'error');
         });
     });
 

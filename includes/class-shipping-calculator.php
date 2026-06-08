@@ -21,37 +21,49 @@ class EOP_Shipping_Calculator {
 
         $items   = isset( $_POST['items'] ) ? json_decode( wp_unslash( $_POST['items'] ), true ) : array();
         $address = isset( $_POST['address'] ) ? json_decode( wp_unslash( $_POST['address'] ), true ) : array();
+        $result  = self::calculate_rates_from_payload(
+            is_array( $items ) ? $items : array(),
+            is_array( $address ) ? $address : array()
+        );
 
-        if ( empty( $items ) || ! is_array( $items ) ) {
-            wp_send_json_error( array( 'message' => __( 'Adicione produtos antes de calcular o frete.', EOP_TEXT_DOMAIN ) ) );
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( array( 'message' => $result->get_error_message() ) );
         }
 
-        $address = $this->sanitize_address( is_array( $address ) ? $address : array() );
+        wp_send_json_success( $result );
+    }
+
+    public static function calculate_rates_from_payload( array $items, array $address ) {
+        if ( empty( $items ) ) {
+            return new WP_Error( 'eop_shipping_items_required', __( 'Adicione produtos antes de calcular o frete.', EOP_TEXT_DOMAIN ) );
+        }
+
+        $instance = new self();
+        $address  = $instance->sanitize_address( $address );
 
         if ( empty( $address['postcode'] ) || empty( $address['city'] ) || empty( $address['address'] ) ) {
-            wp_send_json_error( array( 'message' => __( 'Preencha CEP, cidade e endereco para calcular o frete.', EOP_TEXT_DOMAIN ) ) );
+            return new WP_Error( 'eop_shipping_address_required', __( 'Preencha CEP, cidade e endereco para calcular o frete.', EOP_TEXT_DOMAIN ) );
         }
 
         try {
-            $this->bootstrap_frontend_classes();
-            $this->simulate_customer();
-            $this->populate_cart_from_items( $items );
-            $this->set_customer_address( $address );
+            $instance->bootstrap_frontend_classes();
+            $instance->simulate_customer();
+            $instance->populate_cart_from_items( $items );
+            $instance->set_customer_address( $address );
             WC()->cart->calculate_totals();
-            $rates = $this->collect_rates();
+            $rates = $instance->collect_rates();
         } catch ( \Exception $e ) {
-            $this->restore_state();
-            wp_send_json_error( array( 'message' => $e->getMessage() ) );
-            return;
+            $instance->restore_state();
+            return new WP_Error( 'eop_shipping_calculation_failed', $e->getMessage() );
         }
 
-        $this->restore_state();
+        $instance->restore_state();
 
         if ( empty( $rates ) ) {
-            wp_send_json_error( array( 'message' => __( 'Nenhum metodo de envio disponivel para este endereco.', EOP_TEXT_DOMAIN ) ) );
+            return new WP_Error( 'eop_shipping_rates_empty', __( 'Nenhum metodo de envio disponivel para este endereco.', EOP_TEXT_DOMAIN ) );
         }
 
-        wp_send_json_success( array( 'rates' => $rates ) );
+        return array( 'rates' => $rates );
     }
 
     private function sanitize_address( array $address ) {

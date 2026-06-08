@@ -2,6 +2,194 @@
 
 Todas as alteracoes relevantes do plugin `Aireset Expresso Order` devem ser registradas aqui.
 
+## 1.2.25 - 2026-06-08
+
+- migra as telas de configuracao para React nativo no admin SPA: Loja, Gerais, Visual do Pedido, Visual da Listagem, Visual da Proposta e Confirmacao, reaproveitando as definicoes de campos do admin legado como fonte unica
+- adiciona tipos de campo no SPA: seletor de logo via wp.media, color picker Coloris (igual ao legado), seletor de produto/categoria com busca (multiselect), switch para campos Sim/Nao e campos numericos
+- organiza as secoes em accordions fechados por padrao com sub-cabecalhos por bloco e tooltips de ajuda nos campos complexos; um unico bloco aparece aberto sem accordion
+- corrige campos compartilhados que sumiam no SPA (ex.: borda compartilhada) liberando as chaves do schema na leitura e no salvamento de todas as secoes da ponte
+- ajusta o campo de loja para refletir o legado (logo, todos os campos em PT, botao Salvar flutuante) e remove textos tecnicos de desenvolvimento do cabecalho
+- bootstrap do admin injetado inline no HTML, eliminando o round-trip REST do primeiro carregamento
+- torna o flyout do menu Aireset disponivel em todas as telas do admin, nao apenas dentro do plugin
+- permite navegar no admin legado por aba via `eop_admin_legacy` sem cookie global, com botao dedicado de volta ao admin novo
+- aponta a tela de Documentos do fluxo complementar para o gerenciador do admin legado enquanto a versao nativa nao chega
+- extrai o cluster de anexos/extracao de texto do fluxo complementar para um trait dedicado
+- reduz assets de terceiros carregados na pagina publica `/pedido-expresso/`
+
+## 1.2.24 - 2026-05-30
+
+- adiciona cache em memoria no admin React para settings, previews e pedidos ja carregados, reduzindo flicker ao voltar para views visitadas
+- evita que respostas REST atrasadas sobrescrevam a view atual quando o usuario navega rapidamente entre menus
+- mantem refresh em segundo plano para dados ja cacheados sem reexibir a tela de carregamento completa
+
+## 1.2.23 - 2026-05-30
+
+- remove a renderizacao crua de todas as configuracoes do PDF na view React, evitando uma tela gigante e lenta no SPA
+- transforma a view `PDF` em um painel operacional curto com acesso ao modulo completo pelo fallback tecnico
+- reduz a carga da rota `admin-pdf` ao nao buscar `settings/pdf` ate a quebra do dominio PDF em telas React dedicadas
+
+## 1.2.22 - 2026-05-29
+
+- corrige o deslocamento visual do admin React quando plugins terceiros injetam notices dentro da `.wrap` do WordPress
+- oculta notices externos no shell React sem reativar o CSS legado global do admin
+- endurece o smoke browser para validar que o shell React inicia dentro do viewport e sem notices visiveis quebrando o layout
+
+## 1.2.21 - 2026-05-29
+
+- restaura no admin React/Vite a identidade visual do shell anterior, incluindo sidebar Aireset, logo, grupos de menu e estados ativos equivalentes ao legado
+- adiciona branding no bootstrap REST para o SPA consumir titulo, subtitulo, logo, cores, raio e fonte das configuracoes reais do plugin
+- extrai a camada REST do `App.tsx` para `assets/admin-spa/src/app/api.ts`, mantendo o componente focado em estado e renderizacao
+
+## 1.2.20 - 2026-05-29
+
+- promove o admin React/Vite para superficie principal quando o bundle esta compilado, deixando o admin PHP legado apenas como fallback tecnico por `eop_admin_legacy=1`
+- inicia a reestruturacao real da pasta SPA extraindo tipos e mapas de views para `assets/admin-spa/src/app/`
+- recompila o bundle Vite e atualiza os smokes para validar o SPA como padrao e o legado como fallback explicito
+
+## 1.2.19 - 2026-05-29
+
+- corrige erro `$.fn.select2 is not a function` ao abrir `Novo pedido` via lazy-load a partir de telas que nao carregaram Select2 no bootstrap inicial
+- adiciona carregamento sob demanda dos assets Select2 do WooCommerce para manter a navegacao SPA sem voltar a enfileirar Select2 globalmente em todas as views
+- amplia o smoke browser com navegacao real de uma tela de configuracao para `Novo pedido`, validando Select2 carregado sob demanda
+
+## 1.2.18 - 2026-05-29
+
+- corrige regressao do shell admin apos a remocao do `frontend.css` global, garantindo que views SPA com atributo `hidden` continuem realmente ocultas
+- atualiza a versao do pacote para quebrar cache de `admin.css` nos navegadores e no enqueue do WordPress
+- amplia o smoke browser para cobrir `settings-confirmation-documents` e falhar quando mais de uma view do admin fica visivel
+- torna o lazy-load REST-first mais tolerante: qualquer falha REST tenta o fallback AJAX antes de redirecionar a tela
+
+## 1.2.17 - 2026-05-29
+
+- remove assets globais nao relacionados de Elementor, cupons, Mercado Pago, YaySMTP, Woo admin blocks e Jetpack nas telas do Pedido Expresso
+- bloqueia Elementor Notes na pagina publica `/pedido-expresso/`, evitando erro JavaScript para usuarios logados fora do editor
+- atualiza o baseline pos-limpeza no roadmap, reduzindo `legacy-orders` de `99` para `58` scripts e o SPA de `97` para `56` scripts
+
+## 1.2.16 - 2026-05-29
+
+- corrige o versionamento da serie posterior a `1.1.100`, tratando esta entrega como `1.2.16`
+- adiciona baseline automatizado de performance do admin para comparar legado, SPA por feature flag e views principais
+- documenta o novo fluxo de medicao em `docs/OPERATIONS.md`
+
+- migra lazy-load de views e abas PDF do admin legado para REST-first, mantendo `admin-ajax.php` como fallback temporario
+- adiciona REST-first para seletores de categoria/produto em settings, troca manual de etapa do fluxo complementar e para o fluxo legado isolado de pedidos em `orders.js`
+- amplia o smoke REST para validar lazy-view, PDF tab e busca de categorias junto com bootstrap, settings, previews e pedidos
+- atualiza roadmap e operacoes para refletir a nova cobertura REST-first ainda antes do cutover definitivo do SPA
+
+## 1.1.115 - 2026-05-29
+
+- migra o fluxo legado de novo pedido para tentar REST antes de `admin-ajax.php` em busca de produto, busca de cliente, calculo de frete, listagem de pedidos, carregamento para edicao e salvamento/criacao de pedido
+- mantem fallback temporario para `admin-ajax.php` quando o REST administrativo nao estiver disponivel
+- amplia o payload REST de pedidos para expor `orders`, `viewer`, URLs, status, PDF e resumo do fluxo complementar no formato consumido pelo admin legado
+
+## 1.1.114 - 2026-05-29
+
+- adiciona `scripts/smoke-admin-browser.mjs` com Playwright, autenticacao por cookies gerados via WP-CLI e artefatos em `output/eop-browser-smoke/`
+- valida no navegador o shell admin, `new-order`, `orders`, pagina publica `/pedido-expresso/`, telas de preview, PDF e SPA por feature flag
+- remove na pagina do Pedido Expresso os handlers globais do `disable-dashboard-for-woocommerce-pro` que chamavam `core/edit-post` fora do editor de blocos e geravam erro `isFeatureActive`
+
+## 1.1.113 - 2026-05-29
+
+- endurece o smoke REST via WP-CLI com assertions de fonte da secao `store`, origem publica do preview `new-order` e conteudo das etapas `upload/products`
+- valida que o preview de upload/produtos contem os botoes configurados de upload e personalizacao, alem do card de stage `products`
+
+## 1.1.112 - 2026-05-29
+
+- adiciona `scripts/smoke-admin-rest.php` para validar via WP-CLI os endpoints administrativos de bootstrap, settings, previews e listagem de pedidos
+- documenta em `docs/OPERATIONS.md` o smoke REST administrativo, incluindo execucao com `wp` global ou `tools/wp-cli.phar` local
+- atualiza o roadmap para marcar o smoke REST como validado e separar essa cobertura dos smoke tests interativos ainda pendentes
+
+## 1.1.111 - 2026-05-29
+
+- amplia o preview administrativo de upload/produtos para renderizar separadamente os estados `upload` e `products`
+- exibe no preview os textos e botoes proprios de cada etapa, incluindo `post_confirmation_upload_button_label` e `post_confirmation_products_button_label`
+- preserva o mesmo renderer interno `render_final_step_renderer_markup` para evitar divergencia entre preview e fluxo publico
+
+## 1.1.110 - 2026-05-29
+
+- alinha a secao REST `settings/store` do admin SPA com `EOP_PDF_Settings`, usando os campos reais `shop_*` consumidos pelo renderer de PDF
+- evita que o SPA edite os campos legados `pdf_company_*`/`pdf_footer_note` como fonte primaria da loja
+- passa a aplicar o filtro `exact`/`prefix` tambem em secoes de origem `pdf`, mantendo a secao `pdf` completa apenas quando nenhum filtro e declarado
+
+## 1.1.109 - 2026-05-29
+
+- mantem o preview lateral do PDF ativo mesmo quando `advanced_html_output` esta habilitado, desde que exista pedido valido para preview
+- troca o bloqueio do preview por um aviso operacional informando que o modo avancado continua usando o renderer HTML interno para validacao visual
+
+## 1.1.108 - 2026-05-29
+
+- amplia o payload do preview de contrato para incluir documentos secundarios configurados
+- renderiza cards de documentos adicionais e botoes secundarios no preview administrativo da confirmacao, aproximando-o do renderer publico `render_contract_form`
+
+## 1.1.107 - 2026-05-29
+
+- troca o lazy-load legado da view `new-order` para renderizar `templates/shortcode-page.php`, a mesma superficie usada pelo shortcode publico `[expresso_order]`
+- reduz a divergencia entre admin, preview e pagina `/pedido-expresso/` ao deixar o mock `admin-view-new-order.php` fora do caminho ativo carregado por AJAX
+
+## 1.1.106 - 2026-05-29
+
+- corrige o editor visual da proposta para salvar as cores base em `customer_experience_text_color` e `customer_experience_muted_color`, que sao as chaves priorizadas pelo renderer publico
+- reduz campos sombreados no preview da proposta ao substituir controles legados `proposal_text_color` e `proposal_muted_color` na tela visual principal
+
+## 1.1.105 - 2026-05-29
+
+- alinha o preview administrativo da proposta publica ao renderer compartilhado, usando `customer_experience_title` e `customer_experience_description` como fonte de verdade
+- remove a sobrescrita por `proposal_title`/`proposal_description` no preview visual da proposta para reduzir divergencia entre admin e pagina publica
+
+## 1.1.104 - 2026-05-29
+
+- corrige o preview administrativo da etapa de upload/produtos para usar `post_confirmation_upload_button_label` quando o stage exibido e `upload`
+- amplia o sample do preview final para exibir produto bloqueado e SKU vazio, cobrindo estados configuraveis que antes nao apareciam na tela
+
+## 1.1.103 - 2026-05-29
+
+- separa assets ricos do admin legado por view, carregando media library, TinyMCE, Coloris, fontselect e Select2 apenas nas telas que usam esses recursos
+- limita o `settings-admin.js` a dependencias dinamicas por recurso, reduzindo o peso de views simples de configuracao
+- restringe o flyout administrativo as telas Aireset/Pedido Expresso e remove o carregamento remoto de Font Awesome quando os icones usam Dashicons
+
+## 1.1.102 - 2026-05-29
+
+- reduz o carregamento global de assets no admin legado, limitando `frontend.css`, `pdf-admin.css`, `select2`, media library, editor, Coloris, fontselect e `settings-admin.js` as views que realmente precisam deles
+- atualiza o baseline de performance para refletir os handles carregados por view em vez de uma lista global fixa
+- preserva `admin.js` e o menu do shell legado como base comum enquanto o cutover do SPA segue por feature flag
+
+## 1.1.101 - 2026-05-29
+
+- amplia a migracao de settings no admin SPA com schema automatico para valores escalares das secoes REST existentes
+- libera edicao/salvamento generico para `store`, `proposal`, `new-order`, `orders-list`, confirmacao e PDF quando os campos sao seguros para formulario simples
+- restringe o draft React as chaves declaradas no schema de campos, evitando envio acidental de arrays ou estruturas nao editaveis
+
+## 1.1.100 - 2026-05-29
+
+- completa a edicao de pedidos existentes no admin SPA com busca/adicao de produtos via REST
+- adiciona calculo de frete na edicao de pedidos usando `POST /shipping/rates` e preserva dados do metodo selecionado ao salvar
+- atualiza a UI de `orders` para remover a dependencia do legado na adicao de produtos durante a edicao
+
+## 1.1.99 - 2026-05-29
+
+- normaliza os contratos REST do novo admin para busca de cliente, busca de produtos, calculo de frete e criacao de pedido
+- reaproveita os handlers legados de AJAX como helpers compartilhados para reduzir divergencia entre shortcode, admin legado e shell React
+- adiciona fluxo funcional de `Novo pedido` no admin SPA experimental, com cliente, produtos, endereco, frete, desconto e `POST /orders`
+
+## 1.1.98 - 2026-05-29
+
+- extrai a carga e a atualizacao de pedidos para metodos compartilhados em `EOP_Orders_Page`, reaproveitados pelo AJAX legado e pelo namespace REST do novo admin
+- substitui o `501` de `PUT /orders/{id}` por edicao REST real de pedidos existentes, com refresh do payload completo apos salvar
+- amplia o shell React para listar pedidos, selecionar um pedido, editar cliente/endereco/descontos/itens existentes e salvar pelo novo fluxo SPA
+
+## 1.1.97 - 2026-05-29
+
+- expande o contrato REST da secao `general` com schema e opcoes reais para o novo admin SPA
+- adiciona formulario funcional no shell React para editar e salvar `settings-general-config` via `POST /settings/general`
+- mantem o admin legado como fallback enquanto a migracao funcional segue por dominio
+
+## 1.1.96 - 2026-05-29
+
+- consolida a documentacao canonica em `docs/`, move os planos legados para arquivo historico e reescreve a politica legal e de IA em torno de licenca proprietaria com titularidade `Felipe Almeman + Aireset`
+- substitui `README.md`, `AGENT.md`, `LICENSE`, `readme.txt` e `.github/copilot-instructions.md` para refletir ownership, restricoes de uso e governanca para agentes
+- introduz a fundacao do novo admin SPA experimental com `React + TypeScript + Vite`, namespace REST `aireset-expresso-order/v1/admin`, feature flag controlada e fallback limpo para o admin legado
+- converte a aba `Documentacao` em hub da documentacao canonica do plugin inteiro e adiciona um controle administrativo para ligar o admin SPA experimental nas configuracoes gerais
+
 ## 1.1.95 - 2026-05-14
 
 - reorganiza o editor visual da proposta publica em accordions por elemento real da pagina, incluindo hero principal, hero lateral, lista de itens, cards laterais, botoes e alertas

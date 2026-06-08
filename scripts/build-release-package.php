@@ -34,16 +34,18 @@ $excludedTopLevel = [
 
 $excludedFiles = [
     '.gitignore',
-    'ADMIN_UI_BRAND.md',
-    'AGENT.md',
-    'ARCHITECTURE_MODERNIZATION_ROADMAP.md',
-    'CHANGELOG.md',
     'package.json',
-    'README.md',
+    'package-lock.json',
+    'recovery-before-rollback-2026-05-01.patch',
+    'tsconfig.json',
+    'tsconfig.node.json',
+    'vite.config.ts',
 ];
 
 $excludedRelativePaths = [
     'assets/scss',
+    'assets/admin-spa/src',
+    'docs/archive',
 ];
 
 $obfuscatedFiles = [

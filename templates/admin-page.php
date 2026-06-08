@@ -42,7 +42,7 @@ $general_nav_items = array(
         'icon'  => 'dashicons-format-image',
     ),
     'settings-new-order-style' => array(
-        'label' => __( 'Visual de Criar Pedido', EOP_TEXT_DOMAIN ),
+        'label' => __( 'Visual do Formulario de Pedido', EOP_TEXT_DOMAIN ),
         'icon'  => 'dashicons-cart',
     ),
     'settings-orders-list-style' => array(
@@ -137,6 +137,12 @@ $performance_initial_metrics = class_exists( 'EOP_Performance_Audit' )
                             <span class="dashicons dashicons-fullscreen-alt" aria-hidden="true"></span>
                             <span class="screen-reader-text eop-admin-spa__chrome-toggle-label"><?php esc_html_e( 'Modo foco', EOP_TEXT_DOMAIN ); ?></span>
                         </button>
+                        <?php if ( class_exists( 'EOP_Admin_SPA' ) && EOP_Admin_SPA::has_built_assets() ) : ?>
+                            <a class="eop-admin-spa__chrome-toggle eop-admin-spa__back-to-react" style="background:#1da7a1;border-color:#1da7a1;color:#fff;" href="<?php echo esc_url( add_query_arg( array( 'page' => 'eop-pedido-expresso', 'view' => $initial_view, 'eop_admin_legacy' => '0' ), admin_url( 'admin.php' ) ) ); ?>" title="<?php esc_attr_e( 'Voltar ao admin novo (React)', EOP_TEXT_DOMAIN ); ?>">
+                                <span class="dashicons dashicons-arrow-left-alt" aria-hidden="true"></span>
+                                <span class="screen-reader-text"><?php esc_html_e( 'Voltar ao admin novo', EOP_TEXT_DOMAIN ); ?></span>
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="eop-admin-spa__brand-copy">
@@ -438,14 +444,14 @@ $performance_initial_metrics = class_exists( 'EOP_Performance_Audit' )
 
                 <section class="eop-pdv-view<?php echo 'settings-new-order-style' === $initial_view ? ' is-active' : ''; ?>" data-eop-view="settings-new-order-style" data-eop-lazy="true" data-eop-lazy-loaded="<?php echo 'settings-new-order-style' === $initial_view ? 'true' : 'false'; ?>"<?php echo 'settings-new-order-style' === $initial_view ? '' : ' hidden'; ?>>
                     <div class="eop-admin-panel-head">
-                        <h2><?php esc_html_e( 'Visual de Criar Pedido', EOP_TEXT_DOMAIN ); ?></h2>
-                        <p><?php esc_html_e( 'Personalize a tela interna de criacao de pedido com identidade visual propria.', EOP_TEXT_DOMAIN ); ?></p>
+                        <h2><?php esc_html_e( 'Visual do Formulario de Pedido', EOP_TEXT_DOMAIN ); ?></h2>
+                        <p><?php esc_html_e( 'Personalize a pagina publica /pedido-expresso/ e visualize o mesmo formulario exibido no frontend.', EOP_TEXT_DOMAIN ); ?></p>
                     </div>
                     <div class="eop-admin-view-main">
                     <?php if ( 'settings-new-order-style' === $initial_view ) : ?>
                         <?php EOP_Settings::render_embedded_page( 'new-order-style' ); ?>
                     <?php else : ?>
-                        <?php $render_lazy_placeholder( __( 'Visual de Criar Pedido', EOP_TEXT_DOMAIN ) ); ?>
+                        <?php $render_lazy_placeholder( __( 'Visual do Formulario de Pedido', EOP_TEXT_DOMAIN ) ); ?>
                     <?php endif; ?>
                     </div>
                 </section>

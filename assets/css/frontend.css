@@ -25,6 +25,12 @@
 body .eop-login-wrap,
 body .eop-pdv,
 body .eop-proposal-wrap {
+  border: 0;
+}
+
+body .eop-login-wrap,
+body .eop-pdv,
+body .eop-proposal-wrap {
   box-sizing: border-box;
   color: var(--eop-text);
   font-family: var(--eop-font-family, "Segoe UI", sans-serif);
@@ -717,6 +723,97 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
   gap: 10px;
 }
 
+/* Resumo do fluxo complementar (portado do admin para o frontend). */
+.eop-order-card__flow {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid #dde6f7;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+}
+
+.eop-order-card__flow-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.eop-order-card__flow-head > span {
+  color: #5f6e8e;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.eop-order-card__flow-stage {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #11162f;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.eop-order-card__flow-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.eop-order-card__flow-pill {
+  display: grid;
+  gap: 4px;
+  min-height: 52px;
+  padding: 10px 12px;
+  border: 1px solid #dde6f7;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f9fbff 0%, #eef3ff 100%);
+  color: #11162f;
+}
+
+.eop-order-card__flow-pill-label {
+  color: #5f6e8e;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.eop-order-card__flow-pill-value {
+  color: #11162f;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.eop-order-card__flow-pill--success {
+  border-color: rgba(46, 160, 107, 0.2);
+  background: linear-gradient(180deg, rgba(46, 160, 107, 0.12) 0%, #f8fffb 100%);
+}
+
+.eop-order-card__flow-pill--warning {
+  border-color: rgba(227, 138, 48, 0.22);
+  background: linear-gradient(180deg, rgba(227, 138, 48, 0.14) 0%, #fffaf4 100%);
+}
+
+.eop-order-card__flow-pill--info {
+  border-color: rgba(66, 99, 201, 0.18);
+  background: linear-gradient(180deg, rgba(66, 99, 201, 0.1) 0%, #f8fbff 100%);
+}
+
+.eop-order-card__flow-pill--neutral {
+  border-color: #dde6f7;
+  background: linear-gradient(180deg, #f9fbff 0%, #ffffff 100%);
+}
+
 .eop-orders-browser__pagination {
   display: flex;
   justify-content: center;
@@ -728,6 +825,127 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
   color: var(--eop-text-soft);
   font-size: 14px;
   font-weight: 700;
+}
+
+/* Nav do PDV React: forca o visual (ativo = primary) contra vazamento de estilo do tema. */
+.eop-frontend-app .eop-pdv-nav__item {
+  border: 1px solid #dbe3ff !important;
+  background: #fff !important;
+  color: #3b4765 !important;
+  box-shadow: none !important;
+}
+
+.eop-frontend-app .eop-pdv-nav__item:hover,
+.eop-frontend-app .eop-pdv-nav__item:focus {
+  border-color: var(--eop-primary, #00034b) !important;
+  color: var(--eop-primary, #00034b) !important;
+}
+
+.eop-frontend-app .eop-pdv-nav__item.is-active {
+  border-color: transparent !important;
+  background: var(--eop-primary, #00034b) !important;
+  color: #fff !important;
+  box-shadow: 0 12px 26px rgba(0, 3, 75, 0.18) !important;
+}
+
+/* Busca de produto estilo Select2 (dropdown ancorado no input) no frontend React. */
+.eop-react-search {
+  position: relative;
+}
+
+.eop-react-search__input {
+  width: 100%;
+  border: 1px solid var(--eop-border, #dbe3f0);
+  border-radius: 14px;
+  padding: 13px 16px;
+  font: inherit;
+  background: var(--eop-surface, #fff);
+}
+
+.eop-react-search__input:focus {
+  outline: none;
+  border-color: var(--eop-primary, #00034b);
+  box-shadow: 0 0 0 4px rgba(0, 3, 75, 0.1);
+}
+
+.eop-react-search__dropdown {
+  position: absolute;
+  z-index: 40;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  max-height: 360px;
+  overflow: auto;
+  display: grid;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--eop-border, #dbe3f0);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(10, 21, 43, 0.18);
+}
+
+.eop-react-search__option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  color: var(--eop-text, #11162f);
+  cursor: pointer;
+}
+
+.eop-react-search__option:hover,
+.eop-react-search__option:focus {
+  background: #eef3ff;
+  outline: none;
+}
+
+.eop-react-search__option img {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #fff;
+}
+
+/* Select2 (busca de produto) ajustado ao visual do PDV. */
+.eop-pdv .select2-container--default .select2-selection--single {
+  height: 48px;
+  padding: 8px 10px;
+  border: 1px solid var(--eop-border, #dbe3f0);
+  border-radius: 14px;
+  background: var(--eop-surface, #fff);
+}
+
+.eop-pdv .select2-container--default .select2-selection--single .select2-selection__rendered {
+  line-height: 30px;
+  color: var(--eop-text, #11162f);
+}
+
+.eop-pdv .select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 46px;
+}
+
+.eop-select2-product {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.eop-select2-product img {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #fff;
 }
 
 .eop-pdv .eop-card {

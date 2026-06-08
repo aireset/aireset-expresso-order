@@ -151,11 +151,25 @@ class EOP_Admin_Page {
         }
 
         add_action( 'admin_menu', array( __CLASS__, 'register_page' ) );
+        add_action( 'admin_init', array( __CLASS__, 'maybe_render_preview_frame_page' ), 1 );
         add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
         add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_menu_flyout_assets' ) );
+        add_action( 'admin_enqueue_scripts', array( __CLASS__, 'dequeue_unrelated_admin_assets' ), 999 );
+        add_action( 'admin_head', array( __CLASS__, 'remove_conflicting_editor_bloat_scripts' ), 0 );
         add_action( 'admin_head', array( __CLASS__, 'print_safe_edit_post_store_guard' ), 1 );
         add_action( 'wp_ajax_eop_load_admin_view', array( __CLASS__, 'ajax_load_admin_view' ) );
         add_filter( 'admin_body_class', array( __CLASS__, 'filter_admin_body_class' ) );
+    }
+
+    public static function remove_conflicting_editor_bloat_scripts() {
+        $page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+
+        if ( 'eop-pedido-expresso' !== $page ) {
+            return;
+        }
+
+        remove_action( 'admin_head', 'wcbloat_block_editor_autoclose_welcome_guide' );
+        remove_action( 'admin_head', 'wcbloat_disable_fullscreen_editor_mode' );
     }
 
     public static function filter_admin_body_class( $classes ) {
@@ -163,6 +177,10 @@ class EOP_Admin_Page {
 
         if ( 'eop-pedido-expresso' !== $page ) {
             return $classes;
+        }
+
+        if ( class_exists( 'EOP_Admin_SPA' ) && EOP_Admin_SPA::is_enabled() ) {
+            $classes .= ' eop-admin-react-shell';
         }
 
         $classes .= ' eop-admin-spa-screen';
@@ -188,13 +206,13 @@ class EOP_Admin_Page {
                         return;
                     }
 
-                    if (window.wp.data.__eopSafeCoreEditPostSelect) {
+                    if (window.wp.data.select.__eopSafeCoreEditPostSelect) {
                         return;
                     }
 
                     var originalSelect = window.wp.data.select.bind(window.wp.data);
 
-                    window.wp.data.select = function (storeName) {
+                    function eopSafeSelect(storeName) {
                         var result = originalSelect.apply(this, arguments);
 
                         if (storeName === 'core/edit-post' && !result) {
@@ -209,9 +227,10 @@ class EOP_Admin_Page {
                         }
 
                         return result;
-                    };
+                    }
 
-                    window.wp.data.__eopSafeCoreEditPostSelect = true;
+                    eopSafeSelect.__eopSafeCoreEditPostSelect = true;
+                    window.wp.data.select = eopSafeSelect;
                 }
 
                 patchCoreEditPostSelect();
@@ -220,7 +239,17 @@ class EOP_Admin_Page {
                     document.addEventListener('DOMContentLoaded', patchCoreEditPostSelect, { once: true });
                 }
 
-                window.addEventListener('load', patchCoreEditPostSelect, { once: true });
+                window.addEventListener('load', patchCoreEditPostSelect, { capture: true, once: true });
+
+                var attempts = 0;
+                var interval = window.setInterval(function () {
+                    attempts += 1;
+                    patchCoreEditPostSelect();
+
+                    if (attempts >= 100) {
+                        window.clearInterval(interval);
+                    }
+                }, 100);
             }());
         </script>
         <?php
@@ -290,6 +319,15 @@ class EOP_Admin_Page {
             $query = array_merge( $query, $args );
         }
 
+        // Em modo legado (parametro na URL desta aba), propaga `eop_admin_legacy=1`
+        // para os links de navegacao, mantendo o legado fixo SEM cookie global.
+        // Assim da para abrir o legado numa aba e o admin novo em outra.
+        if ( ! isset( $query['eop_admin_legacy'] )
+            && class_exists( 'EOP_Admin_SPA' )
+            && EOP_Admin_SPA::is_legacy_forced() ) {
+            $query['eop_admin_legacy'] = '1';
+        }
+
         return add_query_arg( $query, admin_url( 'admin.php' ) );
     }
 
@@ -307,6 +345,200 @@ class EOP_Admin_Page {
         }
 
         return $urls;
+    }
+
+    private static function get_current_admin_view() {
+        return self::normalize_view( isset( $_GET['view'] ) ? wp_unslash( $_GET['view'] ) : '' );
+    }
+
+    private static function is_settings_view( $view ) {
+        return 0 === strpos( (string) $view, 'settings-' );
+    }
+
+    private static function view_uses_frontend_preview_assets( $view ) {
+        return in_array(
+            (string) $view,
+            array(
+                'new-order',
+                'orders',
+                'settings-new-order-style',
+                'settings-proposal-link-style',
+                'settings-confirmation-preview',
+                'settings-confirmation-upload-products-preview',
+            ),
+            true
+        );
+    }
+
+    private static function view_uses_pdf_assets( $view ) {
+        return in_array( (string) $view, array( 'pdf', 'settings-store-info' ), true );
+    }
+
+    private static function view_uses_select2_assets( $view ) {
+        return in_array(
+            (string) $view,
+            array(
+                'new-order',
+                'orders',
+                'settings-general-config',
+                'settings-confirmation-general',
+            ),
+            true
+        );
+    }
+
+    private static function view_uses_media_assets( $view ) {
+        if ( in_array( (string) $view, array( 'settings-store-info', 'settings-confirmation-documents' ), true ) ) {
+            return true;
+        }
+
+        return 'pdf' === $view && class_exists( 'EOP_PDF_Admin_Page' ) && 'display' === EOP_PDF_Admin_Page::get_current_tab();
+    }
+
+    private static function view_uses_editor_assets( $view ) {
+        return 'settings-confirmation-documents' === (string) $view;
+    }
+
+    private static function view_uses_color_assets( $view ) {
+        if ( in_array(
+            (string) $view,
+            array(
+                'settings-proposal-link-style',
+                'settings-new-order-style',
+                'settings-orders-list-style',
+                'settings-confirmation-preview',
+                'settings-confirmation-upload-products-preview',
+            ),
+            true
+        ) ) {
+            return true;
+        }
+
+        if ( 'pdf' !== $view || ! class_exists( 'EOP_PDF_Admin_Page' ) ) {
+            return false;
+        }
+
+        return in_array( EOP_PDF_Admin_Page::get_current_tab(), array( 'order-style', 'proposal-style' ), true );
+    }
+
+    private static function view_uses_font_assets( $view ) {
+        return in_array(
+            (string) $view,
+            array(
+                'settings-proposal-link-style',
+                'settings-new-order-style',
+                'settings-orders-list-style',
+                'settings-confirmation-preview',
+                'settings-confirmation-upload-products-preview',
+            ),
+            true
+        );
+    }
+
+    private static function view_uses_settings_admin_script( $view ) {
+        if ( self::is_settings_view( $view ) ) {
+            return true;
+        }
+
+        if ( 'pdf' !== $view || ! class_exists( 'EOP_PDF_Admin_Page' ) ) {
+            return false;
+        }
+
+        return in_array( EOP_PDF_Admin_Page::get_current_tab(), array( 'display', 'order-style', 'proposal-style' ), true );
+    }
+
+    private static function is_aireset_admin_screen( $hook = '' ) {
+        $current_page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+
+        if ( in_array( $current_page, array( 'aireset', 'eop-pedido-expresso' ), true ) ) {
+            return true;
+        }
+
+        if ( in_array( (string) $hook, array( 'toplevel_page_aireset', 'aireset_page_eop-pedido-expresso' ), true ) ) {
+            return true;
+        }
+
+        $screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+
+        if ( $screen && isset( $screen->id ) ) {
+            return false !== strpos( (string) $screen->id, 'aireset' ) || false !== strpos( (string) $screen->id, 'eop-pedido-expresso' );
+        }
+
+        return false;
+    }
+
+    public static function dequeue_unrelated_admin_assets( $hook ) {
+        if ( ! self::is_aireset_admin_screen( $hook ) ) {
+            return;
+        }
+
+        $style_handles = array(
+            'acfwf-wc-cart-block-integration',
+            'acfwf-wc-checkout-block-integration',
+            'fs_common',
+            'elementor-one-admin-fonts',
+            'elementor-one-admin-common',
+            'elementor-pro-admin',
+            'elementor-admin-menu',
+            'elementor-icons',
+            'elementor-common',
+            'e-theme-ui-light',
+            'elementor-admin',
+            'brands-admin-styles',
+            'yay_smtp_global_style',
+            'mercadopago_vars_css',
+            'woocommerce-mercadopago-admin-notice-css',
+        );
+
+        $script_handles = array(
+            'woo-tracks',
+            'elementor-pro-app',
+            'elementor-notes',
+            'elementor-pro-notes',
+            'elementor-pro-notes-app-initiator',
+            'backbone-marionette',
+            'backbone-radio',
+            'elementor-common-modules',
+            'elementor-web-cli',
+            'elementor-dialog',
+            'elementor-dev-tools',
+            'elementor-common',
+            'elementor-app-loader',
+            'acfw-admin',
+            'wp-abilities',
+            'elementor-one-admin-common',
+            'elementor-admin-modules',
+            'elementor-admin',
+            'elementor-pro-admin',
+            'yaycommerce-menu',
+            'yaysmtp-license-script',
+            'yay_smtp_global',
+            'hello-elementor-menu',
+            'editor-one-menu',
+            'elementor-import-export-admin',
+            'import-export-customization-admin',
+            'media-hints',
+            'woocommerce_mercadopago_admin_notice_js',
+            'wc-types',
+            'wc-settings',
+            'wc-tracks',
+            'wc-admin-command-palette',
+            'wc-admin-command-palette-analytics',
+            'elementor-v2-schema',
+            'elementor-v2-editor-mcp',
+            'elementor-v2-elementor-mcp-common',
+            'elementor-v2-elementor-capabilities-mcp',
+            'wc-entities',
+            'jetpack-script-data',
+        );
+
+        foreach ( $style_handles as $handle ) {
+            wp_dequeue_style( $handle );
+        }
+
+        foreach ( $script_handles as $handle ) {
+            wp_dequeue_script( $handle );
+        }
     }
 
     public static function get_form_referer_url( $view = '', $args = array() ) {
@@ -369,14 +601,63 @@ class EOP_Admin_Page {
     }
 
     public static function get_preview_frame_url( $view ) {
+        $view       = self::normalize_preview_frame_view( $view );
+        $public_url = self::get_order_shortcode_page_url();
+
+        if ( $public_url ) {
+            return 'orders' === $view ? add_query_arg( 'view', 'orders', $public_url ) : $public_url;
+        }
+
         return add_query_arg(
             array(
                 'page'              => 'eop-pedido-expresso',
                 'eop_preview_frame' => '1',
-                'preview_view'      => self::normalize_preview_frame_view( $view ),
+                'preview_view'      => $view,
             ),
             admin_url( 'admin.php' )
         );
+    }
+
+    private static function get_order_shortcode_page_url() {
+        $page_id = class_exists( 'EOP_Settings' ) ? absint( EOP_Settings::get( 'order_page_id', 0 ) ) : 0;
+
+        if ( $page_id > 0 && 'publish' === get_post_status( $page_id ) ) {
+            $permalink = get_permalink( $page_id );
+
+            if ( $permalink ) {
+                return $permalink;
+            }
+        }
+
+        $page = get_page_by_path( 'pedido-expresso' );
+
+        if ( $page instanceof WP_Post && 'publish' === $page->post_status ) {
+            $permalink = get_permalink( $page );
+
+            if ( $permalink ) {
+                return $permalink;
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Serve the preview document before WordPress prints the admin chrome.
+     */
+    public static function maybe_render_preview_frame_page() {
+        $page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+
+        if ( 'eop-pedido-expresso' !== $page || ! self::is_preview_frame_request() ) {
+            return;
+        }
+
+        if ( ! current_user_can( 'edit_shop_orders' ) ) {
+            wp_die( esc_html__( 'Acesso negado.', EOP_TEXT_DOMAIN ) );
+        }
+
+        self::render_preview_frame_page();
+        exit;
     }
 
     private static function normalize_preview_frame_view( $view ) {
@@ -488,8 +769,15 @@ class EOP_Admin_Page {
     }
 
     private static function render_preview_frame_page() {
-        $view      = self::normalize_preview_frame_view( isset( $_GET['preview_view'] ) ? wp_unslash( $_GET['preview_view'] ) : '' );
-        $font_urls = method_exists( 'EOP_Settings', 'get_font_stylesheet_urls' ) ? (array) EOP_Settings::get_font_stylesheet_urls() : array();
+        $view = self::normalize_preview_frame_view( isset( $_GET['preview_view'] ) ? wp_unslash( $_GET['preview_view'] ) : '' );
+
+        if ( 'orders' === $view && ! isset( $_GET['view'] ) ) {
+            $_GET['view'] = 'orders';
+        }
+
+        if ( class_exists( 'EOP_Shortcode' ) && method_exists( 'EOP_Shortcode', 'enqueue_frontend_assets' ) ) {
+            EOP_Shortcode::enqueue_frontend_assets();
+        }
 
         status_header( 200 );
         nocache_headers();
@@ -500,28 +788,18 @@ class EOP_Admin_Page {
             <meta charset="<?php bloginfo( 'charset' ); ?>" />
             <meta name="viewport" content="width=device-width, initial-scale=1" />
             <title><?php echo esc_html( get_bloginfo( 'name' ) . ' - ' . ( 'orders' === $view ? __( 'Pedidos', EOP_TEXT_DOMAIN ) : __( 'Novo pedido', EOP_TEXT_DOMAIN ) ) ); ?></title>
-            <link rel="stylesheet" href="<?php echo esc_url( includes_url( 'css/dashicons.min.css' ) ); ?>" />
-            <?php foreach ( $font_urls as $font_url ) : ?>
-                <?php if ( ! empty( $font_url ) ) : ?>
-                    <link rel="stylesheet" href="<?php echo esc_url( $font_url ); ?>" />
-                <?php endif; ?>
-            <?php endforeach; ?>
-            <link rel="stylesheet" href="<?php echo esc_url( EOP_PLUGIN_URL . 'assets/css/admin.css?ver=' . EOP_VERSION ); ?>" />
-            <link rel="stylesheet" href="<?php echo esc_url( EOP_PLUGIN_URL . 'assets/css/frontend.css?ver=' . EOP_VERSION ); ?>" />
+            <?php wp_head(); ?>
             <style>
                 body { margin: 0; background: #eef2f8; }
                 .eop-admin-preview-host { padding: 18px; }
-                .eop-admin-preview-host button,
-                .eop-admin-preview-host input,
-                .eop-admin-preview-host select,
-                .eop-admin-preview-host textarea { pointer-events: none; }
-                .eop-admin-preview-host a { pointer-events: none; text-decoration: none; }
+                .eop-admin-preview-host a { text-decoration: none; }
             </style>
         </head>
         <body class="eop-admin-preview-frame eop-admin-preview-frame--<?php echo esc_attr( $view ); ?>">
             <div class="eop-admin-preview-host">
-                <?php self::render_template( 'shortcode-page.php' ); ?>
+                <?php echo do_shortcode( '[expresso_order]' ); ?>
             </div>
+            <?php wp_footer(); ?>
         </body>
         </html>
         <?php
@@ -531,7 +809,7 @@ class EOP_Admin_Page {
         return array(
             'new-order' => array(
                 'renderer' => function () {
-                    self::render_template( 'admin-view-new-order.php' );
+                    self::render_template( 'shortcode-page.php' );
                 },
                 'wrapped'  => false,
             ),
@@ -600,8 +878,8 @@ class EOP_Admin_Page {
                 },
             ),
             'settings-new-order-style' => array(
-                'title' => __( 'Visual de Criar Pedido', EOP_TEXT_DOMAIN ),
-                'description' => __( 'Personalize a tela interna de novo pedido com textos, botoes, cores, fontes e base visual propria.', EOP_TEXT_DOMAIN ),
+                'title' => __( 'Visual do Formulario de Pedido', EOP_TEXT_DOMAIN ),
+                'description' => __( 'Personalize a pagina publica do formulario de pedido com textos, botoes, cores e fontes.', EOP_TEXT_DOMAIN ),
                 'renderer' => function () {
                     EOP_Settings::render_embedded_page( 'new-order-style' );
                 },
@@ -622,9 +900,9 @@ class EOP_Admin_Page {
             ),
             'documentation' => array(
 				'title' => __( 'Documentação', EOP_TEXT_DOMAIN ),
-                'description' => __( 'Consulte em uma area propria o efeito real de cada configuracao do modulo de documentos.', EOP_TEXT_DOMAIN ),
+                'description' => __( 'Consulte a documentacao canonica do plugin, a governanca legal e o roadmap tecnico consolidado.', EOP_TEXT_DOMAIN ),
                 'renderer' => function () {
-                    EOP_PDF_Admin_Page::render_embedded_page( 'documentation' );
+                    self::render_plugin_documentation_page();
                 },
             ),
             'export-import' => array(
@@ -654,19 +932,23 @@ class EOP_Admin_Page {
         );
     }
 
-    private static function can_access_view( $view ) {
+    public static function can_access_view( $view ) {
         return in_array( $view, self::get_available_views(), true );
     }
 
-    private static function prepare_request_context_for_view( $view ) {
+    public static function prepare_request_context_for_view( $view, $request = null ) {
+        $source = $request instanceof WP_REST_Request ? $request : null;
         $_GET['page'] = 'eop-pedido-expresso';
         $_GET['view'] = $view;
 
         if ( 'pdf' === $view ) {
-            $_GET['pdf_tab']  = isset( $_REQUEST['pdf_tab'] ) ? sanitize_key( wp_unslash( $_REQUEST['pdf_tab'] ) ) : 'display';
-            $_GET['document'] = isset( $_REQUEST['document'] ) && 'proposal' === sanitize_key( wp_unslash( $_REQUEST['document'] ) ) ? 'proposal' : 'order';
+            $pdf_tab       = $source ? (string) $source->get_param( 'pdf_tab' ) : ( isset( $_REQUEST['pdf_tab'] ) ? wp_unslash( $_REQUEST['pdf_tab'] ) : 'display' );
+            $document      = $source ? (string) $source->get_param( 'document' ) : ( isset( $_REQUEST['document'] ) ? wp_unslash( $_REQUEST['document'] ) : 'order' );
+            $preview_order = $source ? absint( $source->get_param( 'preview_order' ) ) : absint( $_REQUEST['preview_order'] ?? 0 );
 
-            $preview_order = absint( $_REQUEST['preview_order'] ?? 0 );
+            $_GET['pdf_tab']  = sanitize_key( $pdf_tab ?: 'display' );
+            $_GET['document'] = 'proposal' === sanitize_key( $document ) ? 'proposal' : 'order';
+
 
             if ( $preview_order > 0 ) {
                 $_GET['preview_order'] = $preview_order;
@@ -676,7 +958,7 @@ class EOP_Admin_Page {
         }
     }
 
-    private static function render_lazy_view_html( $view ) {
+    public static function render_lazy_view_html( $view ) {
         $definitions = self::get_lazy_view_definitions();
 
         if ( empty( $definitions[ $view ]['renderer'] ) || ! is_callable( $definitions[ $view ]['renderer'] ) ) {
@@ -707,48 +989,63 @@ class EOP_Admin_Page {
         return (string) ob_get_clean();
     }
 
-    public static function ajax_load_admin_view() {
-        check_ajax_referer( 'eop_nonce', 'nonce' );
-
-        $view = self::normalize_view( isset( $_REQUEST['view_name'] ) ? wp_unslash( $_REQUEST['view_name'] ) : '' );
+    public static function get_lazy_view_payload( $view, $request = null ) {
+        $view = self::normalize_view( $view );
 
         if ( ! self::can_access_view( $view ) ) {
-            wp_send_json_error(
-                array(
-                    'message' => __( 'Acesso negado.', EOP_TEXT_DOMAIN ),
-                ),
-                403
+            return new WP_Error(
+                'eop_admin_view_forbidden',
+                __( 'Acesso negado.', EOP_TEXT_DOMAIN ),
+                array( 'status' => 403 )
             );
         }
 
-        self::prepare_request_context_for_view( $view );
+        self::prepare_request_context_for_view( $view, $request );
 
         $html = self::render_lazy_view_html( $view );
 
         if ( '' === $html ) {
-            wp_send_json_error(
-                array(
-                    'message' => __( 'View administrativa indisponivel.', EOP_TEXT_DOMAIN ),
-                ),
-                400
+            return new WP_Error(
+                'eop_admin_view_unavailable',
+                __( 'View administrativa indisponivel.', EOP_TEXT_DOMAIN ),
+                array( 'status' => 400 )
             );
         }
 
-        wp_send_json_success(
-            array(
-                'view' => $view,
-                'html' => $html,
-                '_performance' => class_exists( 'EOP_Performance_Audit' )
-                    ? EOP_Performance_Audit::get_request_metrics(
-                        'admin_view',
-                        array(
-                            'view'           => $view,
-                            'response_bytes' => strlen( $html ),
-                        )
+        return array(
+            'view' => $view,
+            'html' => $html,
+            '_performance' => class_exists( 'EOP_Performance_Audit' )
+                ? EOP_Performance_Audit::get_request_metrics(
+                    'admin_view',
+                    array(
+                        'view'           => $view,
+                        'response_bytes' => strlen( $html ),
                     )
-                    : array(),
-            )
+                )
+                : array(),
         );
+    }
+
+    private static function render_plugin_documentation_page() {
+        include EOP_PLUGIN_DIR . 'templates/documentation-page.php';
+    }
+
+    public static function ajax_load_admin_view() {
+        check_ajax_referer( 'eop_nonce', 'nonce' );
+
+        $payload = self::get_lazy_view_payload( isset( $_REQUEST['view_name'] ) ? wp_unslash( $_REQUEST['view_name'] ) : '' );
+
+        if ( is_wp_error( $payload ) ) {
+            wp_send_json_error(
+                array(
+                    'message' => $payload->get_error_message(),
+                ),
+                (int) ( $payload->get_error_data()['status'] ?? 400 )
+            );
+        }
+
+        wp_send_json_success( $payload );
     }
 
     /**
@@ -777,9 +1074,24 @@ class EOP_Admin_Page {
             return;
         }
 
+        if ( class_exists( 'EOP_Admin_SPA' ) && EOP_Admin_SPA::is_enabled() ) {
+            EOP_Admin_SPA::enqueue_assets( $hook );
+            return;
+        }
+
         if ( ! function_exists( 'WC' ) || ! WC() ) {
             return;
         }
+
+        $view                  = self::get_current_admin_view();
+        $uses_frontend_css     = self::view_uses_frontend_preview_assets( $view );
+        $uses_pdf_assets       = self::view_uses_pdf_assets( $view );
+        $uses_select2          = self::view_uses_select2_assets( $view );
+        $uses_media_assets     = self::view_uses_media_assets( $view );
+        $uses_editor_assets    = self::view_uses_editor_assets( $view );
+        $uses_color_assets     = self::view_uses_color_assets( $view );
+        $uses_font_assets      = self::view_uses_font_assets( $view );
+        $uses_settings_script  = self::view_uses_settings_admin_script( $view );
 
         $font_url = method_exists( 'EOP_Settings', 'get_font_stylesheet_url' ) ? EOP_Settings::get_font_stylesheet_url() : '';
 
@@ -789,14 +1101,23 @@ class EOP_Admin_Page {
 
         $wc_version = defined( 'WC_VERSION' ) ? WC_VERSION : EOP_VERSION;
 
-        // Select2 (shipped with WooCommerce).
-        wp_enqueue_style( 'select2', WC()->plugin_url() . '/assets/css/select2.css', array(), $wc_version );
-        wp_enqueue_script( 'select2', WC()->plugin_url() . '/assets/js/select2/select2.full.min.js', array( 'jquery' ), $wc_version, true );
+        if ( $uses_select2 ) {
+            // Select2 (shipped with WooCommerce).
+            wp_enqueue_style( 'select2', WC()->plugin_url() . '/assets/css/select2.css', array(), $wc_version );
+            wp_enqueue_script( 'select2', WC()->plugin_url() . '/assets/js/select2/select2.full.min.js', array( 'jquery' ), $wc_version, true );
+        }
 
-        wp_enqueue_style( 'eop-admin', EOP_PLUGIN_URL . 'assets/css/admin.css', array( 'select2' ), EOP_VERSION );
-        wp_enqueue_style( 'eop-frontend', EOP_PLUGIN_URL . 'assets/css/frontend.css', array(), EOP_VERSION );
-        wp_enqueue_style( 'eop-pdf-admin', EOP_PLUGIN_URL . 'assets/css/pdf-admin.css', array( 'eop-admin' ), EOP_VERSION );
-        wp_enqueue_script( 'eop-admin', EOP_PLUGIN_URL . 'assets/js/admin.js', array( 'jquery', 'select2' ), EOP_VERSION, true );
+        wp_enqueue_style( 'eop-admin', EOP_PLUGIN_URL . 'assets/css/admin.css', $uses_select2 ? array( 'select2' ) : array(), EOP_VERSION );
+
+        if ( $uses_frontend_css ) {
+            wp_enqueue_style( 'eop-frontend', EOP_PLUGIN_URL . 'assets/css/frontend.css', array(), EOP_VERSION );
+        }
+
+        if ( $uses_pdf_assets ) {
+            wp_enqueue_style( 'eop-pdf-admin', EOP_PLUGIN_URL . 'assets/css/pdf-admin.css', array( 'eop-admin' ), EOP_VERSION );
+        }
+
+        wp_enqueue_script( 'eop-admin', EOP_PLUGIN_URL . 'assets/js/admin.js', $uses_select2 ? array( 'jquery', 'select2' ) : array( 'jquery' ), EOP_VERSION, true );
 
         $flyin_style_path  = EOP_PLUGIN_DIR . 'assets/css/admin-flyinmenu.css';
         $flyin_script_path = EOP_PLUGIN_DIR . 'assets/js/admin-flyinmenu.js';
@@ -817,67 +1138,83 @@ class EOP_Admin_Page {
         );
 
         $performance_asset_handles = array(
-            'styles'  => array( 'select2', 'eop-admin', 'eop-frontend', 'eop-pdf-admin', 'eop-admin-flyinmenu', 'eop-coloris', 'eop-settings-admin' ),
-            'scripts' => array( 'select2', 'eop-admin', 'eop-admin-flyinmenu', 'eop-coloris', 'eop-settings-admin' ),
+            'styles'  => array_filter( array( $uses_select2 ? 'select2' : '', 'eop-admin', $uses_frontend_css ? 'eop-frontend' : '', $uses_pdf_assets ? 'eop-pdf-admin' : '', 'eop-admin-flyinmenu', $uses_color_assets ? 'eop-coloris' : '', $uses_settings_script ? 'eop-settings-admin' : '', $uses_font_assets ? 'eop-fontselect' : '' ) ),
+            'scripts' => array_filter( array( $uses_select2 ? 'select2' : '', 'eop-admin', 'eop-admin-flyinmenu', $uses_color_assets ? 'eop-coloris' : '', $uses_settings_script ? 'eop-settings-admin' : '', $uses_font_assets ? 'eop-fontselect' : '' ) ),
         );
 
         $font_css_path = EOP_PLUGIN_DIR . 'assets/css/jquery.fontselect.css';
         $font_js_path  = EOP_PLUGIN_DIR . 'assets/js/jquery.fontselect.js';
 
-        wp_enqueue_media();
-        wp_enqueue_style( 'eop-coloris', EOP_PLUGIN_URL . 'assets/css/coloris.min.css', array(), EOP_VERSION );
-        wp_enqueue_style(
-            'eop-settings-admin',
-            EOP_PLUGIN_URL . 'assets/css/settings-admin.css',
-            array( 'eop-admin', 'eop-coloris' ),
-            EOP_VERSION
-        );
+        if ( $uses_media_assets ) {
+            wp_enqueue_media();
+        }
 
-        if ( file_exists( $font_css_path ) ) {
+        if ( $uses_color_assets ) {
+            wp_enqueue_style( 'eop-coloris', EOP_PLUGIN_URL . 'assets/css/coloris.min.css', array(), EOP_VERSION );
+            wp_enqueue_script( 'eop-coloris', EOP_PLUGIN_URL . 'assets/js/coloris.min.js', array(), EOP_VERSION, true );
+        }
+
+        if ( $uses_settings_script ) {
             wp_enqueue_style(
-                'eop-fontselect',
-                EOP_PLUGIN_URL . 'assets/css/jquery.fontselect.css',
-                array(),
-                (string) filemtime( $font_css_path )
+                'eop-settings-admin',
+                EOP_PLUGIN_URL . 'assets/css/settings-admin.css',
+                array_filter( array( 'eop-admin', $uses_color_assets ? 'eop-coloris' : '' ) ),
+                EOP_VERSION
             );
         }
 
-        wp_enqueue_script( 'eop-coloris', EOP_PLUGIN_URL . 'assets/js/coloris.min.js', array(), EOP_VERSION, true );
+        if ( $uses_font_assets ) {
+            if ( file_exists( $font_css_path ) ) {
+                wp_enqueue_style(
+                    'eop-fontselect',
+                    EOP_PLUGIN_URL . 'assets/css/jquery.fontselect.css',
+                    array(),
+                    (string) filemtime( $font_css_path )
+                );
+            }
 
-        if ( function_exists( 'wp_enqueue_editor' ) ) {
+            if ( file_exists( $font_js_path ) ) {
+                wp_enqueue_script(
+                    'eop-fontselect',
+                    EOP_PLUGIN_URL . 'assets/js/jquery.fontselect.js',
+                    array( 'jquery' ),
+                    (string) filemtime( $font_js_path ),
+                    true
+                );
+            }
+        }
+
+        if ( $uses_editor_assets && function_exists( 'wp_enqueue_editor' ) ) {
             wp_enqueue_editor();
         }
 
-        if ( file_exists( $font_js_path ) ) {
+        if ( $uses_settings_script ) {
             wp_enqueue_script(
-                'eop-fontselect',
-                EOP_PLUGIN_URL . 'assets/js/jquery.fontselect.js',
-                array( 'jquery' ),
-                (string) filemtime( $font_js_path ),
+                'eop-settings-admin',
+                EOP_PLUGIN_URL . 'assets/js/settings-admin.js',
+                array_filter( array( 'jquery', $uses_select2 ? 'select2' : '', $uses_color_assets ? 'eop-coloris' : '', $uses_media_assets ? 'media-editor' : '', $uses_media_assets ? 'media-upload' : '', $uses_editor_assets ? 'wp-editor' : '', $uses_font_assets && file_exists( $font_js_path ) ? 'eop-fontselect' : '' ) ),
+                EOP_VERSION,
                 true
             );
+
+            wp_localize_script(
+                'eop-settings-admin',
+                'eop_settings_vars',
+                EOP_Settings::get_settings_admin_localization( file_exists( $font_js_path ) )
+            );
         }
-
-        wp_enqueue_script(
-            'eop-settings-admin',
-            EOP_PLUGIN_URL . 'assets/js/settings-admin.js',
-            array_filter( array( 'jquery', 'select2', 'eop-coloris', 'media-editor', 'media-upload', 'wp-editor', file_exists( $font_js_path ) ? 'eop-fontselect' : '' ) ),
-            EOP_VERSION,
-            true
-        );
-
-        wp_localize_script(
-            'eop-settings-admin',
-            'eop_settings_vars',
-            EOP_Settings::get_settings_admin_localization( file_exists( $font_js_path ) )
-        );
 
         wp_localize_script( 'eop-admin', 'eop_vars', array(
             'ajax_url'      => admin_url( 'admin-ajax.php' ),
             'nonce'         => wp_create_nonce( 'eop_nonce' ),
+            'admin_rest_url' => class_exists( 'EOP_Admin_SPA' ) ? esc_url_raw( rest_url( trailingslashit( EOP_Admin_SPA::REST_NAMESPACE ) ) ) : '',
             'rest_url'      => esc_url_raw( rest_url( trailingslashit( apply_filters( 'eop_post_confirmation_rest_namespace', 'aireset-expresso-order/v1' ) ) ) ),
             'rest_nonce'    => wp_create_nonce( 'wp_rest' ),
             'cache_namespace' => EOP_VERSION,
+            'select2_assets' => array(
+                'style'  => esc_url_raw( WC()->plugin_url() . '/assets/css/select2.css' ),
+                'script' => esc_url_raw( WC()->plugin_url() . '/assets/js/select2/select2.full.min.js' ),
+            ),
             'discount_mode' => EOP_Settings::get( 'discount_mode', 'both' ),
             'initial_view'  => self::normalize_view( isset( $_GET['view'] ) ? wp_unslash( $_GET['view'] ) : '' ),
             'view_url_base' => self::get_view_url(),
@@ -1030,8 +1367,13 @@ class EOP_Admin_Page {
         ) );
     }
 
-    public static function enqueue_menu_flyout_assets() {
-        if ( ! is_admin() ) {
+    public static function enqueue_menu_flyout_assets( $hook = '' ) {
+        // O flyout do menu Aireset deve aparecer em TODA tela do admin, nao so
+        // dentro das paginas do plugin. Gateamos apenas por contexto admin e
+        // pela mesma capability do submenu (edit_shop_orders), para nao expor
+        // os itens a quem nao pode usar o plugin. As URLs do menu sao absolutas
+        // (get_view_url), entao a montagem nao depende da tela atual.
+        if ( ! is_admin() || ! current_user_can( 'edit_shop_orders' ) ) {
             return;
         }
 
@@ -1119,7 +1461,7 @@ class EOP_Admin_Page {
                 ),
                 array(
                     'key'   => 'eop-view-settings-new-order-style',
-                    'label' => __( 'Visual de Criar Pedido', EOP_TEXT_DOMAIN ),
+                    'label' => __( 'Visual do Formulario de Pedido', EOP_TEXT_DOMAIN ),
                     'icon'  => 'dashicons-cart',
                     'url'   => self::get_view_url( 'settings-new-order-style' ),
                     'query' => array(
@@ -1383,8 +1725,6 @@ class EOP_Admin_Page {
                 'style_version'    => file_exists( $flyout_style_path ) ? (string) filemtime( $flyout_style_path ) : EOP_VERSION,
                 'script_url'       => EOP_PLUGIN_URL . 'assets/js/admin-menu-flyout.js',
                 'script_version'   => file_exists( $flyout_script_path ) ? (string) filemtime( $flyout_script_path ) : EOP_VERSION,
-                'fontawesome_url'  => 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css',
-                'fontawesome_ver'  => '6.3.0',
                 'inline_script'    => 'window.airesetAdminFlyouts=window.airesetAdminFlyouts||[];'
                     . 'window.airesetAdminFlyouts.push(' . wp_json_encode( $config ) . ');',
             )
@@ -1401,6 +1741,11 @@ class EOP_Admin_Page {
 
         if ( self::is_preview_frame_request() ) {
             self::render_preview_frame_page();
+            return;
+        }
+
+        if ( class_exists( 'EOP_Admin_SPA' ) && EOP_Admin_SPA::is_enabled() ) {
+            EOP_Admin_SPA::render_page();
             return;
         }
 

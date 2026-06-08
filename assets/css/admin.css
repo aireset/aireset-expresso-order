@@ -451,6 +451,9 @@ body.eop-admin-spa-screen.is-plugin-fullscreen #wpcontent {
   display: grid;
   gap: 12px;
 }
+.eop-admin-spa .eop-pdv-view[hidden] {
+  display: none !important;
+}
 .eop-admin-spa .eop-settings-page--embedded {
   padding: 0;
 }

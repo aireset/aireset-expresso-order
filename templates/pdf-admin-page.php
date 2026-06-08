@@ -77,7 +77,8 @@ $preview_document = $preview_order instanceof WC_Order ? EOP_Document_Manager::g
 $editing_label   = 'proposal' === $document ? __( 'Proposta', EOP_TEXT_DOMAIN ) : __( 'Pedido', EOP_TEXT_DOMAIN );
 $preview_label   = 'proposal' === $preview_document ? __( 'Proposta', EOP_TEXT_DOMAIN ) : __( 'Pedido', EOP_TEXT_DOMAIN );
 $preview_notice  = $preview_order instanceof WC_Order && $preview_document !== $document;
-$preview_allowed = $preview_order instanceof WC_Order && 'no' === $pdf_settings['advanced_html_output'];
+$preview_allowed = $preview_order instanceof WC_Order;
+$preview_advanced_html_notice = $preview_order instanceof WC_Order && 'yes' === $pdf_settings['advanced_html_output'];
 $preview_mode    = empty( $_GET['preview_order'] ) ? __( 'Atualmente mostrando o ultimo pedido', EOP_TEXT_DOMAIN ) : __( 'Atualmente mostrando o pedido selecionado', EOP_TEXT_DOMAIN );
 $preview_pdf_url = $preview_order instanceof WC_Order ? EOP_Document_Manager::get_pdf_document_url( $preview_order, $preview_document ) : '';
 $preview_xml     = $preview_order instanceof WC_Order && class_exists( 'EOP_Document_Manager' ) ? EOP_Document_Manager::get_edocument_xml_preview( $preview_order, $preview_document ) : '';
@@ -966,13 +967,13 @@ if ( 'pdf' === $pdf_form_view ) {
                             <p><?php printf( esc_html__( 'O pedido selecionado para preview gera %1$s, mas voce esta editando as configuracoes de %2$s.', EOP_TEXT_DOMAIN ), esc_html( $preview_label ), esc_html( $editing_label ) ); ?></p>
                         </div>
                     <?php endif; ?>
+                    <?php if ( $preview_advanced_html_notice ) : ?>
+                        <div class="eop-pdf-admin__notice">
+                            <p><?php esc_html_e( 'Modo avancado de output HTML ativo. O preview lateral continua usando o renderer HTML interno para validacao visual.', EOP_TEXT_DOMAIN ); ?></p>
+                        </div>
+                    <?php endif; ?>
                     <?php if ( $preview_allowed ) : ?>
                         <?php echo EOP_Document_Manager::get_preview_html( $preview_order, $preview_document ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                    <?php elseif ( $preview_order instanceof WC_Order ) : ?>
-                        <div class="eop-pdf-admin__empty-preview">
-                            <strong><?php esc_html_e( 'Preview HTML desativado no modo avancado.', EOP_TEXT_DOMAIN ); ?></strong>
-                            <p><?php esc_html_e( 'Altere a configuracao "Forcar output HTML" em Avancado para voltar a renderizar o preview lateral.', EOP_TEXT_DOMAIN ); ?></p>
-                        </div>
                     <?php else : ?>
                         <div class="eop-pdf-admin__empty-preview">
                             <strong><?php esc_html_e( 'Nenhum pedido encontrado para preview.', EOP_TEXT_DOMAIN ); ?></strong>

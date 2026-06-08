@@ -113,6 +113,40 @@ defined( 'ABSPATH' ) || exit;
 </section>
 
 <section class="eop-settings-card">
+    <h2><?php esc_html_e( 'Admin SPA principal', EOP_TEXT_DOMAIN ); ?></h2>
+    <p><?php esc_html_e( 'Controle o shell administrativo em React. O admin legado fica disponivel apenas como fallback tecnico.', EOP_TEXT_DOMAIN ); ?></p>
+    <div class="eop-settings-grid">
+        <div class="eop-settings-field is-full">
+            <span><?php esc_html_e( 'Habilitar admin SPA principal', EOP_TEXT_DOMAIN ); ?></span>
+            <div class="eop-settings-switch-shell">
+                <input type="hidden" name="eop_admin_experimental[enabled]" value="<?php echo esc_attr( $experimental_admin['enabled'] ?? 'no' ); ?>" />
+                <button
+                    type="button"
+                    class="eop-settings-switcher<?php echo 'yes' === ( $experimental_admin['enabled'] ?? 'no' ) ? ' is-enabled' : ''; ?>"
+                    role="switch"
+                    aria-checked="<?php echo 'yes' === ( $experimental_admin['enabled'] ?? 'no' ) ? 'true' : 'false'; ?>"
+                    data-target-name="eop_admin_experimental[enabled]"
+                    data-enabled-value="yes"
+                    data-disabled-value="no"
+                    aria-label="<?php esc_attr_e( 'Alternar admin SPA principal', EOP_TEXT_DOMAIN ); ?>"
+                >
+                    <span class="eop-settings-switcher__label eop-settings-switcher__label--off">Off</span>
+                    <span class="eop-settings-switcher__thumb" aria-hidden="true"></span>
+                    <span class="eop-settings-switcher__label eop-settings-switcher__label--on">On</span>
+                </button>
+                <span class="eop-settings-switcher__status" aria-live="polite">
+                    <?php echo 'yes' === ( $experimental_admin['enabled'] ?? 'no' ) ? esc_html__( 'Ativado', EOP_TEXT_DOMAIN ) : esc_html__( 'Desativado', EOP_TEXT_DOMAIN ); ?>
+                </span>
+            </div>
+            <small class="eop-settings-help"><?php esc_html_e( 'Quando ativo e com bundle compilado, o plugin pode abrir o novo shell administrativo do rebuild.', EOP_TEXT_DOMAIN ); ?></small>
+            <?php if ( class_exists( 'EOP_Admin_SPA' ) ) : ?>
+                <small class="eop-settings-help"><a href="<?php echo esc_url( EOP_Admin_SPA::get_legacy_url() ); ?>"><?php esc_html_e( 'Abrir fallback legado nesta sessao', EOP_TEXT_DOMAIN ); ?></a></small>
+            <?php endif; ?>
+        </div>
+    </div>
+</section>
+
+<section class="eop-settings-card">
     <h2><?php esc_html_e( 'PDF nativo', EOP_TEXT_DOMAIN ); ?></h2>
     <p><?php esc_html_e( 'Defina os dados exibidos pelo gerador interno de PDF do plugin.', EOP_TEXT_DOMAIN ); ?></p>
     <div class="eop-settings-grid">

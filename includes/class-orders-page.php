@@ -49,11 +49,13 @@ class EOP_Orders_Page {
         wp_enqueue_script( 'eop-orders', EOP_PLUGIN_URL . 'assets/js/orders.js', array( 'jquery', 'select2' ), EOP_VERSION, true );
 
         wp_localize_script( 'eop-orders', 'eop_orders_vars', array(
-            'ajax_url' => admin_url( 'admin-ajax.php' ),
-            'nonce'    => wp_create_nonce( 'eop_nonce' ),
-            'edit_url' => admin_url( 'admin.php?page=eop-pedidos&action=edit&order_id=' ),
-            'discount_mode' => EOP_Settings::get( 'discount_mode', 'both' ),
-            'i18n'     => array(
+            'ajax_url'       => admin_url( 'admin-ajax.php' ),
+            'admin_rest_url' => class_exists( 'EOP_Admin_SPA' ) ? esc_url_raw( rest_url( trailingslashit( EOP_Admin_SPA::REST_NAMESPACE ) ) ) : '',
+            'nonce'          => wp_create_nonce( 'eop_nonce' ),
+            'rest_nonce'     => wp_create_nonce( 'wp_rest' ),
+            'edit_url'       => admin_url( 'admin.php?page=eop-pedidos&action=edit&order_id=' ),
+            'discount_mode'  => EOP_Settings::get( 'discount_mode', 'both' ),
+            'i18n'           => array(
                 'search_product'    => __( 'Buscar produto por nome ou SKU...', EOP_TEXT_DOMAIN ),
                 'label_price'       => __( 'Preco', EOP_TEXT_DOMAIN ),
                 'label_quantity'    => __( 'Qtd', EOP_TEXT_DOMAIN ),
@@ -268,109 +270,13 @@ class EOP_Orders_Page {
             wp_send_json_error( array( 'message' => __( 'Voce nao pode acessar este pedido.', EOP_TEXT_DOMAIN ) ) );
         }
 
-        $items         = array();
-        $discount_mode = EOP_Settings::get( 'discount_mode', 'both' );
-        foreach ( $order->get_items() as $item ) {
-            if ( ! $item instanceof WC_Order_Item_Product ) {
-                continue;
-            }
+        $payload = self::get_order_editor_payload( $order );
 
-            $product = $item->get_product();
-            $subtotal = (float) $item->get_subtotal();
-            $total    = (float) $item->get_total();
-            $disc     = $subtotal - $total;
-            $discount_data = self::resolve_loaded_discount_data(
-                $disc,
-                $subtotal,
-                $discount_mode,
-                $item->get_meta( '_eop_discount_type', true ),
-                $item->get_meta( '_eop_discount_value', true )
-            );
-
-            $image_url = '';
-            if ( $product ) {
-                $img_id = $product->get_image_id();
-                if ( $img_id ) {
-                    $src = wp_get_attachment_image_url( $img_id, 'thumbnail' );
-                    if ( $src ) {
-                        $image_url = $src;
-                    }
-                }
-                if ( ! $image_url ) {
-                    $image_url = wc_placeholder_img_src( 'thumbnail' );
-                }
-            }
-
-            $items[] = array(
-                'product_id'     => $item->get_product_id(),
-                'name'           => $item->get_name(),
-                'sku'            => $product ? $product->get_sku() : '',
-                'price'          => $item->get_quantity() > 0 ? $subtotal / $item->get_quantity() : 0,
-                'quantity'       => $item->get_quantity(),
-                'discount_type'  => $discount_data['type'],
-                'discount_value' => $discount_data['value'],
-                'image'          => $image_url,
-            );
+        if ( is_wp_error( $payload ) ) {
+            wp_send_json_error( array( 'message' => $payload->get_error_message() ) );
         }
 
-        $discount_fee = 0;
-        foreach ( $order->get_fees() as $fee ) {
-            if ( (float) $fee->get_total() < 0 ) {
-                $discount_fee += abs( (float) $fee->get_total() );
-            }
-        }
-
-        $shipping_total = (float) $order->get_shipping_total();
-        $shipping_method = '';
-        foreach ( $order->get_shipping_methods() as $method ) {
-            $shipping_method = $method->get_method_title();
-            break;
-        }
-
-        $document              = $order->get_meta( '_billing_cpf' ) ?: $order->get_meta( '_billing_cnpj' );
-        $general_discount_data = self::resolve_loaded_discount_data(
-            $discount_fee,
-            max( 0, (float) $order->get_subtotal() ),
-            $discount_mode,
-            $order->get_meta( '_eop_discount_type', true ),
-            $order->get_meta( '_eop_discount_value', true )
-        );
-
-        wp_send_json_success( array(
-            'order_id' => $order->get_id(),
-            'status'   => $order->get_status(),
-            'customer' => array(
-                'user_id'  => $order->get_customer_id(),
-                'name'     => trim( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() ),
-                'email'    => $order->get_billing_email(),
-                'phone'    => $order->get_billing_phone(),
-                'document' => $document,
-            ),
-            'items'           => $items,
-            'shipping'        => $shipping_total,
-            'shipping_method' => $shipping_method,
-            'shipping_address' => array(
-                'postcode'     => $order->get_shipping_postcode(),
-                'state'        => $order->get_shipping_state(),
-                'city'         => $order->get_shipping_city(),
-                'address'      => $order->get_shipping_address_1(),
-                'number'       => $order->get_meta( '_shipping_number' ),
-                'neighborhood' => $order->get_meta( '_shipping_neighborhood' ),
-                'address_2'    => $order->get_shipping_address_2(),
-            ),
-            'discount'      => $general_discount_data['value'],
-            'discount_type' => $general_discount_data['type'],
-            'notes'         => $order->get_customer_note(),
-            'post_confirmation_flow' => class_exists( 'EOP_Post_Confirmation_Flow' ) ? EOP_Post_Confirmation_Flow::get_export_data( $order, 'admin' ) : array(),
-            '_performance'     => class_exists( 'EOP_Performance_Audit' )
-                ? EOP_Performance_Audit::get_request_metrics(
-                    'order_load',
-                    array(
-                        'order_id' => $order->get_id(),
-                    )
-                )
-                : array(),
-        ) );
+        wp_send_json_success( $payload );
     }
 
     /**
@@ -401,7 +307,138 @@ class EOP_Orders_Page {
             wp_send_json_error( array( 'message' => __( 'Voce nao pode editar este pedido.', EOP_TEXT_DOMAIN ) ) );
         }
 
-        // --- Update customer ---
+        $result = self::update_order_from_payload( $order, $data );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+        }
+
+        wp_send_json_success( $result );
+    }
+
+    public static function get_order_editor_payload( $order ) {
+        if ( ! $order instanceof WC_Order ) {
+            return new WP_Error(
+                'eop_order_invalid',
+                __( 'Pedido nao encontrado.', EOP_TEXT_DOMAIN )
+            );
+        }
+
+        $items         = array();
+        $discount_mode = EOP_Settings::get( 'discount_mode', 'both' );
+
+        foreach ( $order->get_items() as $item ) {
+            if ( ! $item instanceof WC_Order_Item_Product ) {
+                continue;
+            }
+
+            $product       = $item->get_product();
+            $subtotal      = (float) $item->get_subtotal();
+            $total         = (float) $item->get_total();
+            $disc          = $subtotal - $total;
+            $discount_data = self::resolve_loaded_discount_data(
+                $disc,
+                $subtotal,
+                $discount_mode,
+                $item->get_meta( '_eop_discount_type', true ),
+                $item->get_meta( '_eop_discount_value', true )
+            );
+
+            $image_url = '';
+
+            if ( $product ) {
+                $img_id = $product->get_image_id();
+                if ( $img_id ) {
+                    $src = wp_get_attachment_image_url( $img_id, 'thumbnail' );
+                    if ( $src ) {
+                        $image_url = $src;
+                    }
+                }
+                if ( ! $image_url ) {
+                    $image_url = wc_placeholder_img_src( 'thumbnail' );
+                }
+            }
+
+            $items[] = array(
+                'product_id'     => (int) $item->get_product_id(),
+                'name'           => $item->get_name(),
+                'sku'            => $product ? $product->get_sku() : '',
+                'price'          => $item->get_quantity() > 0 ? $subtotal / $item->get_quantity() : 0,
+                'quantity'       => (int) $item->get_quantity(),
+                'discount_type'  => $discount_data['type'],
+                'discount_value' => $discount_data['value'],
+                'image'          => $image_url,
+            );
+        }
+
+        $discount_fee = 0;
+        foreach ( $order->get_fees() as $fee ) {
+            if ( (float) $fee->get_total() < 0 ) {
+                $discount_fee += abs( (float) $fee->get_total() );
+            }
+        }
+
+        $shipping_total  = (float) $order->get_shipping_total();
+        $shipping_method = '';
+        foreach ( $order->get_shipping_methods() as $method ) {
+            $shipping_method = $method->get_method_title();
+            break;
+        }
+
+        $document              = $order->get_meta( '_billing_cpf' ) ?: $order->get_meta( '_billing_cnpj' );
+        $general_discount_data = self::resolve_loaded_discount_data(
+            $discount_fee,
+            max( 0, (float) $order->get_subtotal() ),
+            $discount_mode,
+            $order->get_meta( '_eop_discount_type', true ),
+            $order->get_meta( '_eop_discount_value', true )
+        );
+
+        return array(
+            'order_id'                => (int) $order->get_id(),
+            'status'                  => $order->get_status(),
+            'customer'                => array(
+                'user_id'  => (int) $order->get_customer_id(),
+                'name'     => trim( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() ),
+                'email'    => $order->get_billing_email(),
+                'phone'    => $order->get_billing_phone(),
+                'document' => $document,
+            ),
+            'items'                   => $items,
+            'shipping'                => $shipping_total,
+            'shipping_method'         => $shipping_method,
+            'shipping_address'        => array(
+                'postcode'     => $order->get_shipping_postcode(),
+                'state'        => $order->get_shipping_state(),
+                'city'         => $order->get_shipping_city(),
+                'address'      => $order->get_shipping_address_1(),
+                'number'       => $order->get_meta( '_shipping_number' ),
+                'neighborhood' => $order->get_meta( '_shipping_neighborhood' ),
+                'address_2'    => $order->get_shipping_address_2(),
+            ),
+            'discount'                => $general_discount_data['value'],
+            'discount_type'           => $general_discount_data['type'],
+            'notes'                   => $order->get_customer_note(),
+            'post_confirmation_flow'  => class_exists( 'EOP_Post_Confirmation_Flow' ) ? EOP_Post_Confirmation_Flow::get_export_data( $order, 'admin' ) : array(),
+            '_performance'            => class_exists( 'EOP_Performance_Audit' )
+                ? EOP_Performance_Audit::get_request_metrics(
+                    'order_load',
+                    array(
+                        'order_id' => $order->get_id(),
+                    )
+                )
+                : array(),
+        );
+    }
+
+    public static function update_order_from_payload( $order, array $data ) {
+        if ( ! $order instanceof WC_Order ) {
+            return new WP_Error(
+                'eop_order_invalid',
+                __( 'Pedido nao encontrado.', EOP_TEXT_DOMAIN )
+            );
+        }
+
         $customer = $data['customer'] ?? array();
         $name     = sanitize_text_field( $customer['name'] ?? '' );
         $email    = sanitize_email( $customer['email'] ?? '' );
@@ -426,7 +463,6 @@ class EOP_Orders_Page {
             $order->update_meta_data( '_billing_persontype', strlen( $document ) <= 11 ? '1' : '2' );
         }
 
-        // --- Update shipping address ---
         $shipping_address = isset( $data['shipping_address'] ) && is_array( $data['shipping_address'] ) ? $data['shipping_address'] : array();
         if ( ! empty( $shipping_address ) ) {
             $shipping_line_2_parts = array_filter( array(
@@ -447,7 +483,6 @@ class EOP_Orders_Page {
             $order->update_meta_data( '_shipping_neighborhood', sanitize_text_field( $shipping_address['neighborhood'] ?? '' ) );
         }
 
-        // --- Remove existing line items, fees, shipping ---
         foreach ( $order->get_items() as $item_id => $item ) {
             $order->remove_item( $item_id );
         }
@@ -458,8 +493,7 @@ class EOP_Orders_Page {
             $order->remove_item( $item_id );
         }
 
-        // --- Re-add line items ---
-        $items = $data['items'] ?? array();
+        $items          = is_array( $data['items'] ?? null ) ? $data['items'] : array();
         $items_subtotal = 0;
         $valid_items    = 0;
 
@@ -476,17 +510,13 @@ class EOP_Orders_Page {
             $valid_items++;
 
             $item_disc_type  = in_array( $item['discount_type'] ?? 'fixed', array( 'fixed', 'percent' ), true ) ? $item['discount_type'] : 'fixed';
-            $item_disc_value = floatval( $item['discount_value'] ?? 0 );
-            $item_disc_value = max( 0, $item_disc_value );
-
-            $line_total = (float) $product->get_price() * $quantity;
+            $item_disc_value = max( 0, (float) ( $item['discount_value'] ?? 0 ) );
+            $line_total      = (float) $product->get_price() * $quantity;
 
             if ( $item_disc_value > 0 && $line_item_id ) {
-                if ( 'percent' === $item_disc_type ) {
-                    $disc_amount = min( $line_total, $line_total * $item_disc_value / 100 );
-                } else {
-                    $disc_amount = min( $line_total, $item_disc_value );
-                }
+                $disc_amount = 'percent' === $item_disc_type
+                    ? min( $line_total, $line_total * $item_disc_value / 100 )
+                    : min( $line_total, $item_disc_value );
 
                 if ( $disc_amount > 0 ) {
                     $line_item = $order->get_item( $line_item_id );
@@ -507,34 +537,43 @@ class EOP_Orders_Page {
         }
 
         if ( 0 === $valid_items ) {
-            wp_send_json_error( array( 'message' => __( 'Adicione ao menos um produto valido.', EOP_TEXT_DOMAIN ) ) );
+            return new WP_Error(
+                'eop_order_items_required',
+                __( 'Adicione ao menos um produto valido.', EOP_TEXT_DOMAIN )
+            );
         }
 
-        // --- Re-add shipping ---
-        $shipping_value = floatval( $data['shipping'] ?? 0 );
-        $shipping_value = max( 0, $shipping_value );
+        $shipping_value = max( 0, (float) ( $data['shipping'] ?? 0 ) );
         if ( $shipping_value > 0 ) {
+            $selected_shipping_rate = isset( $data['shipping_rate'] ) && is_array( $data['shipping_rate'] ) ? $data['shipping_rate'] : array();
             $shipping_item = new WC_Order_Item_Shipping();
-            $shipping_item->set_method_title( sanitize_text_field( $data['shipping_method'] ?? __( 'Frete', EOP_TEXT_DOMAIN ) ) );
-            $shipping_item->set_method_id( 'flat_rate' );
+            $shipping_item->set_method_title( sanitize_text_field( $selected_shipping_rate['label'] ?? $data['shipping_method'] ?? __( 'Frete', EOP_TEXT_DOMAIN ) ) );
+            $shipping_item->set_method_id( sanitize_text_field( $selected_shipping_rate['id'] ?? 'flat_rate' ) );
             $shipping_item->set_total( $shipping_value );
+
+            if ( ! empty( $selected_shipping_rate['instance_id'] ) ) {
+                $shipping_item->set_instance_id( absint( $selected_shipping_rate['instance_id'] ) );
+            }
+
+            if ( ! empty( $selected_shipping_rate['meta_data'] ) && is_array( $selected_shipping_rate['meta_data'] ) ) {
+                foreach ( $selected_shipping_rate['meta_data'] as $meta_key => $meta_value ) {
+                    if ( is_scalar( $meta_value ) && '' !== (string) $meta_value ) {
+                        $shipping_item->add_meta_data( sanitize_text_field( $meta_key ), sanitize_text_field( (string) $meta_value ) );
+                    }
+                }
+            }
+
             $order->add_item( $shipping_item );
         }
 
-        // --- Re-add discount ---
-        $discount_value = floatval( $data['discount'] ?? 0 );
-        $discount_value = max( 0, $discount_value );
+        $discount_value = max( 0, (float) ( $data['discount'] ?? 0 ) );
         $discount_type  = in_array( $data['discount_type'] ?? 'fixed', array( 'fixed', 'percent' ), true ) ? $data['discount_type'] : 'fixed';
 
         $order->update_meta_data( '_eop_discount_type', $discount_type );
         $order->update_meta_data( '_eop_discount_value', $discount_value );
 
         if ( $discount_value > 0 ) {
-            if ( 'percent' === $discount_type ) {
-                $discount_abs = $items_subtotal * $discount_value / 100;
-            } else {
-                $discount_abs = $discount_value;
-            }
+            $discount_abs = 'percent' === $discount_type ? $items_subtotal * $discount_value / 100 : $discount_value;
             $discount_abs = max( 0, $discount_abs );
 
             if ( $discount_abs > 0 ) {
@@ -546,15 +585,13 @@ class EOP_Orders_Page {
             }
         }
 
-        // --- Update status ---
         $status  = sanitize_text_field( $data['status'] ?? '' );
         $allowed = array( 'completed', 'pending', 'processing', 'on-hold', 'cancelled' );
         if ( in_array( $status, $allowed, true ) ) {
             $order->set_status( $status );
         }
 
-        // --- Notes ---
-        $note = sanitize_textarea_field( $data['note'] ?? '' );
+        $note = sanitize_textarea_field( $data['note'] ?? $data['notes'] ?? '' );
         if ( $note ) {
             $order->add_order_note( $note );
         }
@@ -563,11 +600,11 @@ class EOP_Orders_Page {
         $order->add_order_note( __( 'Pedido atualizado via Expresso Order.', EOP_TEXT_DOMAIN ) );
         $order->save();
 
-        wp_send_json_success( array(
+        return array(
             'order_id'  => $order->get_id(),
             'order_url' => admin_url( 'admin.php?page=eop-pedidos&action=edit&order_id=' . $order->get_id() ),
             'message'   => __( 'Pedido atualizado com sucesso!', EOP_TEXT_DOMAIN ),
-        ) );
+        );
     }
 
     public static function current_user_can_access_order( $order ) {

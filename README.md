@@ -4,7 +4,7 @@ Plugin WordPress/WooCommerce privado da Aireset para operacao comercial interna,
 
 ## Versao atual
 
-`1.2.26`
+`1.2.27`
 
 ## Ownership e licenca
 

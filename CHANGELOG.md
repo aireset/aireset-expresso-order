@@ -2,6 +2,12 @@
 
 Todas as alteracoes relevantes do plugin `Aireset Expresso Order` devem ser registradas aqui.
 
+## 1.2.27 - 2026-06-08
+
+- reconstroi a tela Fluxo de Confirmacao > Documentos em React nativo: repetidor de documentos de assinatura com titulo, tipo (conteudo HTML ou arquivo), corpo, anexo via wp.media (PDF/Word) e textos dos botoes, com insercao de variaveis de placeholder
+- adiciona o endpoint REST `aireset-expresso-order/v1/admin/confirmation-documents` (leitura e gravacao) reaproveitando o sanitizador oficial das configuracoes
+- remove o handoff para o admin legado nessa tela
+
 ## 1.2.26 - 2026-06-08
 
 - adiciona o seletor de produtos bloqueados (multiselect com busca) na tela Confirmacao - Upload e Produtos, reaproveitando o estado de selecao do admin legado

@@ -3,7 +3,7 @@ Contributors: aireset
 Tags: woocommerce, pedido expresso, proposta, fluxo comercial, plugin privado
 Requires at least: 6.0
 Tested up to: 6.7
-Stable tag: 1.2.26
+Stable tag: 1.2.27
 License: Proprietary
 License URI: https://aireset.com.br/termos-de-uso
 

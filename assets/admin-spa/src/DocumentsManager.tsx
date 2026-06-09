@@ -67,6 +67,7 @@ function RichTextEditor({
   onChange: (html: string) => void;
 }) {
   const [placeholderOpen, setPlaceholderOpen] = useState(false);
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
 
   const editor = useEditor({
     extensions: [StarterKit, TextAlign.configure({ types: ['heading', 'paragraph'] })],
@@ -155,24 +156,41 @@ function RichTextEditor({
             </button>
             {placeholderOpen ? (
               <div className="eop-rte__placeholder-menu">
-                {groups.map((group) => (
-                  <div className="eop-rte__placeholder-group" key={group.label}>
-                    <strong>{group.label}</strong>
-                    {group.tokens.map((token) => (
+                {groups.map((group) => {
+                  const expanded = openGroup === group.label;
+
+                  return (
+                    <div className="eop-rte__placeholder-group" key={group.label}>
                       <button
                         type="button"
-                        key={token}
-                        className="eop-rte__placeholder-item"
-                        onClick={() => {
-                          editor.chain().focus().insertContent(token).run();
-                          setPlaceholderOpen(false);
-                        }}
+                        className="eop-rte__placeholder-grouptoggle"
+                        aria-expanded={expanded}
+                        onClick={() => setOpenGroup(expanded ? null : group.label)}
                       >
-                        {token}
+                        <span>{group.label}</span>
+                        <span
+                          className={`dashicons dashicons-arrow-${expanded ? 'up' : 'down'}-alt2`}
+                          aria-hidden="true"
+                        />
                       </button>
-                    ))}
-                  </div>
-                ))}
+                      {expanded
+                        ? group.tokens.map((token) => (
+                            <button
+                              type="button"
+                              key={token}
+                              className="eop-rte__placeholder-item"
+                              onClick={() => {
+                                editor.chain().focus().insertContent(token).run();
+                                setPlaceholderOpen(false);
+                              }}
+                            >
+                              {token}
+                            </button>
+                          ))
+                        : null}
+                    </div>
+                  );
+                })}
               </div>
             ) : null}
           </div>

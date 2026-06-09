@@ -1923,7 +1923,7 @@ class EOP_Post_Confirmation_Flow {
 			<?php endif; ?>
 			<?php if ( 'iframe' === $content_type && '' !== $content ) : ?>
 				<div class="eop-post-flow__document-reader-frame">
-					<iframe src="<?php echo esc_url( $content ); ?>#toolbar=1&navpanes=0&scrollbar=1" title="<?php echo esc_attr( $title ); ?>"></iframe>
+					<iframe src="<?php echo esc_url( $content ); ?>#toolbar=0&navpanes=0&scrollbar=1&view=FitH" title="<?php echo esc_attr( $title ); ?>" loading="lazy"></iframe>
 				</div>
 			<?php elseif ( 'html' === $content_type && '' !== trim( wp_strip_all_tags( $content ) ) ) : ?>
 				<div class="eop-post-flow__document-reader-frame">

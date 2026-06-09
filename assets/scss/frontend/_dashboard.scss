@@ -629,6 +629,36 @@
   margin-top: 4px;
 }
 
+.eop-pdv .eop-order-card__flow-stage-controls {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.eop-pdv .eop-order-card__flow-stage-controls > label {
+  color: var(--eop-primary-strong);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.eop-pdv .eop-order-card__flow-stage-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.eop-pdv .eop-order-card__flow-stage-row .select2-container {
+  align-self: stretch;
+}
+
+.eop-pdv .eop-order-card__flow-stage-row .eop-btn {
+  min-height: 0;
+  white-space: nowrap;
+}
+
 .eop-pdv .eop-field {
   margin-bottom: 16px;
 }
@@ -651,6 +681,7 @@
 .eop-pdv .eop-field input[type="email"],
 .eop-pdv .eop-field input[type="tel"],
 .eop-pdv .eop-field input[type="number"],
+.eop-pdv .eop-field input[type="search"],
 .eop-pdv .eop-field select {
   width: 100%;
   min-height: 54px;

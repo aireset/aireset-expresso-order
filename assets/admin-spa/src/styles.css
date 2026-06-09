@@ -659,10 +659,10 @@ body.eop-admin-react-shell #eop-admin-app {
 
 /* Editor rico TipTap. */
 .eop-rte {
+  position: relative;
   border: 1px solid #c5d3e6;
   border-radius: 12px;
   background: #fff;
-  overflow: hidden;
 }
 
 .eop-rte__toolbar {
@@ -672,6 +672,7 @@ body.eop-admin-react-shell #eop-admin-app {
   gap: 2px;
   padding: 6px 8px;
   border-bottom: 1px solid #e1e8f3;
+  border-radius: 11px 11px 0 0;
   background: #f8fbff;
 }
 
@@ -767,13 +768,13 @@ body.eop-admin-react-shell #eop-admin-app {
   position: absolute;
   right: 0;
   top: calc(100% + 6px);
-  z-index: 50;
+  z-index: 60;
   display: grid;
   gap: 4px;
-  width: 260px;
-  max-height: 320px;
+  width: 280px;
+  max-height: 360px;
   overflow: auto;
-  padding: 8px;
+  padding: 6px;
   border: 1px solid #d9e4f3;
   border-radius: 12px;
   background: #fff;
@@ -785,12 +786,33 @@ body.eop-admin-react-shell #eop-admin-app {
   gap: 2px;
 }
 
-.eop-rte__placeholder-group strong {
-  padding: 6px 8px 2px;
-  font-size: 11px;
+.eop-rte__placeholder-grouptoggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: #f3f6ff;
+  color: #17284a;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #5f6f86;
+  cursor: pointer;
+}
+
+.eop-rte__placeholder-grouptoggle:hover {
+  background: #e7edfb;
+}
+
+.eop-rte__placeholder-grouptoggle .dashicons {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
 }
 
 .eop-rte__placeholder-item {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { BootstrapPayload, OrderSummary, OrdersPayload } from './app/types';
 import { adminApi, getAdminSpaConfig, getInlineBootstrap } from './app/api';
 import NewOrderForm from './NewOrderForm';
+import Select2 from './Select2';
 
 function formatCurrency(value: number, currency: string): string {
   try {
@@ -102,16 +103,22 @@ function OrderCard({
           {controls?.can_update && controls.options && controls.options.length ? (
             <div className="eop-order-card__flow-stage-controls">
               <label>Etapa do fluxo</label>
-              <select value={stage} onChange={(event) => setStage(event.target.value)}>
-                {controls.options.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <button type="button" className="eop-btn" onClick={() => void updateStage()} disabled={updating}>
-                {updating ? '...' : 'Atualizar etapa'}
-              </button>
+              <div className="eop-order-card__flow-stage-row">
+                <Select2
+                  value={stage}
+                  options={controls.options.map((option) => ({ value: option.value, label: option.label }))}
+                  onChange={setStage}
+                  ariaLabel="Etapa do fluxo"
+                />
+                <button
+                  type="button"
+                  className="eop-btn eop-btn-primary"
+                  onClick={() => void updateStage()}
+                  disabled={updating}
+                >
+                  {updating ? '...' : 'Atualizar etapa'}
+                </button>
+              </div>
             </div>
           ) : null}
         </div>

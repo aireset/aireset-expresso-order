@@ -657,6 +657,36 @@ body.eop-admin-react-shell #eop-admin-app {
   margin-top: 14px;
 }
 
+.eop-doc-editor {
+  width: 100%;
+  min-height: 220px;
+}
+
+.eop-react-doc__footer {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #eef1f7;
+}
+
+.eop-react-doc__footer small {
+  color: #5f6f86;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+/* Editor TinyMCE (wp.editor) dentro do shell React. */
+.eop-react-block .wp-editor-wrap,
+.eop-react-block .wp-editor-container {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.eop-react-block .mce-tinymce {
+  box-shadow: none;
+}
+
 /* Telas de settings: campos sem o cartao de fundo azul, so o input. */
 .eop-react-form--settings .eop-react-form__field {
   background: transparent;

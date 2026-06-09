@@ -68,6 +68,7 @@ function RichTextEditor({
 }) {
   const [placeholderOpen, setPlaceholderOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const [mode, setMode] = useState<'visual' | 'code'>('visual');
 
   const editor = useEditor({
     extensions: [StarterKit, TextAlign.configure({ types: ['heading', 'paragraph'] })],
@@ -78,6 +79,22 @@ function RichTextEditor({
 
   if (!editor) {
     return null;
+  }
+
+  function switchMode(next: 'visual' | 'code') {
+    if (next === mode || !editor) {
+      return;
+    }
+
+    if (next === 'code') {
+      // Captura o HTML atual do editor visual antes de mostrar o codigo.
+      onChange(editor.getHTML());
+    } else {
+      // Carrega o HTML (possivelmente editado a mao) de volta no editor visual.
+      editor.commands.setContent(value || '');
+    }
+
+    setMode(next);
   }
 
   const groups = groupPlaceholders(tokens);
@@ -105,6 +122,24 @@ function RichTextEditor({
 
   return (
     <div className="eop-rte">
+      <div className="eop-rte__tabs">
+        <button
+          type="button"
+          className={`eop-rte__tab ${mode === 'visual' ? 'is-active' : ''}`}
+          onClick={() => switchMode('visual')}
+        >
+          Visual
+        </button>
+        <button
+          type="button"
+          className={`eop-rte__tab ${mode === 'code' ? 'is-active' : ''}`}
+          onClick={() => switchMode('code')}
+        >
+          Codigo
+        </button>
+      </div>
+
+      {mode === 'visual' ? (
       <div className="eop-rte__toolbar">
         <select
           className="eop-rte__format"
@@ -196,8 +231,20 @@ function RichTextEditor({
           </div>
         ) : null}
       </div>
+      ) : null}
 
-      <EditorContent editor={editor} className="eop-rte__content" />
+      <div className={`eop-rte__content-wrap ${mode === 'code' ? 'is-hidden' : ''}`}>
+        <EditorContent editor={editor} className="eop-rte__content" />
+      </div>
+
+      {mode === 'code' ? (
+        <textarea
+          className="eop-rte__code"
+          value={value}
+          spellCheck={false}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      ) : null}
     </div>
   );
 }

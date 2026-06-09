@@ -657,9 +657,156 @@ body.eop-admin-react-shell #eop-admin-app {
   margin-top: 14px;
 }
 
-.eop-doc-editor {
-  width: 100%;
+/* Editor rico TipTap. */
+.eop-rte {
+  border: 1px solid #c5d3e6;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.eop-rte__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #e1e8f3;
+  background: #f8fbff;
+}
+
+.eop-rte__format {
+  height: 30px;
+  margin-right: 4px;
+  padding: 0 6px;
+  border: 1px solid #c5d3e6;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+}
+
+.eop-rte__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #42556f;
+  cursor: pointer;
+}
+
+.eop-rte__btn .dashicons {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.eop-rte__btn:hover {
+  background: #eef3fb;
+}
+
+.eop-rte__btn.is-active {
+  background: #17284a;
+  color: #fff;
+}
+
+.eop-rte__sep {
+  width: 1px;
+  height: 20px;
+  margin: 0 4px;
+  background: #d9e2f1;
+}
+
+.eop-rte__content {
+  padding: 6px 14px;
+}
+
+.eop-rte__content .ProseMirror {
   min-height: 220px;
+  outline: none;
+  line-height: 1.6;
+}
+
+.eop-rte__content .ProseMirror p {
+  margin: 0 0 10px;
+}
+
+.eop-rte__content .ProseMirror blockquote {
+  margin: 0 0 10px;
+  padding-left: 12px;
+  border-left: 3px solid #c5d3e6;
+  color: #42556f;
+}
+
+.eop-rte__placeholder {
+  position: relative;
+  margin-left: auto;
+}
+
+.eop-rte__placeholder-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid #c5d3e6;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+  color: #17284a;
+  cursor: pointer;
+}
+
+.eop-rte__placeholder-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 50;
+  display: grid;
+  gap: 4px;
+  width: 260px;
+  max-height: 320px;
+  overflow: auto;
+  padding: 8px;
+  border: 1px solid #d9e4f3;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 18px 42px rgba(0, 3, 75, 0.2);
+}
+
+.eop-rte__placeholder-group {
+  display: grid;
+  gap: 2px;
+}
+
+.eop-rte__placeholder-group strong {
+  padding: 6px 8px 2px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5f6f86;
+}
+
+.eop-rte__placeholder-item {
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  color: #122236;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.eop-rte__placeholder-item:hover {
+  background: #eef3fb;
 }
 
 .eop-react-doc__footer {
@@ -674,17 +821,6 @@ body.eop-admin-react-shell #eop-admin-app {
   color: #5f6f86;
   line-height: 1.5;
   word-break: break-word;
-}
-
-/* Editor TinyMCE (wp.editor) dentro do shell React. */
-.eop-react-block .wp-editor-wrap,
-.eop-react-block .wp-editor-container {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.eop-react-block .mce-tinymce {
-  box-shadow: none;
 }
 
 /* Telas de settings: campos sem o cartao de fundo azul, so o input. */

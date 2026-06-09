@@ -88,11 +88,6 @@ class EOP_Admin_SPA {
 		wp_enqueue_style( 'eop-coloris', EOP_PLUGIN_URL . 'assets/css/coloris.min.css', array(), EOP_VERSION );
 		wp_enqueue_script( 'eop-coloris', EOP_PLUGIN_URL . 'assets/js/coloris.min.js', array(), EOP_VERSION, true );
 
-		// Editor TinyMCE (wp.editor) para o corpo dos documentos do contrato.
-		if ( function_exists( 'wp_enqueue_editor' ) ) {
-			wp_enqueue_editor();
-		}
-
 		$asset_base = trailingslashit( EOP_PLUGIN_URL . 'assets/admin-spa/dist' );
 		$file_path  = EOP_PLUGIN_DIR . 'assets/admin-spa/dist/' . ltrim( (string) $entry['file'], '/\\' );
 

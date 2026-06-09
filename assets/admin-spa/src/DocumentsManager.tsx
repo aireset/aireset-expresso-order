@@ -1,4 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { EditorContent, useEditor } from '@tiptap/react';
+import type { Editor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import TextAlign from '@tiptap/extension-text-align';
 import { adminApi } from './app/api';
 import type { ConfirmationDocument } from './app/types';
 
@@ -26,113 +30,157 @@ function groupPlaceholders(tokens: string[]): PlaceholderGroup[] {
   ].filter((group) => group.tokens.length > 0);
 }
 
-// Editor rico (TinyMCE via wp.editor), mesma base do admin legado. Integra o
-// componente nao-controlado do TinyMCE com o estado React: sincroniza o conteudo
-// nos eventos do editor e remove a instancia ao desmontar.
+function ToolbarButton({
+  icon,
+  title,
+  active,
+  onClick,
+}: {
+  icon: string;
+  title: string;
+  active?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={`eop-rte__btn ${active ? 'is-active' : ''}`}
+      title={title}
+      aria-label={title}
+      onMouseDown={(event) => event.preventDefault()}
+      onClick={onClick}
+    >
+      <span className={`dashicons dashicons-${icon}`} aria-hidden="true" />
+    </button>
+  );
+}
+
+// Editor rico nativo de React (TipTap / ProseMirror). Produz HTML, sincroniza com
+// o estado via onUpdate e tem menu de placeholder categorizado como no legado.
 function RichTextEditor({
-  id,
   value,
   tokens,
   onChange,
 }: {
-  id: string;
   value: string;
   tokens: string[];
   onChange: (html: string) => void;
 }) {
-  const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
-  const initialValueRef = useRef(value);
+  const [placeholderOpen, setPlaceholderOpen] = useState(false);
 
-  useEffect(() => {
-    const wp = (window as unknown as { wp?: { editor?: { initialize?: (id: string, cfg: unknown) => void; remove?: (id: string) => void } } }).wp;
+  const editor = useEditor({
+    extensions: [StarterKit, TextAlign.configure({ types: ['heading', 'paragraph'] })],
+    content: value || '',
+    immediatelyRender: false,
+    onUpdate: ({ editor: current }) => onChange(current.getHTML()),
+  });
 
-    if (!wp?.editor || typeof wp.editor.initialize !== 'function') {
-      return undefined;
+  if (!editor) {
+    return null;
+  }
+
+  const groups = groupPlaceholders(tokens);
+  const blockValue = editor.isActive('heading', { level: 2 })
+    ? 'h2'
+    : editor.isActive('heading', { level: 3 })
+    ? 'h3'
+    : 'p';
+
+  function applyLink(current: Editor) {
+    const previous = (current.getAttributes('link').href as string | undefined) ?? '';
+    const url = window.prompt('URL do link:', previous || 'https://');
+
+    if (url === null) {
+      return;
     }
 
-    const groups = groupPlaceholders(tokens);
+    if (url === '') {
+      current.chain().focus().unsetLink().run();
+      return;
+    }
 
-    wp.editor.initialize(id, {
-      tinymce: {
-        wpautop: true,
-        menubar: 'edit insert view format',
-        branding: false,
-        elementpath: false,
-        block_formats: 'Paragrafo=p;Titulo 2=h2;Titulo 3=h3;Titulo 4=h4;Citacao=blockquote;Pre-formatado=pre',
-        toolbar1:
-          'formatselect,bold,italic,underline,strikethrough,|,forecolor,backcolor,|,alignleft,aligncenter,alignright,alignjustify,|,link,unlink,|,eopplaceholders',
-        toolbar2: 'bullist,numlist,outdent,indent,blockquote,hr,|,pastetext,removeformat,charmap,|,undo,redo,fullscreen',
-        height: 360,
-        setup: (editor: {
-          on: (events: string, handler: () => void) => void;
-          getContent: () => string;
-          insertContent: (content: string) => void;
-          ui?: { registry?: { addMenuButton?: (id: string, cfg: unknown) => void } };
-          addButton?: (id: string, cfg: unknown) => void;
-        }) => {
-          editor.on('change keyup undo redo SetContent', () => onChangeRef.current(editor.getContent()));
-
-          if (editor.ui?.registry?.addMenuButton) {
-            editor.ui.registry.addMenuButton('eopplaceholders', {
-              text: 'Inserir placeholder',
-              fetch: (callback: (items: unknown[]) => void) => {
-                callback(
-                  groups.map((group) => ({
-                    type: 'nestedmenuitem',
-                    text: group.label,
-                    getSubmenuItems: () =>
-                      group.tokens.map((token) => ({
-                        type: 'menuitem',
-                        text: token,
-                        onAction: () => editor.insertContent(token),
-                      })),
-                  }))
-                );
-              },
-            });
-          } else if (typeof editor.addButton === 'function') {
-            editor.addButton('eopplaceholders', {
-              type: 'menubutton',
-              text: 'Inserir placeholder',
-              icon: false,
-              menu: groups.map((group) => ({
-                text: group.label,
-                menu: group.tokens.map((token) => ({
-                  text: token,
-                  onclick: () => editor.insertContent(token),
-                })),
-              })),
-            });
-          }
-        },
-      },
-      quicktags: { buttons: 'strong,em,link,block,ul,ol,li,code,close' },
-      mediaButtons: false,
-    });
-
-    return () => {
-      const tiny = (window as unknown as { tinymce?: { get?: (id: string) => { getContent: () => string } | null } }).tinymce;
-      const editor = tiny?.get?.(id);
-
-      if (editor) {
-        onChangeRef.current(editor.getContent());
-      }
-
-      if (wp.editor && typeof wp.editor.remove === 'function') {
-        wp.editor.remove(id);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+    current.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  }
 
   return (
-    <textarea
-      id={id}
-      className="eop-doc-editor"
-      defaultValue={initialValueRef.current}
-      onChange={(event) => onChangeRef.current(event.target.value)}
-    />
+    <div className="eop-rte">
+      <div className="eop-rte__toolbar">
+        <select
+          className="eop-rte__format"
+          value={blockValue}
+          onChange={(event) => {
+            const next = event.target.value;
+            if (next === 'p') {
+              editor.chain().focus().setParagraph().run();
+            } else {
+              editor
+                .chain()
+                .focus()
+                .toggleHeading({ level: next === 'h2' ? 2 : 3 })
+                .run();
+            }
+          }}
+        >
+          <option value="p">Paragrafo</option>
+          <option value="h2">Titulo 2</option>
+          <option value="h3">Titulo 3</option>
+        </select>
+
+        <ToolbarButton icon="editor-bold" title="Negrito" active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()} />
+        <ToolbarButton icon="editor-italic" title="Italico" active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()} />
+        <ToolbarButton icon="editor-underline" title="Sublinhado" active={editor.isActive('underline')} onClick={() => editor.chain().focus().toggleUnderline().run()} />
+        <ToolbarButton icon="editor-strikethrough" title="Tachado" active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()} />
+        <span className="eop-rte__sep" />
+        <ToolbarButton icon="editor-ul" title="Lista" active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()} />
+        <ToolbarButton icon="editor-ol" title="Lista numerada" active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()} />
+        <ToolbarButton icon="editor-quote" title="Citacao" active={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()} />
+        <span className="eop-rte__sep" />
+        <ToolbarButton icon="editor-alignleft" title="Esquerda" active={editor.isActive({ textAlign: 'left' })} onClick={() => editor.chain().focus().setTextAlign('left').run()} />
+        <ToolbarButton icon="editor-aligncenter" title="Centro" active={editor.isActive({ textAlign: 'center' })} onClick={() => editor.chain().focus().setTextAlign('center').run()} />
+        <ToolbarButton icon="editor-alignright" title="Direita" active={editor.isActive({ textAlign: 'right' })} onClick={() => editor.chain().focus().setTextAlign('right').run()} />
+        <span className="eop-rte__sep" />
+        <ToolbarButton icon="admin-links" title="Link" active={editor.isActive('link')} onClick={() => applyLink(editor)} />
+        <ToolbarButton icon="undo" title="Desfazer" onClick={() => editor.chain().focus().undo().run()} />
+        <ToolbarButton icon="redo" title="Refazer" onClick={() => editor.chain().focus().redo().run()} />
+
+        {groups.length ? (
+          <div className="eop-rte__placeholder">
+            <button
+              type="button"
+              className="eop-rte__placeholder-toggle"
+              onClick={() => setPlaceholderOpen((open) => !open)}
+            >
+              Inserir placeholder
+              <span className="dashicons dashicons-arrow-down-alt2" aria-hidden="true" />
+            </button>
+            {placeholderOpen ? (
+              <div className="eop-rte__placeholder-menu">
+                {groups.map((group) => (
+                  <div className="eop-rte__placeholder-group" key={group.label}>
+                    <strong>{group.label}</strong>
+                    {group.tokens.map((token) => (
+                      <button
+                        type="button"
+                        key={token}
+                        className="eop-rte__placeholder-item"
+                        onClick={() => {
+                          editor.chain().focus().insertContent(token).run();
+                          setPlaceholderOpen(false);
+                        }}
+                      >
+                        {token}
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+
+      <EditorContent editor={editor} className="eop-rte__content" />
+    </div>
   );
 }
 
@@ -355,7 +403,6 @@ export default function DocumentsManager() {
                         <span className="eop-react-field-label">Conteudo do documento</span>
                         {isOpen ? (
                           <RichTextEditor
-                            id={`eop-doc-editor-${index}`}
                             value={document.body}
                             tokens={tokens}
                             onChange={(html) => patchDocument(index, { body: html })}

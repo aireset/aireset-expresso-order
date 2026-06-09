@@ -11,6 +11,12 @@
     "baseline:admin-performance": "node scripts/performance-admin-baseline.mjs"
   },
   "dependencies": {
+    "@tiptap/extension-link": "^3.26.0",
+    "@tiptap/extension-text-align": "^3.26.0",
+    "@tiptap/extension-underline": "^3.26.0",
+    "@tiptap/pm": "^3.26.0",
+    "@tiptap/react": "^3.26.0",
+    "@tiptap/starter-kit": "^3.26.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

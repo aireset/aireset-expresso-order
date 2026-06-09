@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type {
   BootstrapPayload,
@@ -14,7 +14,8 @@ import type {
   ShippingPackage,
 } from './app/types';
 import { adminApi, getAdminSpaConfig, getInlineBootstrap } from './app/api';
-import DocumentsManager from './DocumentsManager';
+
+const DocumentsManager = lazy(() => import('./DocumentsManager'));
 import {
   labels,
   navGroups,
@@ -1358,7 +1359,18 @@ function App() {
           {viewError ? <p className="eop-react-error">{viewError}</p> : null}
 
           {!viewLoading && !viewError && selectedView === 'settings-confirmation-documents' ? (
-            <DocumentsManager />
+            <Suspense
+              fallback={
+                <div className="eop-react-block">
+                  <div className="eop-react-loading" role="status" aria-live="polite">
+                    <span className="eop-react-loading__spinner" aria-hidden="true" />
+                    <span>Carregando editor...</span>
+                  </div>
+                </div>
+              }
+            >
+              <DocumentsManager />
+            </Suspense>
           ) : null}
 
           {!viewLoading && !viewError && selectedView === 'new-order' ? (

@@ -724,13 +724,19 @@ body.eop-admin-react-shell #eop-admin-app {
 }
 
 .eop-rte__content {
+  height: 300px;
+  min-height: 160px;
+  max-height: 900px;
   padding: 6px 14px;
+  overflow: auto;
+  resize: vertical;
 }
 
 .eop-rte__content .ProseMirror {
-  min-height: 220px;
+  min-height: 100%;
   outline: none;
   line-height: 1.6;
+  box-sizing: border-box;
 }
 
 .eop-rte__content .ProseMirror p {

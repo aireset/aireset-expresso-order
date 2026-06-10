@@ -119,6 +119,7 @@ function NewOrderForm({ orderId, onExit }: { orderId?: number; onExit?: () => vo
   const [paymentOpen, setPaymentOpen] = useState<boolean>(false);
   const [shippingOpen, setShippingOpen] = useState<boolean>(false);
   const [cepStatus, setCepStatus] = useState<string>('');
+  const [copied, setCopied] = useState<boolean>(false);
 
   useEffect(() => {
     if (!isEdit || !orderId) {
@@ -361,15 +362,46 @@ function NewOrderForm({ orderId, onExit }: { orderId?: number; onExit?: () => vo
     setCustomerMessage('');
   }
 
+  async function copyLink() {
+    if (!created?.publicUrl) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(created.publicUrl);
+    } catch {
+      const el = document.getElementById('eop-created-link') as HTMLInputElement | null;
+      el?.select();
+      document.execCommand?.('copy');
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   if (created) {
+    const waText = encodeURIComponent(`Ola! Segue sua proposta: ${created.publicUrl}`);
     return (
-      <div className="eop-card">
+      <div className="eop-card eop-order-success">
         <h2>Pedido criado!</h2>
-        <p>Pedido #{created.id} criado com sucesso.</p>
+        <p>Pedido #{created.id}. Envie o link da proposta para o cliente.</p>
+
+        {created.publicUrl ? (
+          <div className="eop-copy-row">
+            <input id="eop-created-link" type="text" readOnly value={created.publicUrl} onFocus={(e) => e.currentTarget.select()} />
+            <button type="button" className="eop-btn" onClick={() => void copyLink()}>
+              {copied ? 'Copiado!' : 'Copiar'}
+            </button>
+          </div>
+        ) : null}
+
         <div className="eop-order-card__actions">
           {created.publicUrl ? (
-            <a className="eop-btn eop-btn-primary" href={created.publicUrl} target="_blank" rel="noreferrer">
-              Link do cliente
+            <a className="eop-btn eop-btn-primary" href={`https://wa.me/?text=${waText}`} target="_blank" rel="noreferrer">
+              Enviar no WhatsApp
+            </a>
+          ) : null}
+          {created.publicUrl ? (
+            <a className="eop-btn" href={created.publicUrl} target="_blank" rel="noreferrer">
+              Abrir link
             </a>
           ) : null}
           {created.pdfUrl ? (

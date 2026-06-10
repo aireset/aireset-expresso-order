@@ -659,6 +659,32 @@
   white-space: nowrap;
 }
 
+.eop-pdv .eop-order-success h2 {
+  margin: 0 0 6px;
+}
+
+.eop-pdv .eop-copy-row {
+  display: flex;
+  gap: 8px;
+  margin: 14px 0 18px;
+}
+
+.eop-pdv .eop-copy-row input {
+  flex: 1;
+  min-width: 0;
+  min-height: 50px;
+  padding: 0 16px;
+  border: 1px solid var(--eop-border);
+  border-radius: var(--eop-radius-md);
+  background: #fff;
+  color: var(--eop-text);
+  font-size: 15px;
+}
+
+.eop-pdv .eop-copy-row .eop-btn {
+  white-space: nowrap;
+}
+
 .eop-pdv .eop-field {
   margin-bottom: 16px;
 }

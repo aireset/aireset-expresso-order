@@ -34,14 +34,16 @@ function OrderCard({
   const controls = flow?.stage_controls;
   const [stage, setStage] = useState<string>(controls?.current || '');
   const [updating, setUpdating] = useState<boolean>(false);
+  const [stageError, setStageError] = useState<string>('');
 
   async function updateStage() {
     setUpdating(true);
+    setStageError('');
     try {
       await adminApi.updateOrderStage(order.id, stage);
       onRefresh();
-    } catch {
-      /* feedback simples por enquanto */
+    } catch (error) {
+      setStageError(error instanceof Error ? error.message : 'Nao foi possivel atualizar a etapa.');
     } finally {
       setUpdating(false);
     }
@@ -119,6 +121,7 @@ function OrderCard({
                   {updating ? '...' : 'Atualizar etapa'}
                 </button>
               </div>
+              {stageError ? <p className="eop-notice eop-notice-error">{stageError}</p> : null}
             </div>
           ) : null}
         </div>

@@ -1143,7 +1143,7 @@ class EOP_Post_Confirmation_Flow {
 						<?php self::render_completion_panel( $order, $settings, $state, $line_items, $pdf_url ); ?>
 					<?php endif; ?>
 				</div>
-				<?php if ( ! $is_final_step_stage ) : ?>
+				<?php if ( ! $is_final_step_stage && ! $is_completed_stage ) : ?>
 					<aside class="eop-post-flow__sidebar">
 						<?php if ( $is_contract_stage ) : ?>
 							<?php self::render_contract_summary_panel( $order, $total_rows, $pdf_url ); ?>

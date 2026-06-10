@@ -1946,91 +1946,61 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
 .eop-post-flow textarea {
   font: inherit;
 }
-.eop-post-flow--stage-contract {
-  position: relative;
-  overflow: hidden;
-  margin-top: 0;
-  padding: 0;
-  border-radius: 34px;
-  background: var(--eop-post-flow-panel-bg, #ffffff);
-  box-shadow: 0 28px 64px rgba(15, 27, 53, 0.12);
+.eop-post-flow--stage-contract .eop-post-flow__contract-header, .eop-post-flow--stage-completed .eop-post-flow__contract-header, .eop-post-flow--final-step .eop-post-flow__contract-header {
+  margin-bottom: 22px;
 }
-.eop-post-flow--stage-contract > * {
-  position: relative;
-  z-index: 1;
+.eop-post-flow--stage-contract .eop-post-flow__main, .eop-post-flow--stage-completed .eop-post-flow__main, .eop-post-flow--final-step .eop-post-flow__main {
+  border: 1px solid rgba(15, 27, 53, 0.08);
+  border-radius: 28px;
+  background: var(--eop-post-flow-panel-bg, #ffffff);
+  box-shadow: 0 16px 36px rgba(15, 27, 53, 0.06);
+  padding: 26px;
+  gap: 18px;
+}
+.eop-post-flow--stage-contract .eop-post-flow__document-reader,
+.eop-post-flow--stage-contract .eop-post-flow__stage-intro,
+.eop-post-flow--stage-contract .eop-post-flow__final-step-card,
+.eop-post-flow--stage-contract .eop-post-flow__acceptance-card, .eop-post-flow--stage-completed .eop-post-flow__document-reader,
+.eop-post-flow--stage-completed .eop-post-flow__stage-intro,
+.eop-post-flow--stage-completed .eop-post-flow__final-step-card,
+.eop-post-flow--stage-completed .eop-post-flow__acceptance-card, .eop-post-flow--final-step .eop-post-flow__document-reader,
+.eop-post-flow--final-step .eop-post-flow__stage-intro,
+.eop-post-flow--final-step .eop-post-flow__final-step-card,
+.eop-post-flow--final-step .eop-post-flow__acceptance-card {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  border-radius: 0;
+}
+.eop-post-flow--stage-contract .eop-post-flow__acceptance-card, .eop-post-flow--stage-completed .eop-post-flow__acceptance-card, .eop-post-flow--final-step .eop-post-flow__acceptance-card {
+  margin-top: 6px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(15, 27, 53, 0.08);
 }
 .eop-post-flow--stage-contract .eop-post-flow__layout {
   grid-template-columns: minmax(0, 1.22fr) minmax(250px, 0.78fr);
-  gap: 28px;
-  padding: 10px 6px 6px;
+  gap: 22px;
+  align-items: start;
 }
 .eop-post-flow--stage-contract .eop-post-flow__sidebar {
   position: static;
 }
-.eop-post-flow--stage-contract .eop-post-flow__stage-intro,
-.eop-post-flow--stage-contract .eop-post-flow__contract,
-.eop-post-flow--stage-contract .eop-post-flow__acceptance-card,
-.eop-post-flow--stage-contract .eop-post-flow__panel,
-.eop-post-flow--stage-contract .eop-post-flow__document-reader {
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-.eop-post-flow--stage-contract .eop-post-flow__stage-intro {
-  padding: 0 0 6px;
-  background: transparent;
-}
-.eop-post-flow--stage-contract .eop-post-flow__document-reader {
-  gap: 16px;
-  padding: 0;
-}
-.eop-post-flow--stage-contract .eop-post-flow__document-reader-head {
-  padding: 14px 2px 0;
-}
-.eop-post-flow--stage-contract .eop-post-flow__document-reader-frame {
-  border-radius: 30px;
-}
-.eop-post-flow--stage-contract .eop-post-flow__acceptance-card {
-  padding-top: 20px;
-  border-top: 1px solid rgba(15, 27, 53, 0.08);
-}
-.eop-post-flow--stage-contract .eop-post-flow__panel {
-  padding: 8px 0 0 28px;
-  border-left: 1px solid rgba(15, 27, 53, 0.08);
-}
-.eop-post-flow--final-step {
-  padding: 0;
-}
-.eop-post-flow--final-step .eop-post-flow__layout {
+.eop-post-flow--final-step .eop-post-flow__layout, .eop-post-flow--stage-completed .eop-post-flow__layout {
   grid-template-columns: minmax(0, 1fr);
-  gap: 0;
-  padding: 0 18px 18px;
-  margin-top: 0;
+  gap: 22px;
 }
-.eop-post-flow--final-step .eop-post-flow__sidebar {
+.eop-post-flow--final-step .eop-post-flow__sidebar, .eop-post-flow--stage-completed .eop-post-flow__sidebar {
   display: none;
 }
-.eop-post-flow--final-step .eop-post-flow__main {
-  gap: 18px;
+.eop-post-flow--final-step .eop-post-flow__main, .eop-post-flow--stage-completed .eop-post-flow__main {
+  gap: 22px;
 }
-.eop-post-flow--final-step .eop-post-flow__contract-header {
-  padding: 20px 20px 24px;
-  background: var(--eop-post-flow-hero-bg, linear-gradient(135deg, #00034b 0%, #243553 100%));
-}
-.eop-post-flow--final-step .eop-post-flow__contract-header .eop-post-flow__contract-header-main {
+.eop-post-flow--final-step .eop-post-flow__contract-header .eop-post-flow__contract-header-main, .eop-post-flow--stage-completed .eop-post-flow__contract-header .eop-post-flow__contract-header-main {
   display: flex;
   align-items: flex-start;
   gap: 20px;
   min-width: 0;
-}
-.eop-post-flow--final-step .eop-post-flow__final-step-card {
-  margin-top: 0;
-  padding: 0 14px 14px;
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
 }
 .eop-post-flow .eop-notice {
   padding: 14px 18px;

@@ -107,98 +107,58 @@
     font: inherit;
   }
 
-  &--stage-contract {
-    position: relative;
-    overflow: hidden;
-    margin-top: 0;
-    padding: 0;
-    border-radius: 34px;
-    background: var(--eop-post-flow-panel-bg, #ffffff);
-    box-shadow: 0 28px 64px rgba(15, 27, 53, 0.12);
-
-    // &::before {
-    //   content: "";
-    //   position: absolute;
-    //   inset: 0 0 auto;
-    //   height: 154px;
-    //   border-radius: 28px 28px 0 0;
-    //   background: var(--eop-post-flow-hero-bg, linear-gradient(135deg, #00034b 0%, #243553 100%));
-    // }
-
-    // &::after {
-    //   content: "";
-    //   position: absolute;
-    //   top: -80px;
-    //   right: -30px;
-    //   width: 260px;
-    //   height: 260px;
-    //   border-radius: 50%;
-    //   background: radial-gradient(circle, var(--eop-post-flow-accent-glow, rgba(215, 138, 47, .28)) 0%, transparent 70%);
-    // }
-
-    > * {
-      position: relative;
-      z-index: 1;
+  // Padrao unificado (igual a proposta): hero navy flutuante separado +
+  // blocos de conteudo brancos a parte, sobre o fundo claro.
+  &--stage-contract,
+  &--stage-completed,
+  &--final-step {
+    .eop-post-flow__contract-header {
+      margin-bottom: 22px;
     }
 
+    // Conteudo principal = um card branco (igual a proposta).
+    .eop-post-flow__main {
+      @include flow-card-shell;
+      padding: 26px;
+      gap: 18px;
+    }
+
+    // Achata cards aninhados dentro do card principal.
+    .eop-post-flow__document-reader,
+    .eop-post-flow__stage-intro,
+    .eop-post-flow__final-step-card,
+    .eop-post-flow__acceptance-card {
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      padding: 0;
+      border-radius: 0;
+    }
+
+    .eop-post-flow__acceptance-card {
+      margin-top: 6px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(15, 27, 53, 0.08);
+    }
+  }
+
+  &--stage-contract {
     .eop-post-flow__layout {
       grid-template-columns: minmax(0, 1.22fr) minmax(250px, 0.78fr);
-      gap: 28px;
-      padding: 10px 6px 6px;
+      gap: 22px;
+      align-items: start;
     }
 
     .eop-post-flow__sidebar {
       position: static;
     }
-
-    .eop-post-flow__stage-intro,
-    .eop-post-flow__contract,
-    .eop-post-flow__acceptance-card,
-    .eop-post-flow__panel,
-    .eop-post-flow__document-reader {
-      border: none;
-      border-radius: 0;
-      background: transparent;
-      box-shadow: none;
-    }
-
-    .eop-post-flow__stage-intro {
-      padding: 0 0 6px;
-      background: transparent;
-    }
-
-    .eop-post-flow__document-reader {
-      gap: 16px;
-      padding: 0;
-    }
-
-    .eop-post-flow__document-reader-head {
-      padding: 14px 2px 0;
-    }
-
-    .eop-post-flow__document-reader-frame {
-      border-radius: 30px;
-    }
-
-    .eop-post-flow__acceptance-card {
-      padding-top: 20px;
-      border-top: 1px solid rgba(15, 27, 53, 0.08);
-    }
-
-    .eop-post-flow__panel {
-      padding: 8px 0 0 28px;
-      border-left: 1px solid rgba(15, 27, 53, 0.08);
-    }
   }
 
-  &--final-step {
-    padding: 0;
-
+  &--final-step,
+  &--stage-completed {
     .eop-post-flow__layout {
       grid-template-columns: minmax(0, 1fr);
-      gap: 0;
-      padding: 0 18px 18px;
-      margin-top: 0;
+      gap: 22px;
     }
 
     .eop-post-flow__sidebar {
@@ -206,31 +166,14 @@
     }
 
     .eop-post-flow__main {
-      gap: 18px;
+      gap: 22px;
     }
 
-    .eop-post-flow__contract-header {
-      padding: 20px 20px 24px;
-      background: var(
-        --eop-post-flow-hero-bg,
-        linear-gradient(135deg, #00034b 0%, #243553 100%)
-      );
-
-      .eop-post-flow__contract-header-main {
-        display: flex;
-        align-items: flex-start;
-        gap: 20px;
-        min-width: 0;
-      }
-    }
-
-    .eop-post-flow__final-step-card {
-      margin-top: 0;
-      padding: 0 14px 14px;
-      border: none;
-      border-radius: 0;
-      background: transparent;
-      box-shadow: none;
+    .eop-post-flow__contract-header .eop-post-flow__contract-header-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      min-width: 0;
     }
   }
 

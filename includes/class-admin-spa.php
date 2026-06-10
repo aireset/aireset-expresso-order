@@ -119,6 +119,17 @@ class EOP_Admin_SPA {
 				);
 			}
 		}
+
+		// Reaproveita os estilos legados dos componentes operacionais (Novo pedido /
+		// Pedidos) renderizados pelos componentes React (.eop-pdv-grid, .eop-card,
+		// .eop-accordion, .eop-totals, .eop-shipping-*, etc.) que vivem no admin.css.
+		$admin_css_path = EOP_PLUGIN_DIR . 'assets/css/admin.css';
+		wp_enqueue_style(
+			'eop-admin-spa-legacy',
+			EOP_PLUGIN_URL . 'assets/css/admin.css',
+			array(),
+			file_exists( $admin_css_path ) ? (string) filemtime( $admin_css_path ) : EOP_VERSION
+		);
 	}
 
 	public static function filter_script_loader_tag( $tag, $handle, $src ) {

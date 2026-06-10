@@ -345,8 +345,11 @@ function App() {
   const [bootstrap, setBootstrap] = useState<BootstrapPayload | null>(() => getInlineBootstrap());
   const [error, setError] = useState<string>('');
   const [selectedView, setSelectedView] = useState<string>(getAdminSpaConfig()?.initial_view || 'new-order');
-  // Modo foco controlado pelo usuario (como no admin legado): esconde a interface
-  // do WordPress sob demanda. Comeca desligado — nunca forcamos esconder o menu.
+  // Toggles de chrome controlados pelo usuario (como no admin legado): recolher a
+  // sidebar do plugin (vira faixa de icones com fly-in, estilizado pelo
+  // admin-flyinmenu.css) e o "modo foco" que esconde a interface do WordPress.
+  // Ambos comecam desligados — nunca forcamos esconder o menu do WP.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [focusMode, setFocusMode] = useState<boolean>(false);
 
   useEffect(() => {
@@ -354,11 +357,13 @@ function App() {
     const html = document.documentElement;
     body.classList.toggle('is-plugin-fullscreen', focusMode);
     html.classList.toggle('eop-admin-spa-fullscreen', focusMode);
+    html.classList.toggle('eop-admin-sidebar-collapsed', sidebarCollapsed);
     return () => {
       body.classList.remove('is-plugin-fullscreen');
       html.classList.remove('eop-admin-spa-fullscreen');
+      html.classList.remove('eop-admin-sidebar-collapsed');
     };
-  }, [focusMode]);
+  }, [focusMode, sidebarCollapsed]);
   const [viewLoading, setViewLoading] = useState<boolean>(false);
   const [viewError, setViewError] = useState<string>('');
   const [settingsPayload, setSettingsPayload] = useState<SettingsPayload | null>(null);
@@ -1259,13 +1264,23 @@ function App() {
   }
 
   return (
-    <div className="wrap eop-admin-spa eop-pdv eop-admin-spa--react" style={shellStyle}>
+    <div className={`wrap eop-admin-spa eop-pdv eop-admin-spa--react ${sidebarCollapsed ? 'is-sidebar-collapsed' : ''}`} style={shellStyle}>
       <div className="eop-admin-spa__layout">
         <aside className="eop-admin-spa__sidebar">
           <div className="eop-admin-spa__brand">
             <div className="eop-admin-spa__brand-mark">
               <img src={bootstrap.branding.logoUrl} alt="Pedido Expresso - Aireset" />
               <div className="eop-admin-spa__brand-actions">
+                <button
+                  type="button"
+                  className="eop-admin-spa__chrome-toggle eop-admin-spa__sidebar-toggle"
+                  aria-pressed={sidebarCollapsed}
+                  title={sidebarCollapsed ? 'Abrir menu lateral' : 'Recolher menu lateral'}
+                  onClick={() => setSidebarCollapsed((value) => !value)}
+                >
+                  <span className={`dashicons ${sidebarCollapsed ? 'dashicons-arrow-right-alt2' : 'dashicons-arrow-left-alt2'}`} aria-hidden="true" />
+                  <span className="screen-reader-text">Recolher menu lateral</span>
+                </button>
                 <button
                   type="button"
                   className="eop-admin-spa__chrome-toggle"

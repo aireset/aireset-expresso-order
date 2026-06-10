@@ -132,6 +132,18 @@ class EOP_Admin_SPA {
 			array(),
 			file_exists( $admin_css_path ) ? (string) filemtime( $admin_css_path ) : EOP_VERSION
 		);
+
+		// CSS do recolher de sidebar (botao "<"): colapsa a nav do plugin para uma
+		// faixa de icones com submenus em fly-in (.eop-admin-spa.is-sidebar-collapsed).
+		$flyin_css_path = EOP_PLUGIN_DIR . 'assets/css/admin-flyinmenu.css';
+		if ( file_exists( $flyin_css_path ) ) {
+			wp_enqueue_style(
+				'eop-admin-spa-flyinmenu',
+				EOP_PLUGIN_URL . 'assets/css/admin-flyinmenu.css',
+				array( 'eop-admin-spa-legacy' ),
+				(string) filemtime( $flyin_css_path )
+			);
+		}
 	}
 
 	public static function filter_script_loader_tag( $tag, $handle, $src ) {

@@ -61,17 +61,14 @@
   --eop-post-flow-summary-note-size: 12px;
 
   margin-top: 30px;
-  padding: 24px;
-  border: 1px solid rgba(15, 27, 53, 0.08);
-  border-radius: 32px;
-  background: var(
-    --eop-post-flow-page-bg,
-    linear-gradient(180deg, #edf2fb 0%, #f7f9fc 100%)
-  );
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--eop-post-flow-text, #172033);
   font-family: var(--eop-post-flow-font-family, "Montserrat", sans-serif);
   font-size: var(--eop-post-flow-text-size, 16px);
-  box-shadow: 0 28px 64px rgba(15, 27, 53, 0.1);
+  box-shadow: none;
 
   a,
   button,
@@ -226,6 +223,10 @@
   &__product-card,
   &__completion-item {
     @include flow-card-shell;
+  }
+
+  // Item de conclusao = linha compacta (thumb + nome). NAO afeta os outros cards.
+  &__completion-item {
     display: flex;
     align-items: center;
     gap: 14px;
@@ -1130,6 +1131,7 @@
   }
 
   &__panel {
+    padding: 24px;
     background: var(--eop-post-flow-side-bg, #f6f8fc);
   }
 

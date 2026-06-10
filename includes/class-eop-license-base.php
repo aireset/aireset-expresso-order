@@ -233,7 +233,10 @@ if ( ! class_exists( 'EOP_License_Core' ) ) {
 						if ( ! empty( $data->request_duration ) && $data->request_duration > 0 ) {
 							$response_obj->next_request = strtotime( "+ {$data->request_duration} hour" );
 						} else {
-							$response_obj->next_request = time();
+							// Sem duracao do servidor: memoiza por 12h em vez de revalidar a cada
+							// request (evita phone-home bloqueante de 1.7-5.7s em todo carregamento).
+							// Expiracao da licenca e revogacao remota continuam honradas acima.
+							$response_obj->next_request = strtotime( '+ 12 hour' );
 						}
 
 						$response_obj->expire_renew_link  = self::get_renew_link( $response_obj, 'l' );
@@ -584,7 +587,7 @@ if ( ! class_exists( 'EOP_License_Core' ) ) {
 			$rq_params = [
 				'method'      => 'POST',
 				'sslverify'   => true,
-				'timeout'     => 120,
+				'timeout'     => 12,
 				'redirection' => 5,
 				'httpversion' => '1.0',
 				'blocking'    => true,

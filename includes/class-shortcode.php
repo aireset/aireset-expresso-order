@@ -235,8 +235,8 @@ class EOP_Shortcode {
         }
 
         // React e o padrao para vendedores. Escape para o frontend legado (jQuery)
-        // com ?eop_react=0 caso seja preciso durante uma venda ao vivo.
-        if ( isset( $_GET['eop_react'] ) && '0' === sanitize_text_field( wp_unslash( $_GET['eop_react'] ) ) ) {
+        // com ?eop_legacy=1 caso seja preciso durante uma venda ao vivo.
+        if ( isset( $_GET['eop_legacy'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['eop_legacy'] ) ) ) {
             return false;
         }
 

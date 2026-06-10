@@ -218,10 +218,9 @@
 
       .eop-post-flow__contract-header-main {
         display: flex;
-        align-items: center;
-        gap: 18px;
+        align-items: flex-start;
+        gap: 20px;
         min-width: 0;
-        justify-content: space-between;
       }
     }
 
@@ -294,10 +293,9 @@
 
   &__contract-header-main {
     display: flex;
-    align-items: center;
-    gap: 18px;
+    align-items: flex-start;
+    gap: 20px;
     min-width: 0;
-    justify-content: space-between;
   }
 
   &__breadcrumb {
@@ -462,28 +460,69 @@
   }
 
   &__contract-meta {
-    display: grid;
-    gap: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     min-width: 0;
-    padding: 14px 16px;
-    border-radius: 22px;
+    padding: 0;
     text-align: left;
-    @include flow-glass-shell;
+    background: transparent;
+    border: none;
+    backdrop-filter: none;
 
-    strong {
+    > strong {
+      order: 2;
       display: block;
       color: #ffffff;
-      font-size: 16px;
-      font-weight: 700;
-      line-height: 1.2;
+      font-size: clamp(24px, 3.4vw, 38px);
+      font-weight: 800;
+      line-height: 1.02;
+      letter-spacing: -0.03em;
     }
 
-    span {
+    .eop-post-flow__contract-chip {
+      order: 0;
+      align-self: flex-start;
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: var(--eop-post-flow-accent-soft, rgba(215, 138, 47, 0.22));
+      border: 1px solid var(--eop-post-flow-accent-border, rgba(215, 138, 47, 0.28));
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .eop-post-flow__contract-eyebrow {
+      order: 1;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .eop-post-flow__contract-subtitle {
+      order: 3;
+      margin: 0;
+      max-width: 56ch;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    > span:not([class]) {
+      order: 1;
       display: block;
       color: rgba(255, 255, 255, 0.72);
-      font-size: 12px;
-      font-weight: 400;
-      line-height: 1.4;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
     }
   }
 
@@ -1341,7 +1380,6 @@
     }
 
     &__contract-header-main {
-      flex-direction: column;
       align-items: flex-start;
     }
 

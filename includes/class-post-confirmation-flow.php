@@ -1029,6 +1029,7 @@ class EOP_Post_Confirmation_Flow {
 		$is_contract_stage = 'contract' === $stage;
 		$is_final_step_stage = in_array( $stage, array( 'upload', 'products' ), true );
 		$is_focused_stage = $is_contract_stage || $is_final_step_stage;
+		$is_completed_stage = ! $is_focused_stage && 'payment' !== $stage;
 		$totals   = class_exists( 'EOP_Order_Creator' ) ? EOP_Order_Creator::sync_order_totals( $order ) : array( 'total' => $order->get_total() );
 		$total_rows = class_exists( 'EOP_Document_Manager' ) ? EOP_Document_Manager::get_document_total_rows( $totals, 'proposal' ) : array();
 		$logo_url          = ! empty( $settings['brand_logo_url'] ) ? esc_url_raw( (string) $settings['brand_logo_url'] ) : '';
@@ -1039,7 +1040,7 @@ class EOP_Post_Confirmation_Flow {
 		}
 		$heading_note = 'contract' === $stage
 			? __( 'A proposta já foi confirmada. Agora basta registrar o aceite do contrato para liberar as próximas etapas.', EOP_TEXT_DOMAIN )
-			: __( 'Conclua a etapa atual para o fluxo continuar sem precisar voltar para esta proposta depois.', EOP_TEXT_DOMAIN );
+			: ( $is_completed_stage ? __( 'Pronto! Todas as etapas foram concluídas e seu pedido seguiu para a equipe responsável.', EOP_TEXT_DOMAIN ) : __( 'Conclua a etapa atual para o fluxo continuar sem precisar voltar para esta proposta depois.', EOP_TEXT_DOMAIN ) );
 		$final_intro_title       = 'upload' === $stage ? trim( (string) ( $settings['post_confirmation_upload_title'] ?? '' ) ) : trim( (string) ( $settings['post_confirmation_products_title'] ?? '' ) );
 		$final_intro_description = 'upload' === $stage ? trim( (string) ( $settings['post_confirmation_upload_description'] ?? '' ) ) : trim( (string) ( $settings['post_confirmation_products_description'] ?? '' ) );
 		$final_intro_eyebrow    = trim( (string) ( $settings['post_confirmation_final_intro_eyebrow'] ?? '' ) );
@@ -1063,7 +1064,7 @@ class EOP_Post_Confirmation_Flow {
 		?>
 		<?php self::render_post_flow_styles( $settings ); ?>
 		<div class="<?php echo esc_attr( implode( ' ', $wrapper_classes ) ); ?>">
-			<?php if ( $is_focused_stage ) : ?>
+			<?php if ( $is_focused_stage || $is_completed_stage ) : ?>
 				<div class="eop-post-flow__contract-header">
 					<div class="eop-post-flow__contract-header-main">
 						<div class="eop-post-flow__contract-brand">
@@ -1075,7 +1076,7 @@ class EOP_Post_Confirmation_Flow {
 						</div>
 						<div class="eop-post-flow__contract-meta">
 							<strong><?php echo esc_html( $brand_name ); ?></strong>
-							<span><?php echo esc_html( sprintf( __( 'Pedido #%d', EOP_TEXT_DOMAIN ), $order->get_id() ) ); ?></span>
+							<?php $eop_total_steps = count( (array) $steps ); $eop_current_index = 0; foreach ( (array) $steps as $eop_step_pos => $eop_step ) { if ( ( $eop_step['key'] ?? '' ) === $stage ) { $eop_current_index = (int) $eop_step_pos + 1; break; } } ?><?php if ( $eop_current_index > 0 && $eop_total_steps > 0 ) : ?><span class="eop-post-flow__contract-chip"><?php echo esc_html( sprintf( __( 'Etapa %1$d de %2$d', EOP_TEXT_DOMAIN ), $eop_current_index, $eop_total_steps ) ); ?></span><?php endif; ?><span class="eop-post-flow__contract-eyebrow"><?php echo esc_html( sprintf( __( 'Pedido #%d', EOP_TEXT_DOMAIN ), $order->get_id() ) ); ?></span><p class="eop-post-flow__contract-subtitle"><?php echo esc_html( $heading_note ); ?></p>
 						</div>
 					</div>
 					<?php self::render_stage_breadcrumb( $steps, $stage ); ?>
@@ -1097,7 +1098,7 @@ class EOP_Post_Confirmation_Flow {
 
 
 
-					<?php if ( ! $is_focused_stage ) : ?>
+					<?php if ( ! $is_focused_stage && ! $is_completed_stage ) : ?>
 						<div class="eop-post-flow__heading">
 							<div class="eop-post-flow__heading-copy">
 								<span class="eop-post-flow__eyebrow"><?php esc_html_e( 'Etapa complementar do pedido', EOP_TEXT_DOMAIN ); ?></span>

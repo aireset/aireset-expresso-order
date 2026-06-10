@@ -2220,6 +2220,7 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
 }
 .eop-post-flow__contract-meta {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 10px;
   min-width: 0;
@@ -2920,13 +2921,13 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
 }
 .eop-post-flow__summary-totals {
   display: grid;
-  gap: 8px;
+  gap: 0;
 }
 .eop-post-flow__summary-total-row {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 0;
+  padding: 9px 0;
   border-bottom: 1px solid rgba(15, 27, 53, 0.08);
   color: var(--eop-post-flow-text, #172033);
   align-items: flex-start;

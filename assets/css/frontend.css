@@ -2040,6 +2040,30 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
   border-radius: 28px;
   background: var(--eop-post-flow-panel-bg, #ffffff);
   box-shadow: 0 16px 36px rgba(15, 27, 53, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+}
+.eop-post-flow__heading img, .eop-post-flow__stage-intro img, .eop-post-flow__contract img, .eop-post-flow__upload-card img, .eop-post-flow__acceptance-card img, .eop-post-flow__panel img, .eop-post-flow__product-card img, .eop-post-flow__completion-item img {
+  flex: 0 0 auto;
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  object-fit: cover;
+  background: var(--eop-post-flow-side-bg, #f6f8fc);
+}
+.eop-post-flow__heading strong, .eop-post-flow__stage-intro strong, .eop-post-flow__contract strong, .eop-post-flow__upload-card strong, .eop-post-flow__acceptance-card strong, .eop-post-flow__panel strong, .eop-post-flow__product-card strong, .eop-post-flow__completion-item strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--eop-post-flow-text, #172033);
+}
+.eop-post-flow__heading p, .eop-post-flow__stage-intro p, .eop-post-flow__contract p, .eop-post-flow__upload-card p, .eop-post-flow__acceptance-card p, .eop-post-flow__panel p, .eop-post-flow__product-card p, .eop-post-flow__completion-item p {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: var(--eop-post-flow-muted, #5d6b82);
 }
 .eop-post-flow__contract-header {
   display: grid;

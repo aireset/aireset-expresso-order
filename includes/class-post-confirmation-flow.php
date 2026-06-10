@@ -2430,8 +2430,8 @@ class EOP_Post_Confirmation_Flow {
 					<div class="eop-post-flow__completion-item">
 						<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $item->get_name() ); ?>" />
 						<div>
-							<strong><?php echo esc_html( $item->get_name() ); ?></strong>
-							<p><?php echo esc_html( $custom_name ? $custom_name : $item->get_name() ); ?></p>
+							<strong><?php echo esc_html( $custom_name ? $custom_name : $item->get_name() ); ?></strong>
+							<?php if ( $custom_name && $custom_name !== $item->get_name() ) : ?><p><?php echo esc_html( sprintf( __( 'Original: %s', EOP_TEXT_DOMAIN ), $item->get_name() ) ); ?></p><?php endif; ?>
 						</div>
 					</div>
 				<?php endforeach; ?>

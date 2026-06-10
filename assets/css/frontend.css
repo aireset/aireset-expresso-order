@@ -2218,7 +2218,7 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
   font-weight: 400;
   line-height: 1.6;
 }
-.eop-post-flow__contract-meta {
+.eop-post-flow__contract-copy {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -2230,7 +2230,7 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
   border: none;
   backdrop-filter: none;
 }
-.eop-post-flow__contract-meta > strong {
+.eop-post-flow__contract-copy > strong {
   order: 2;
   display: block;
   color: #ffffff;
@@ -2239,7 +2239,7 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
   line-height: 1.02;
   letter-spacing: -0.03em;
 }
-.eop-post-flow__contract-meta .eop-post-flow__contract-chip {
+.eop-post-flow__contract-copy .eop-post-flow__contract-chip {
   order: 0;
   align-self: flex-start;
   display: inline-flex;
@@ -2255,7 +2255,7 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.eop-post-flow__contract-meta .eop-post-flow__contract-eyebrow {
+.eop-post-flow__contract-copy .eop-post-flow__contract-eyebrow {
   order: 1;
   color: rgba(255, 255, 255, 0.78);
   font-size: 11px;
@@ -2263,7 +2263,7 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
-.eop-post-flow__contract-meta .eop-post-flow__contract-subtitle {
+.eop-post-flow__contract-copy .eop-post-flow__contract-subtitle {
   order: 3;
   margin: 0;
   max-width: 56ch;
@@ -2271,7 +2271,7 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
   font-size: 15px;
   line-height: 1.6;
 }
-.eop-post-flow__contract-meta > span:not([class]) {
+.eop-post-flow__contract-copy > span:not([class]) {
   order: 1;
   display: block;
   color: rgba(255, 255, 255, 0.72);
@@ -2997,7 +2997,7 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
   .eop-post-flow__summary-actions {
     grid-template-columns: 1fr;
   }
-  .eop-post-flow__contract-meta {
+  .eop-post-flow__contract-copy {
     text-align: left;
   }
   .eop-post-flow--stage-contract .eop-post-flow__panel {

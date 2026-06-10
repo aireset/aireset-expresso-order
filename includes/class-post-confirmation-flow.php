@@ -1074,7 +1074,7 @@ class EOP_Post_Confirmation_Flow {
 								<span class="eop-post-flow__contract-brand-fallback"><?php echo esc_html( strtoupper( substr( $brand_name, 0, 1 ) ) ); ?></span>
 							<?php endif; ?>
 						</div>
-						<div class="eop-post-flow__contract-meta">
+						<div class="eop-post-flow__contract-copy">
 							<strong><?php echo esc_html( $brand_name ); ?></strong>
 							<?php $eop_total_steps = count( (array) $steps ); $eop_current_index = 0; foreach ( (array) $steps as $eop_step_pos => $eop_step ) { if ( ( $eop_step['key'] ?? '' ) === $stage ) { $eop_current_index = (int) $eop_step_pos + 1; break; } } ?><?php if ( $eop_current_index > 0 && $eop_total_steps > 0 ) : ?><span class="eop-post-flow__contract-chip"><?php echo esc_html( sprintf( __( 'Etapa %1$d de %2$d', EOP_TEXT_DOMAIN ), $eop_current_index, $eop_total_steps ) ); ?></span><?php endif; ?><span class="eop-post-flow__contract-eyebrow"><?php echo esc_html( sprintf( __( 'Pedido #%d', EOP_TEXT_DOMAIN ), $order->get_id() ) ); ?></span><p class="eop-post-flow__contract-subtitle"><?php echo esc_html( $heading_note ); ?></p>
 						</div>

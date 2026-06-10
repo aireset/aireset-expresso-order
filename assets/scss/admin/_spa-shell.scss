@@ -1481,3 +1481,51 @@ body.eop-admin-spa-screen.is-plugin-fullscreen {
   color: #11162f;
   font-size: 16px;
 }
+
+/* Paridade visual: conteudo do Novo pedido / Pedidos no shell React deve ficar
+   igual a tela de vendas do frontend (/pedido-expresso/). Valores portados do
+   dashboard do frontend, escopados em .eop-admin-spa--react para nao afetar o
+   restante do admin. */
+.eop-admin-spa--react {
+  .eop-pdv-main > .eop-card,
+  .eop-pdv-sidebar > .eop-card {
+    padding: 24px 26px;
+    border: 1px solid #dbe2ff;
+    border-radius: 22px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .98), #ffffff);
+    box-shadow: 0 18px 44px rgba(0, 3, 75, .12);
+  }
+
+  .eop-total-grand span {
+    font-size: 34px;
+    font-weight: 900;
+    color: #050a76;
+  }
+
+  .eop-total-grand span:first-child {
+    font-size: 22px;
+  }
+
+  .eop-btn-primary,
+  .eop-btn-block.eop-btn-primary {
+    min-height: 48px;
+    padding: 0 22px;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #00034b 0%, #050a76 100%);
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .eop-accordion__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    background: rgba(0, 3, 75, .08);
+    color: #050a76;
+    font-size: 18px;
+  }
+}

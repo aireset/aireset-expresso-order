@@ -6,6 +6,10 @@
  * Author: Felipe Almeman / Aireset
  * Author URI: https://aireset.com.br
  * Requires Plugins: woocommerce
+ * Requires at least: 6.0
+ * Requires PHP: 7.4
+ * WC requires at least: 7.0
+ * WC tested up to: 9.4
  * Text Domain: aireset-expresso-order
  * Domain Path: /languages
  * License: Proprietary

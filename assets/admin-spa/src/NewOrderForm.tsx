@@ -169,8 +169,11 @@ function NewOrderForm({ orderId, onExit }: { orderId?: number; onExit?: () => vo
 
     setCepStatus('Buscando endereco pelo CEP...');
 
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6000);
+
     try {
-      const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`, { signal: controller.signal });
       const data = await response.json();
 
       if (data?.erro) {
@@ -191,6 +194,8 @@ function NewOrderForm({ orderId, onExit }: { orderId?: number; onExit?: () => vo
       setCepStatus('Endereco encontrado. Confira o numero e o complemento.');
     } catch {
       setCepStatus('Nao foi possivel buscar o CEP agora. Continue manualmente.');
+    } finally {
+      clearTimeout(timer);
     }
   }
 

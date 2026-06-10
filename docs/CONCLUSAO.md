@@ -32,9 +32,10 @@ Branch: `feat/conclusao-plugin`. Modo: autônomo com checkpoints (Felipe valida 
 
 **Checkpoints A:** (1) escolher accent → (2) tokens unificados → (3) aplicar PDV+admin → (4) validar visual.
 
-## Decisões pendentes do Felipe
-- **Accent canônico** (frente A): azul / dourado / teal / outro?
-- **SDK de licença** (frente F): tem controle do servidor de licença? Pode quebrar ativação ao corrigir.
+## Decisões do Felipe
+- **Accent canônico** (A): ✅ dourado `#d78a2f`.
+- **SDK de licença** (F): ✅ Felipe **controla o servidor** (aireset.com.br) → corrigir canal autenticado de verdade (cliente+servidor).
+- **PDF** (G): ✅ **embarcar Dompdf** (Composer+Strauss) dentro do plugin.
 
 ## Log
 - 2026-06-10: branch criada. Frente A iniciada (mapeamento de tokens). Commit anterior `1a5f4e4` (hero do fluxo) em `chore/fase0-prontidao-venda`.

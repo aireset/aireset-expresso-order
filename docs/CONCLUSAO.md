@@ -9,7 +9,7 @@ Branch: `feat/conclusao-plugin`. Modo: autônomo com checkpoints (Felipe valida 
 | Frente | O que resolve | Status |
 |---|---|---|
 | **A. Design system** | Padrão visual único (tokens) — fim dos "layouts divergentes" | ✅ accent unificado (token-math deferido p/ frentes B/C, baixo ROI) |
-| **B. Terminar migração React** | Paridade SPA+frontend, matar legado/jQuery | ⬜ a fazer |
+| **B. Terminar migração React** | Paridade SPA+frontend, matar legado/jQuery | 🟡 Novo pedido + Pedidos do admin SPA agora usam os componentes canônicos (NewOrderForm/OrdersBrowser) c/ layout legado |
 | **C. Navegação + performance** | Reorganizar IA/menu, lazy-load, telas rápidas | 🟡 phone-home licença cacheado (admin ~3s→~0) |
 | **D. Personalização** | Expandir opções de customização | ⬜ |
 | **E. Falhas funcionais** | Bugs, etapa products morta, mobile (EMAIL FORA: vendedor usa ao vivo no WhatsApp) | 🟡 confirm idempotente + fallback contrato + ViaCEP timeout |

@@ -8,11 +8,11 @@ Branch: `feat/conclusao-plugin`. Modo: autônomo com checkpoints (Felipe valida 
 
 | Frente | O que resolve | Status |
 |---|---|---|
-| **A. Design system** | Padrão visual único (tokens) — fim dos "layouts divergentes" | 🟡 em andamento |
+| **A. Design system** | Padrão visual único (tokens) — fim dos "layouts divergentes" | ✅ accent unificado (token-math deferido p/ frentes B/C, baixo ROI) |
 | **B. Terminar migração React** | Paridade SPA+frontend, matar legado/jQuery | ⬜ a fazer |
 | **C. Navegação + performance** | Reorganizar IA/menu, lazy-load, telas rápidas | ⬜ |
 | **D. Personalização** | Expandir opções de customização | ⬜ |
-| **E. Falhas funcionais** | Bugs, etapa products morta, emails, mobile | ⬜ |
+| **E. Falhas funcionais** | Bugs, etapa products morta, emails, mobile | 🟡 confirm idempotente + fallback contrato mobile feitos |
 | **F. Segurança** | Canal licença, Dompdf SSRF, uploads | ⬜ (SDK licença depende de OK do Felipe) |
 | **G. Conclusão** | PDF embarcado, i18n, uninstall, release | ⬜ |
 
@@ -38,3 +38,6 @@ Branch: `feat/conclusao-plugin`. Modo: autônomo com checkpoints (Felipe valida 
 
 ## Log
 - 2026-06-10: branch criada. Frente A iniciada (mapeamento de tokens). Commit anterior `1a5f4e4` (hero do fluxo) em `chore/fase0-prontidao-venda`.
+- 2026-06-10: A — accent unico dourado aplicado (`9767e0c`). Decisao: token-math (raio/sombra) NAO re-plumbado agora (cores quase identicas, ROI baixo); alinho componente a componente conforme toco telas em B/C.
+- 2026-06-10: E — confirm de proposta idempotente (nao duplica nota/redispara). Contrato com botao "Abrir em nova aba" sobreposto (resolve iframe PDF branco no iOS Safari).
+- DEFERIDO p/ Frente F: Dompdf `isRemoteEnabled=false` (SSRF CRIT) — flipar direto quebra logo no PDF; precisa resolver imagens confiaveis p/ caminho local/base64 antes.

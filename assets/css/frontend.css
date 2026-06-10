@@ -2416,6 +2416,7 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
   line-height: 1.55;
 }
 .eop-post-flow__document-reader-frame {
+  position: relative;
   overflow: hidden;
   min-height: clamp(340px, 58vh, 640px);
   border: 1px solid rgba(15, 27, 53, 0.1);
@@ -2428,6 +2429,26 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
   min-height: clamp(340px, 58vh, 640px);
   border: 0;
   background: #ffffff;
+}
+.eop-post-flow__doc-open {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--eop-post-flow-accent, #d78a2f);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgba(15, 27, 53, 0.18);
+}
+.eop-post-flow__doc-open:hover, .eop-post-flow__doc-open:focus {
+  color: #ffffff;
 }
 .eop-post-flow__document-reader-content {
   min-height: clamp(340px, 58vh, 640px);

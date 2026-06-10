@@ -101,9 +101,12 @@ class EOP_Public_Proposal {
             return;
         }
 
-        $order->update_meta_data( '_eop_proposal_confirmed', 'yes' );
-        $order->add_order_note( __( 'Proposta confirmada pelo cliente.', EOP_TEXT_DOMAIN ) );
-        $order->save();
+        // Idempotente: so confirma uma vez (re-POST nao duplica nota nem re-dispara fluxo).
+        if ( 'yes' !== (string) $order->get_meta( '_eop_proposal_confirmed', true ) ) {
+            $order->update_meta_data( '_eop_proposal_confirmed', 'yes' );
+            $order->add_order_note( __( 'Proposta confirmada pelo cliente.', EOP_TEXT_DOMAIN ) );
+            $order->save();
+        }
 
         $redirect = add_query_arg( 'eop_confirmed', '1', self::get_public_link( $order ) );
 

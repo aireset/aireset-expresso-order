@@ -1924,7 +1924,7 @@ class EOP_Post_Confirmation_Flow {
 			<?php endif; ?>
 			<?php if ( 'iframe' === $content_type && '' !== $content ) : ?>
 				<div class="eop-post-flow__document-reader-frame">
-					<iframe src="<?php echo esc_url( $content ); ?>#toolbar=0&navpanes=0&scrollbar=1&view=FitH" title="<?php echo esc_attr( $title ); ?>" loading="lazy"></iframe>
+					<iframe src="<?php echo esc_url( $content ); ?>#toolbar=0&navpanes=0&scrollbar=1&view=FitH" title="<?php echo esc_attr( $title ); ?>" loading="lazy"></iframe><a class="eop-post-flow__doc-open" href="<?php echo esc_url( $content ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Abrir em nova aba', EOP_TEXT_DOMAIN ); ?></a>
 				</div>
 			<?php elseif ( 'html' === $content_type && '' !== trim( wp_strip_all_tags( $content ) ) ) : ?>
 				<div class="eop-post-flow__document-reader-frame">

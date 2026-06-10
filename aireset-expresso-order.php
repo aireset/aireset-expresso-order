@@ -70,6 +70,21 @@ require_once EOP_PLUGIN_DIR . 'includes/class-admin-spa.php';
 require_once EOP_PLUGIN_DIR . 'includes/class-performance-audit.php';
 
 
+/**
+ * Declara compatibilidade com HPOS (Custom Order Tables) do WooCommerce.
+ * Todo acesso a pedidos usa a CRUD do WC (wc_get_order/wc_get_orders/get_meta),
+ * portanto e compativel. Registrado antes do gate de licenca para que o aviso
+ * de incompatibilidade nao apareca nem em instalacoes sem licenca.
+ */
+add_action(
+	'before_woocommerce_init',
+	function () {
+		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', EOP_PLUGIN_FILE, true );
+		}
+	}
+);
+
 /* License gate */
 require_once EOP_PLUGIN_DIR . 'includes/class-eop-license-manager.php';
 EOP_License_Manager::get_instance( __FILE__ );

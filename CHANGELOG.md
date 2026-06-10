@@ -2,6 +2,17 @@
 
 Todas as alteracoes relevantes do plugin `Aireset Expresso Order` devem ser registradas aqui.
 
+## 1.3.0 - 2026-06-10
+
+- performance: cacheia a verificacao de licenca (phone-home bloqueante a cada request do admin), derrubando o tempo das chamadas REST do painel de ~2-3s para ~0,8s; quando o servidor nao envia `request_duration`, o resultado valido passa a ser memoizado por 12h em vez de revalidado a cada carregamento, e o timeout do request cai de 120s para 12s (sem alterar a logica de validacao)
+- admin SPA: a tela "Novo pedido" passa a renderizar o componente React canonico (NewOrderForm) com o layout do admin legado (grid PDV de 2 colunas, cards, accordions, totais) em vez do formulario chapado divergente
+- admin SPA: a tela "Pedidos" passa a usar o novo OrdersBrowser (cards com Data/Total/Vendedor, resumo do fluxo complementar com pills, filtros Buscar/Status) e a edicao abre o pedido no proprio formulario
+- admin SPA: desativa o modo fullscreen forcado no "Novo pedido" que escondia o menu do WordPress; o painel volta a conviver com o menu do WP, e o modo foco (esconder a interface do WP) e o recolher da sidebar (faixa de icones com submenus em fly-in) viram botoes opcionais controlados pelo usuario
+- frontend: o shortcode `[expresso_order]` (tela de vendas) passa a usar o React por padrao para usuarios com permissao de vendedor; escape para o frontend legado com `?eop_legacy=1`
+- frontend: corrige o overlap do PDV em larguras medias/zoom (a coluna de produtos vazava por baixo da sidebar); o layout passa a empilhar em 1 coluna abaixo de 1280px
+- compatibilidade: declara suporte a HPOS (Custom Order Tables) do WooCommerce
+- corrige o numero de pedido exibido com `#` duplicado (`##6161` -> `#6161`) no admin SPA
+
 ## 1.2.30 - 2026-06-10
 
 - corrige a interpolacao desnecessaria de numeros de pedido no admin SPA, limpando a renderizacao e evitando formatacao redundante

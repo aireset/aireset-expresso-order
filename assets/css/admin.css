@@ -667,7 +667,7 @@ body.eop-admin-spa-screen.is-plugin-fullscreen #wpcontent {
 }
 .eop-admin-spa-nav__item.is-active, .eop-admin-spa-nav__group.is-open > .eop-admin-spa-nav__item {
   border-color: rgba(215, 138, 47, 0.22) !important;
-  background: linear-gradient(135deg, rgba(21, 50, 103, 0.95) 0%, rgba(22, 91, 121, 0.9) 100%) !important;
+  background: linear-gradient(135deg, rgba(21, 50, 103, 0.95) 0%, rgba(184, 112, 31, 0.92) 100%) !important;
   color: #fff !important;
   box-shadow: inset 0 0 0 1px rgba(80, 201, 194, 0.2) !important;
 }
@@ -681,7 +681,7 @@ body.eop-admin-spa-screen.is-plugin-fullscreen #wpcontent {
 }
 .eop-admin-spa-nav__group.is-open > .eop-admin-spa-nav__group-toggle {
   border-color: rgba(215, 138, 47, 0.22) !important;
-  background: linear-gradient(135deg, rgba(21, 50, 103, 0.95) 0%, rgba(22, 91, 121, 0.9) 100%) !important;
+  background: linear-gradient(135deg, rgba(21, 50, 103, 0.95) 0%, rgba(184, 112, 31, 0.92) 100%) !important;
   color: #fff !important;
   box-shadow: inset 0 0 0 1px rgba(80, 201, 194, 0.2) !important;
 }

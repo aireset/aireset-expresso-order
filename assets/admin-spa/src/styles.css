@@ -39,7 +39,7 @@ body.eop-admin-react-shell #eop-admin-app {
 
 .eop-admin-spa--react {
   --eop-panel-bg: linear-gradient(180deg, rgba(9, 21, 51, 0.98) 0%, rgba(15, 37, 87, 0.98) 100%);
-  --eop-panel-active-bg: linear-gradient(135deg, rgba(21, 50, 103, 0.95) 0%, rgba(22, 91, 121, 0.9) 100%);
+  --eop-panel-active-bg: linear-gradient(135deg, rgba(21, 50, 103, 0.95) 0%, rgba(184, 112, 31, 0.92) 100%);
   --eop-panel-accent: #d78a2f;
   --eop-panel-shadow: 0 20px 40px rgba(9, 21, 51, 0.22);
   max-width: 100%;

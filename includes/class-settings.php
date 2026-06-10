@@ -114,7 +114,7 @@ class EOP_Settings {
             'customer_experience_sidebar_background_mode' => 'solid',
             'customer_experience_sidebar_background_color' => '#f6f8fc',
             'customer_experience_sidebar_background_secondary_color' => '#ffffff',
-            'customer_experience_accent_color'       => '#d78a2f',
+            'customer_experience_accent_color'       => '#00ffff',
             'customer_experience_text_color'         => '#16243a',
             'customer_experience_muted_color'        => '#66768d',
             'customer_experience_title_size'         => '46px',
@@ -459,7 +459,7 @@ class EOP_Settings {
             $fields[ $prefix . 'border_width' ] = array( 'label' => sprintf( __( 'Borda do %s', EOP_TEXT_DOMAIN ), $item_label ), 'type' => 'size', 'default' => '1px', 'css' => array( array( 'selector' => $item_selector, 'property' => 'border-width' ) ) );
             $fields[ $prefix . 'border_style' ] = array( 'label' => sprintf( __( 'Estilo da borda do %s', EOP_TEXT_DOMAIN ), $item_label ), 'type' => 'select', 'default' => 'solid', 'choices' => $border_style_choices, 'css' => array( array( 'selector' => $item_selector, 'property' => 'border-style' ) ) );
             $fields[ $prefix . 'border_color' ] = array( 'label' => sprintf( __( 'Cor da borda do %s', EOP_TEXT_DOMAIN ), $item_label ), 'type' => 'color', 'default' => '#dbe3f0', 'css' => array( array( 'selector' => $item_selector, 'property' => 'border-color' ) ) );
-            $fields[ $prefix . 'index_background_color' ] = array( 'label' => sprintf( __( 'Fundo do numero do %s', EOP_TEXT_DOMAIN ), $item_label ), 'type' => 'color', 'default' => 'contract' === $step_key ? '#d78a2f' : '#eff3fb', 'css' => array( array( 'selector' => $index_selector, 'property' => 'background' ) ) );
+            $fields[ $prefix . 'index_background_color' ] = array( 'label' => sprintf( __( 'Fundo do numero do %s', EOP_TEXT_DOMAIN ), $item_label ), 'type' => 'color', 'default' => 'contract' === $step_key ? '#00ffff' : '#eff3fb', 'css' => array( array( 'selector' => $index_selector, 'property' => 'background' ) ) );
             $fields[ $prefix . 'index_color' ] = array( 'label' => sprintf( __( 'Cor do numero do %s', EOP_TEXT_DOMAIN ), $item_label ), 'type' => 'color', 'default' => 'contract' === $step_key ? '#ffffff' : '#16243a', 'css' => array( array( 'selector' => $index_selector, 'property' => 'color' ) ) );
         }
 
@@ -496,7 +496,7 @@ class EOP_Settings {
             $fields[ $prefix . 'border_width' ] = array( 'label' => sprintf( __( 'Borda do %s', EOP_TEXT_DOMAIN ), $item_label ), 'type' => 'size', 'default' => '1px', 'css' => array( array( 'selector' => $item_selector, 'property' => 'border-width' ) ) );
             $fields[ $prefix . 'border_style' ] = array( 'label' => sprintf( __( 'Estilo da borda do %s', EOP_TEXT_DOMAIN ), $item_label ), 'type' => 'select', 'default' => 'solid', 'choices' => $border_style_choices, 'css' => array( array( 'selector' => $item_selector, 'property' => 'border-style' ) ) );
             $fields[ $prefix . 'border_color' ] = array( 'label' => sprintf( __( 'Cor da borda do %s', EOP_TEXT_DOMAIN ), $item_label ), 'type' => 'color', 'default' => '#dbe3f0', 'css' => array( array( 'selector' => $item_selector, 'property' => 'border-color' ) ) );
-            $fields[ $prefix . 'index_background_color' ] = array( 'label' => sprintf( __( 'Fundo do numero do %s', EOP_TEXT_DOMAIN ), $item_label ), 'type' => 'color', 'default' => 'upload' === $step_key ? '#d78a2f' : '#eff3fb', 'css' => array( array( 'selector' => $index_selector, 'property' => 'background' ) ) );
+            $fields[ $prefix . 'index_background_color' ] = array( 'label' => sprintf( __( 'Fundo do numero do %s', EOP_TEXT_DOMAIN ), $item_label ), 'type' => 'color', 'default' => 'upload' === $step_key ? '#00ffff' : '#eff3fb', 'css' => array( array( 'selector' => $index_selector, 'property' => 'background' ) ) );
             $fields[ $prefix . 'index_color' ] = array( 'label' => sprintf( __( 'Cor do numero do %s', EOP_TEXT_DOMAIN ), $item_label ), 'type' => 'color', 'default' => 'upload' === $step_key ? '#ffffff' : '#16243a', 'css' => array( array( 'selector' => $index_selector, 'property' => 'color' ) ) );
         }
 
@@ -588,7 +588,7 @@ class EOP_Settings {
                         'post_confirmation_contract_visual_breadcrumb_completed_text_color' => array( 'label' => __( 'Texto do item concluido', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item.is-completed', 'property' => 'color' ) ) ),
                         'post_confirmation_contract_visual_breadcrumb_index_color' => array( 'label' => __( 'Cor do numero', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-index', 'property' => 'color' ) ) ),
                         'post_confirmation_contract_visual_breadcrumb_index_background_color' => array( 'label' => __( 'Fundo do numero', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#eff3fb', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-index', 'property' => 'background' ) ) ),
-                        'post_confirmation_contract_visual_breadcrumb_current_index_background_color' => array( 'label' => __( 'Fundo do numero atual', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#d78a2f', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item.is-current .eop-post-flow__breadcrumb-index', 'property' => 'background' ) ) ),
+                        'post_confirmation_contract_visual_breadcrumb_current_index_background_color' => array( 'label' => __( 'Fundo do numero atual', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#00ffff', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item.is-current .eop-post-flow__breadcrumb-index', 'property' => 'background' ) ) ),
                         'post_confirmation_contract_visual_breadcrumb_current_index_color' => array( 'label' => __( 'Cor do numero atual', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item.is-current .eop-post-flow__breadcrumb-index', 'property' => 'color' ) ) ),
                     ),
                     self::get_post_confirmation_contract_breadcrumb_item_style_fields()
@@ -669,7 +669,7 @@ class EOP_Settings {
                 'label'       => __( 'Botoes', EOP_TEXT_DOMAIN ),
                 'description' => __( 'Controle o CTA principal do aceite e os botoes secundarios dos documentos.', EOP_TEXT_DOMAIN ),
                 'fields'      => array(
-                    'post_confirmation_contract_visual_primary_button_background_color' => array( 'label' => __( 'Fundo do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#d78a2f', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'background' ) ) ),
+                    'post_confirmation_contract_visual_primary_button_background_color' => array( 'label' => __( 'Fundo do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#00ffff', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'background' ) ) ),
                     'post_confirmation_contract_visual_primary_button_text_color' => array( 'label' => __( 'Texto do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'color' ) ) ),
                     'post_confirmation_contract_visual_primary_button_font_family' => array( 'label' => __( 'Fonte do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'font', 'default' => 'Montserrat:400,700', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'font-family' ) ) ),
                     'post_confirmation_contract_visual_primary_button_font_size' => array( 'label' => __( 'Tamanho da fonte do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '18px', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'font-size' ) ) ),
@@ -679,9 +679,9 @@ class EOP_Settings {
                     'post_confirmation_contract_visual_primary_button_margin' => array( 'label' => __( 'Margin do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'box', 'default' => '0', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'margin' ) ) ),
                     'post_confirmation_contract_visual_primary_button_border_width' => array( 'label' => __( 'Borda do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '0px', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'border-width' ) ) ),
                     'post_confirmation_contract_visual_primary_button_border_style' => array( 'label' => __( 'Estilo da borda do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'select', 'default' => 'solid', 'choices' => array( 'solid' => 'Solid', 'dashed' => 'Dashed', 'dotted' => 'Dotted', 'none' => 'None' ), 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'border-style' ) ) ),
-                    'post_confirmation_contract_visual_primary_button_border_color' => array( 'label' => __( 'Cor da borda do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#d78a2f', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'border-color' ) ) ),
+                    'post_confirmation_contract_visual_primary_button_border_color' => array( 'label' => __( 'Cor da borda do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#00ffff', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'border-color' ) ) ),
                     'post_confirmation_contract_visual_primary_button_border_radius' => array( 'label' => __( 'Radius do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'size', 'default' => '18px', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'border-radius' ) ) ),
-                    'post_confirmation_contract_visual_primary_button_box_shadow' => array( 'label' => __( 'Sombra do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'shadow', 'default' => '0 16px 30px rgba(215, 138, 47, .20)', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'box-shadow' ) ) ),
+                    'post_confirmation_contract_visual_primary_button_box_shadow' => array( 'label' => __( 'Sombra do botao principal', EOP_TEXT_DOMAIN ), 'type' => 'shadow', 'default' => '0 16px 30px rgba(0, 255, 255, .20)', 'css' => array( array( 'selector' => '.eop-post-flow__form--acceptance .eop-proposal-button', 'property' => 'box-shadow' ) ) ),
                     'post_confirmation_contract_visual_secondary_button_background_color' => array( 'label' => __( 'Fundo dos botoes secundarios', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card .eop-proposal-button--secondary', 'property' => 'background' ) ) ),
                     'post_confirmation_contract_visual_secondary_button_text_color' => array( 'label' => __( 'Texto dos botoes secundarios', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card .eop-proposal-button--secondary', 'property' => 'color' ) ) ),
                     'post_confirmation_contract_visual_secondary_button_font_family' => array( 'label' => __( 'Fonte dos botoes secundarios', EOP_TEXT_DOMAIN ), 'type' => 'font', 'default' => 'Montserrat:400,700', 'css' => array( array( 'selector' => '.eop-post-flow__upload-card .eop-proposal-button--secondary', 'property' => 'font-family' ) ) ),
@@ -752,7 +752,7 @@ class EOP_Settings {
                         'post_confirmation_visual_breadcrumb_completed_text_color' => array( 'label' => __( 'Texto do item concluido', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item.is-completed', 'property' => 'color' ) ) ),
                         'post_confirmation_visual_breadcrumb_index_background_color' => array( 'label' => __( 'Fundo do numero', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#eff3fb', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-index', 'property' => 'background' ) ) ),
                         'post_confirmation_visual_breadcrumb_index_color' => array( 'label' => __( 'Cor do numero', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-index', 'property' => 'color' ) ) ),
-                        'post_confirmation_visual_breadcrumb_current_index_background_color' => array( 'label' => __( 'Fundo do numero atual', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#d78a2f', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item.is-current .eop-post-flow__breadcrumb-index', 'property' => 'background' ) ) ),
+                        'post_confirmation_visual_breadcrumb_current_index_background_color' => array( 'label' => __( 'Fundo do numero atual', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#00ffff', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item.is-current .eop-post-flow__breadcrumb-index', 'property' => 'background' ) ) ),
                         'post_confirmation_visual_breadcrumb_current_index_color' => array( 'label' => __( 'Cor do numero atual', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-post-flow__breadcrumb-item.is-current .eop-post-flow__breadcrumb-index', 'property' => 'color' ) ) ),
                     ),
                     self::get_post_confirmation_upload_products_breadcrumb_item_style_fields()
@@ -887,7 +887,7 @@ class EOP_Settings {
                 'label'       => __( 'Botao principal', EOP_TEXT_DOMAIN ),
                 'description' => __( 'Defina o visual do CTA final da etapa.', EOP_TEXT_DOMAIN ),
                 'fields'      => array(
-                    'post_confirmation_visual_button_background_color' => array( 'label' => __( 'Fundo do botao', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#d78a2f', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'background' ) ) ),
+                    'post_confirmation_visual_button_background_color' => array( 'label' => __( 'Fundo do botao', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#00ffff', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'background' ) ) ),
                     'post_confirmation_visual_button_text_color'       => array( 'label' => __( 'Cor do texto', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#ffffff', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'color' ) ) ),
                     'post_confirmation_visual_button_font_family'      => array( 'label' => __( 'Fonte', EOP_TEXT_DOMAIN ), 'type' => 'font', 'default' => 'Montserrat:400,700', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'font-family' ) ) ),
                     'post_confirmation_visual_button_font_size'        => array( 'label' => __( 'Tamanho da fonte', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '20px', 'css' => array( array( 'selector' => '.eop-proposal-button.eop-post-flow__final-submit', 'property' => 'font-size' ) ) ),
@@ -1024,7 +1024,7 @@ class EOP_Settings {
                 'customer_experience_text_size' => array( 'label' => __( 'Tamanho do texto base da experiencia', EOP_TEXT_DOMAIN ), 'type' => 'text', 'default' => '16px' ),
                 'customer_experience_text_color' => array( 'label' => __( 'Cor do texto principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a' ),
                 'customer_experience_muted_color' => array( 'label' => __( 'Cor do texto auxiliar', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#66768d' ),
-                'customer_experience_accent_color' => array( 'label' => __( 'Cor de destaque', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#d78a2f' ),
+                'customer_experience_accent_color' => array( 'label' => __( 'Cor de destaque', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#00ffff' ),
                 'customer_experience_background_mode' => array( 'label' => __( 'Modo do fundo da pagina', EOP_TEXT_DOMAIN ), 'type' => 'select', 'default' => 'gradient', 'choices' => $fill_mode_choices ),
                 'customer_experience_background_color' => array( 'label' => __( 'Cor principal do fundo da pagina', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#edf2fb' ),
                 'customer_experience_background_secondary_color' => array( 'label' => __( 'Segunda cor do fundo da pagina', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#f7f9fc' ),
@@ -1329,7 +1329,7 @@ class EOP_Settings {
                             </div>
                             <div class="eop-settings-field">
                                 <label for="eop_customer_experience_accent_color_preview"><?php esc_html_e( 'Cor de destaque', EOP_TEXT_DOMAIN ); ?></label>
-                                <input id="eop_customer_experience_accent_color_preview" class="eop-color-field" type="text" data-default-color="#d78a2f" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_accent_color]" value="<?php echo esc_attr( $settings['customer_experience_accent_color'] ); ?>" />
+                                <input id="eop_customer_experience_accent_color_preview" class="eop-color-field" type="text" data-default-color="#00ffff" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[customer_experience_accent_color]" value="<?php echo esc_attr( $settings['customer_experience_accent_color'] ); ?>" />
                             </div>
                         </div>
                     </section>
@@ -1429,7 +1429,7 @@ class EOP_Settings {
                 'customer_experience_font_family' => array( 'label' => __( 'Fonte base da pagina', EOP_TEXT_DOMAIN ), 'type' => 'font', 'default' => 'Montserrat:400,700', 'full' => true ),
                 'customer_experience_text_color' => array( 'label' => __( 'Cor do texto principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#16243a' ),
                 'customer_experience_muted_color' => array( 'label' => __( 'Cor do texto auxiliar', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#66768d' ),
-                'customer_experience_accent_color' => array( 'label' => __( 'Cor de destaque', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#d78a2f' ),
+                'customer_experience_accent_color' => array( 'label' => __( 'Cor de destaque', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#00ffff' ),
                 'customer_experience_background_mode' => array( 'label' => __( 'Modo do fundo da pagina', EOP_TEXT_DOMAIN ), 'type' => 'select', 'default' => 'gradient', 'choices' => $fill_mode_choices ),
                 'customer_experience_background_color' => array( 'label' => __( 'Cor principal do fundo da pagina', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#edf2fb' ),
                 'customer_experience_background_secondary_color' => array( 'label' => __( 'Segunda cor do fundo da pagina', EOP_TEXT_DOMAIN ), 'type' => 'color', 'default' => '#f7f9fc' ),
@@ -1958,7 +1958,7 @@ class EOP_Settings {
                     'customer_experience_background_secondary_color' => array( 'label' => __( 'Cor secundaria do fundo', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Fundo da pagina', EOP_TEXT_DOMAIN ), 'default' => '#f7f9fc' ),
                     'customer_experience_text_color'       => array( 'label' => __( 'Texto principal', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Cores base', EOP_TEXT_DOMAIN ), 'default' => '#16243a' ),
                     'customer_experience_muted_color'      => array( 'label' => __( 'Texto auxiliar', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Cores base', EOP_TEXT_DOMAIN ), 'default' => '#66768d' ),
-                    'customer_experience_accent_color'     => array( 'label' => __( 'Cor de destaque', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Cores base', EOP_TEXT_DOMAIN ), 'default' => '#d78a2f' ),
+                    'customer_experience_accent_color'     => array( 'label' => __( 'Cor de destaque', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Cores base', EOP_TEXT_DOMAIN ), 'default' => '#00ffff' ),
                     'border_color'                         => array( 'label' => __( 'Cor de borda compartilhada', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Bordas compartilhadas', EOP_TEXT_DOMAIN ), 'default' => '#dbe3f0' ),
                     'customer_experience_shared_border_width' => array( 'label' => __( 'Espessura da borda compartilhada', EOP_TEXT_DOMAIN ), 'type' => 'size', 'group' => __( 'Bordas compartilhadas', EOP_TEXT_DOMAIN ), 'default' => '1px' ),
                     'customer_experience_shared_border_style' => array( 'label' => __( 'Estilo da borda compartilhada', EOP_TEXT_DOMAIN ), 'type' => 'select', 'group' => __( 'Bordas compartilhadas', EOP_TEXT_DOMAIN ), 'default' => 'solid', 'choices' => $border_style_choices ),
@@ -2068,17 +2068,17 @@ class EOP_Settings {
                 'fields'      => array(
                     'proposal_button_enabled'             => array( 'label' => __( 'Exibir botao', EOP_TEXT_DOMAIN ), 'type' => 'select', 'group' => __( 'Comportamento', EOP_TEXT_DOMAIN ), 'default' => 'yes', 'choices' => $yes_no_choices ),
                     'proposal_button_label'               => array( 'label' => __( 'Texto do botao', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Comportamento', EOP_TEXT_DOMAIN ) ),
-                    'customer_experience_primary_button_background_color' => array( 'label' => __( 'Fundo do botao', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Fundo e borda', EOP_TEXT_DOMAIN ), 'default' => '#d78a2f' ),
+                    'customer_experience_primary_button_background_color' => array( 'label' => __( 'Fundo do botao', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Fundo e borda', EOP_TEXT_DOMAIN ), 'default' => '#00ffff' ),
                     'customer_experience_primary_button_text_color'  => array( 'label' => __( 'Cor do texto', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Fundo e borda', EOP_TEXT_DOMAIN ), 'default' => '#ffffff' ),
                     'customer_experience_button_border_width' => array( 'label' => __( 'Largura da borda', EOP_TEXT_DOMAIN ), 'type' => 'size', 'group' => __( 'Fundo e borda', EOP_TEXT_DOMAIN ), 'default' => '0px' ),
                     'customer_experience_button_border_style' => array( 'label' => __( 'Estilo da borda', EOP_TEXT_DOMAIN ), 'type' => 'select', 'group' => __( 'Fundo e borda', EOP_TEXT_DOMAIN ), 'default' => 'solid', 'choices' => $border_style_choices ),
-                    'customer_experience_button_border_color' => array( 'label' => __( 'Cor da borda', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Fundo e borda', EOP_TEXT_DOMAIN ), 'default' => '#d78a2f' ),
+                    'customer_experience_button_border_color' => array( 'label' => __( 'Cor da borda', EOP_TEXT_DOMAIN ), 'type' => 'color', 'group' => __( 'Fundo e borda', EOP_TEXT_DOMAIN ), 'default' => '#00ffff' ),
                     'customer_experience_button_font_size'   => array( 'label' => __( 'Tamanho da fonte', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ), 'default' => '16px' ),
                     'customer_experience_button_line_height' => array( 'label' => __( 'Line-height', EOP_TEXT_DOMAIN ), 'type' => 'text', 'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ), 'default' => '1' ),
                     'customer_experience_button_font_weight' => array( 'label' => __( 'Peso da fonte', EOP_TEXT_DOMAIN ), 'type' => 'select', 'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ), 'default' => '700', 'choices' => $font_weight_choices ),
                     'customer_experience_button_padding'     => array( 'label' => __( 'Padding', EOP_TEXT_DOMAIN ), 'type' => 'box', 'group' => __( 'Espacamento e sombra', EOP_TEXT_DOMAIN ), 'default' => '0 22px' ),
                     'customer_experience_button_radius'      => array( 'label' => __( 'Radius', EOP_TEXT_DOMAIN ), 'type' => 'size', 'group' => __( 'Espacamento e sombra', EOP_TEXT_DOMAIN ), 'default' => '18px' ),
-                    'customer_experience_button_shadow'      => array( 'label' => __( 'Sombra', EOP_TEXT_DOMAIN ), 'type' => 'shadow', 'group' => __( 'Espacamento e sombra', EOP_TEXT_DOMAIN ), 'default' => '0 16px 30px rgba(215, 138, 47, .20)' ),
+                    'customer_experience_button_shadow'      => array( 'label' => __( 'Sombra', EOP_TEXT_DOMAIN ), 'type' => 'shadow', 'group' => __( 'Espacamento e sombra', EOP_TEXT_DOMAIN ), 'default' => '0 16px 30px rgba(0, 255, 255, .20)' ),
                 ),
             ),
             array(

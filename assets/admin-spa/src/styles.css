@@ -39,8 +39,8 @@ body.eop-admin-react-shell #eop-admin-app {
 
 .eop-admin-spa--react {
   --eop-panel-bg: linear-gradient(180deg, rgba(9, 21, 51, 0.98) 0%, rgba(15, 37, 87, 0.98) 100%);
-  --eop-panel-active-bg: linear-gradient(135deg, rgba(21, 50, 103, 0.95) 0%, rgba(184, 112, 31, 0.92) 100%);
-  --eop-panel-accent: #d78a2f;
+  --eop-panel-active-bg: linear-gradient(135deg, rgba(21, 50, 103, 0.95) 0%, rgba(0, 204, 204, 0.92) 100%);
+  --eop-panel-accent: #00ffff;
   --eop-panel-shadow: 0 20px 40px rgba(9, 21, 51, 0.22);
   max-width: 100%;
   min-height: 100vh;
@@ -1502,8 +1502,8 @@ body.eop-admin-react-shell #eop-admin-app {
   width: 10px;
   height: 10px;
   border-radius: 999px;
-  background: var(--eop-panel-accent, #d78a2f);
-  box-shadow: 0 0 0 4px rgba(215, 138, 47, 0.15);
+  background: var(--eop-panel-accent, #00ffff);
+  box-shadow: 0 0 0 4px rgba(0, 255, 255, 0.15);
 }
 
 .eop-proposal-preview-card__tools {

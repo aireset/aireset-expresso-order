@@ -120,9 +120,11 @@ class EOP_Admin_SPA {
 			}
 		}
 
-		// Reaproveita os estilos legados dos componentes operacionais (Novo pedido /
-		// Pedidos) renderizados pelos componentes React (.eop-pdv-grid, .eop-card,
-		// .eop-accordion, .eop-totals, .eop-shipping-*, etc.) que vivem no admin.css.
+		// Estilos legados dos componentes operacionais (Novo pedido / Pedidos)
+		// renderizados pelos componentes React (.eop-pdv-grid, .eop-card,
+		// .eop-accordion, .eop-totals, .eop-shipping-*, .eop-order-card-*, etc.).
+		// O modo fullscreen do shell (que esconderia o menu do WP) fica desativado
+		// em filter_admin_body_class, entao carregar o admin.css completo e seguro.
 		$admin_css_path = EOP_PLUGIN_DIR . 'assets/css/admin.css';
 		wp_enqueue_style(
 			'eop-admin-spa-legacy',

@@ -1628,3 +1628,91 @@ body.eop-admin-spa-screen.is-plugin-fullscreen #wpcontent {
     white-space: normal;
   }
 }
+/* Componentes do browser de pedidos (Novo painel React: OrdersBrowser).
+   Portado do dashboard do frontend com cores literais para ficar disponivel
+   no admin sem depender do frontend.css. */
+.eop-orders-browser__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.eop-orders-browser__filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(220px, 0.6fr);
+  gap: 14px;
+}
+
+.eop-orders-browser__summary {
+  display: grid;
+}
+
+.eop-orders-summary__card {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 18px 22px;
+  border: 1px solid #dbe2ff;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), #ffffff);
+  box-shadow: 0 10px 30px rgba(0, 3, 75, 0.06);
+}
+
+.eop-orders-summary__card strong {
+  color: #11162f;
+  font-size: 15px;
+}
+
+.eop-orders-summary__card span {
+  color: #55607f;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.eop-orders-browser__list {
+  display: grid;
+  gap: 18px;
+}
+
+.eop-orders-empty-state {
+  color: #55607f;
+  font-size: 15px;
+  text-align: center;
+}
+
+.eop-order-card__email {
+  margin: 8px 0 0;
+  color: #55607f;
+  font-size: 14px;
+}
+
+.eop-order-card__meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.eop-order-card__meta div {
+  display: grid;
+  gap: 6px;
+  padding: 16px 18px;
+  border: 1px solid #e2e8ff;
+  border-radius: 18px;
+  background: #fbfcff;
+}
+
+.eop-order-card__meta span {
+  color: #667391;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.eop-order-card__meta strong {
+  color: #11162f;
+  font-size: 16px;
+}

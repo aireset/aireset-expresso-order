@@ -185,9 +185,8 @@ class EOP_Admin_Page {
 
         $classes .= ' eop-admin-spa-screen';
 
-        if ( 'new-order' === self::normalize_view( isset( $_GET['view'] ) ? wp_unslash( $_GET['view'] ) : '' ) ) {
-            $classes .= ' is-plugin-fullscreen';
-        }
+        // Nao ativar o modo fullscreen (que esconde o menu do WordPress). O painel
+        // do plugin convive com o menu/admin bar do WP, como nas demais telas.
 
         return trim( $classes );
     }

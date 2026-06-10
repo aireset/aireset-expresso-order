@@ -2001,7 +2001,7 @@ function App() {
                       className={`eop-react-order ${selectedOrderId === order.id ? 'is-active' : ''}`}
                       onClick={() => setSelectedOrderId(order.id)}
                     >
-                      <strong>#{order.number}</strong>
+                      <strong>{order.number}</strong>
                       <span>{order.customer_name || 'Sem cliente'}</span>
                       <span>{order.status}</span>
                       <small>{formatCurrency(order.total, order.currency)}</small>
@@ -2017,7 +2017,7 @@ function App() {
                     <div className="eop-react-block">
                       <div className="eop-react-block__head">
                         <div>
-                          <h4>Pedido #{orderDetail.number}</h4>
+                          <h4>Pedido {orderDetail.number}</h4>
                           <p>
                             Atualize dados do cliente, endereco, descontos e itens existentes.
                           </p>

@@ -10,6 +10,7 @@ Todas as alteracoes relevantes do plugin `Aireset Expresso Order` devem ser regi
 - admin SPA: desativa o modo fullscreen forcado no "Novo pedido" que escondia o menu do WordPress; o painel volta a conviver com o menu do WP, e o modo foco (esconder a interface do WP) e o recolher da sidebar (faixa de icones com submenus em fly-in) viram botoes opcionais controlados pelo usuario
 - frontend: o shortcode `[expresso_order]` (tela de vendas) passa a usar o React por padrao para usuarios com permissao de vendedor; escape para o frontend legado com `?eop_legacy=1`
 - frontend: corrige o overlap do PDV em larguras medias/zoom (a coluna de produtos vazava por baixo da sidebar); o layout passa a empilhar em 1 coluna abaixo de 1280px
+- admin SPA: o conteudo do "Novo pedido"/"Pedidos" passa a ter o mesmo acabamento da tela de vendas do frontend (cards arredondados com sombra, Total em destaque navy, botao primario em pill com gradiente, icone de accordion circular)
 - compatibilidade: declara suporte a HPOS (Custom Order Tables) do WooCommerce
 - corrige o numero de pedido exibido com `#` duplicado (`##6161` -> `#6161`) no admin SPA
 

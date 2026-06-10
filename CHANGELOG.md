@@ -2,6 +2,10 @@
 
 Todas as alteracoes relevantes do plugin `Aireset Expresso Order` devem ser registradas aqui.
 
+## 1.2.30 - 2026-06-10
+
+- corrige a interpolacao desnecessaria de numeros de pedido no admin SPA, limpando a renderizacao e evitando formatacao redundante
+
 ## 1.2.29 - 2026-06-10
 
 - release patch: correcoes menores, aprimoramentos de estabilidade e ajustes de build

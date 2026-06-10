@@ -694,8 +694,8 @@ body.eop-settings-screen .error {
   width: 10px;
   height: 10px;
   border-radius: 999px;
-  background: #32d1c7;
-  box-shadow: 0 0 0 4px rgba(50, 209, 199, 0.15);
+  background: #d78a2f;
+  box-shadow: 0 0 0 4px rgba(215, 138, 47, 0.15);
 }
 .eop-proposal-preview-card__tools {
   display: flex;

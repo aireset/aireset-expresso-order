@@ -666,7 +666,7 @@ body.eop-admin-spa-screen.is-plugin-fullscreen #wpcontent {
   text-decoration: none;
 }
 .eop-admin-spa-nav__item.is-active, .eop-admin-spa-nav__group.is-open > .eop-admin-spa-nav__item {
-  border-color: rgba(80, 201, 194, 0.2) !important;
+  border-color: rgba(215, 138, 47, 0.22) !important;
   background: linear-gradient(135deg, rgba(21, 50, 103, 0.95) 0%, rgba(22, 91, 121, 0.9) 100%) !important;
   color: #fff !important;
   box-shadow: inset 0 0 0 1px rgba(80, 201, 194, 0.2) !important;
@@ -680,7 +680,7 @@ body.eop-admin-spa-screen.is-plugin-fullscreen #wpcontent {
   gap: 0;
 }
 .eop-admin-spa-nav__group.is-open > .eop-admin-spa-nav__group-toggle {
-  border-color: rgba(80, 201, 194, 0.2) !important;
+  border-color: rgba(215, 138, 47, 0.22) !important;
   background: linear-gradient(135deg, rgba(21, 50, 103, 0.95) 0%, rgba(22, 91, 121, 0.9) 100%) !important;
   color: #fff !important;
   box-shadow: inset 0 0 0 1px rgba(80, 201, 194, 0.2) !important;
@@ -740,13 +740,13 @@ body.eop-admin-spa-screen.is-plugin-fullscreen #wpcontent {
 }
 .eop-admin-spa-nav__submenu-item:hover, .eop-admin-spa-nav__submenu-item:focus {
   background: rgba(255, 255, 255, 0.08);
-  border-left-color: #32d1c7;
+  border-left-color: #d78a2f;
   color: #fff;
   outline: none;
 }
 .eop-admin-spa-nav__submenu-item.is-active {
   background: linear-gradient(90deg, rgba(29, 167, 161, 0.18) 0%, rgba(255, 255, 255, 0.1) 100%);
-  border-left-color: #32d1c7;
+  border-left-color: #d78a2f;
   color: #fff;
   font-weight: 600;
 }

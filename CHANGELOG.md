@@ -2,6 +2,10 @@
 
 Todas as alteracoes relevantes do plugin `Aireset Expresso Order` devem ser registradas aqui.
 
+## 1.2.29 - 2026-06-10
+
+- release patch: correcoes menores, aprimoramentos de estabilidade e ajustes de build
+
 ## 1.2.28 - 2026-06-08
 
 - redesenha a pagina publica da proposta para mobile (hero mais leve, card de item compacto, logo responsiva que nao estoura mais a caixa) mantendo o layout do desktop

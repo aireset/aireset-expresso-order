@@ -148,7 +148,7 @@ class EOP_Public_Proposal {
         $flow_enabled    = class_exists( 'EOP_Post_Confirmation_Flow' ) && EOP_Post_Confirmation_Flow::is_enabled_for_order( $order );
         $current_flow_stage = $confirmed && $flow_enabled ? EOP_Post_Confirmation_Flow::get_current_stage( $order ) : '';
         $current_flow_label = $current_flow_stage ? EOP_Post_Confirmation_Flow::get_stage_label( $current_flow_stage ) : '';
-        $is_flow_focus = $confirmed && $flow_enabled && in_array( $current_flow_stage, array( 'payment', 'contract', 'upload', 'products', 'completed' ), true );
+        $is_flow_focus = $confirmed && $flow_enabled && in_array( $current_flow_stage, array( 'data', 'payment', 'contract', 'upload', 'products', 'completed' ), true );
         $document_config = class_exists( 'EOP_Document_Manager' ) ? EOP_Document_Manager::get_document_display_settings( 'proposal' ) : array();
         $item_columns    = class_exists( 'EOP_Document_Manager' ) ? EOP_Document_Manager::get_document_item_columns( 'proposal' ) : array();
         $item_labels     = class_exists( 'EOP_Document_Manager' ) ? EOP_Document_Manager::get_document_item_labels( 'proposal' ) : array();

@@ -2320,39 +2320,6 @@ class EOP_Post_Confirmation_Flow {
 				</div>
 			</div>
 		</div>
-		<div class="eop-post-flow eop-post-flow--stage-products eop-post-flow--stage-contract eop-post-flow--final-step eop-post-flow--admin-preview eop-post-flow--admin-final-preview">
-			<div class="eop-post-flow__contract-header">
-				<div class="eop-post-flow__contract-header-main">
-					<div class="eop-post-flow__contract-brand">
-						<?php if ( '' !== $logo_url ) : ?>
-							<img src="<?php echo esc_url( $logo_url ); ?>" alt="<?php echo esc_attr( $brand_name ); ?>">
-						<?php else : ?>
-							<span class="eop-post-flow__contract-brand-fallback"><?php echo esc_html( strtoupper( substr( $brand_name, 0, 1 ) ) ); ?></span>
-						<?php endif; ?>
-					</div>
-					<div class="eop-post-flow__contract-meta">
-						<strong><?php echo esc_html( $brand_name ); ?></strong>
-						<span><?php echo esc_html( sprintf( __( 'Pedido #%d', EOP_TEXT_DOMAIN ), 5238 ) ); ?></span>
-					</div>
-				</div>
-				<?php self::render_stage_breadcrumb( $steps, 'upload' ); ?>
-			</div>
-			<div class="eop-post-flow__layout">
-				<div class="eop-post-flow__main">
-					<div class="eop-post-flow__final-intro">
-						<span class="eop-post-flow__final-intro-eyebrow"><?php echo esc_html( $final_intro_eyebrow ); ?></span>
-						<h2 class="eop-post-flow__final-intro-title"><?php echo esc_html( $settings['post_confirmation_products_title'] ); ?></h2>
-						<p class="eop-post-flow__final-intro-text"><?php echo esc_html( $settings['post_confirmation_products_description'] ); ?></p>
-					</div>
-					<div class="eop-post-flow__final-step-card">
-						<form method="post" enctype="multipart/form-data" class="eop-post-flow__form eop-post-flow__form--final-step">
-							<?php echo $products_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-							<button type="submit" class="eop-proposal-button eop-post-flow__final-submit"><?php echo esc_html( $settings['post_confirmation_products_button_label'] ); ?></button>
-						</form>
-					</div>
-				</div>
-			</div>
-		</div>
 	</div>
 </body>
 </html>

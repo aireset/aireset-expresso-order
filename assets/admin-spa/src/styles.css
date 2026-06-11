@@ -1430,12 +1430,14 @@ body.eop-admin-react-shell #eop-admin-app {
 }
 
 .eop-react-preview-frame {
+  display: block;
   width: 100%;
-  min-height: 640px;
+  min-height: 200px;
   border: 1px solid #d9e2f1;
   border-radius: 18px;
   margin-top: 12px;
   background: #fff;
+  overflow: hidden;
 }
 
 .eop-react-preview-html {

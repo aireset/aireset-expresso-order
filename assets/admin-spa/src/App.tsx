@@ -399,6 +399,10 @@ function App() {
   const [newOrderMessage, setNewOrderMessage] = useState<string>('');
   const [createdOrderUrl, setCreatedOrderUrl] = useState<string>('');
   const [previewPayload, setPreviewPayload] = useState<PreviewPayload | null>(null);
+  // Bump apos salvar para forcar o iframe do preview a recarregar e refletir as
+  // configuracoes recem-salvas sem precisar de F5.
+  const [previewNonce, setPreviewNonce] = useState<number>(0);
+  const previewHtmlRef = useRef<HTMLDivElement>(null);
   const settingsCacheRef = useRef<Record<string, SettingsPayload>>({});
   const previewCacheRef = useRef<Record<string, PreviewPayload>>({});
   const ordersCacheRef = useRef<OrdersPayload | null>(null);
@@ -1213,6 +1217,40 @@ function App() {
     }
   }
 
+  // Ajusta a altura do iframe srcdoc do preview da proposta ao seu conteudo,
+  // eliminando a barra de rolagem interna. Roda quando o preview (re)carrega.
+  useEffect(() => {
+    const container = previewHtmlRef.current;
+    if (!container) {
+      return;
+    }
+    const iframe = container.querySelector<HTMLIFrameElement>('iframe.eop-proposal-preview-render');
+    if (!iframe) {
+      return;
+    }
+    const resize = () => {
+      try {
+        const doc = iframe.contentDocument;
+        const height = doc
+          ? Math.max(doc.documentElement?.scrollHeight ?? 0, doc.body?.scrollHeight ?? 0)
+          : 0;
+        if (height > 0) {
+          iframe.style.height = `${height}px`;
+          iframe.style.minHeight = '0';
+          const shell = container.querySelector<HTMLElement>('.eop-proposal-preview-card__shell');
+          if (shell) {
+            shell.style.minHeight = '0';
+          }
+        }
+      } catch {
+        /* iframe inacessivel: mantem a altura padrao */
+      }
+    };
+    iframe.addEventListener('load', resize);
+    resize();
+    return () => iframe.removeEventListener('load', resize);
+  }, [previewPayload, previewNonce]);
+
   async function saveCurrentSettings() {
     if (!settingsPayload || !getAdminSpaConfig()) {
       return;
@@ -1227,6 +1265,21 @@ function App() {
       setSettingsDraft(createSettingsDraft(payload));
       setSettingsSaveState('saved');
       setSettingsSaveMessage('Configuracoes salvas com sucesso.');
+
+      // Atualiza o preview ao vivo logo apos salvar (sem F5): invalida o cache,
+      // rebusca e forca o iframe a recarregar via previewNonce.
+      const previewSurface = previewSurfaceByView[selectedView];
+      if (previewSurface) {
+        try {
+          delete previewCacheRef.current[previewSurface];
+          const freshPreview = await adminApi.getPreview(previewSurface);
+          previewCacheRef.current[previewSurface] = freshPreview;
+          setPreviewPayload(freshPreview);
+          setPreviewNonce((value) => value + 1);
+        } catch {
+          /* preview e best-effort */
+        }
+      }
     } catch (saveError) {
       setSettingsSaveState('error');
       setSettingsSaveMessage(saveError instanceof Error ? saveError.message : 'Falha ao salvar configuracoes.');
@@ -1516,10 +1569,30 @@ function App() {
           {!viewLoading && !viewError && previewPayload ? (
             <div className="eop-react-block">
               {previewPayload.mode === 'iframe' && previewPayload.url ? (
-                <iframe title={previewPayload.surface} src={previewPayload.url} className="eop-react-preview-frame" />
+                <iframe
+                  key={`${previewPayload.surface}-${previewNonce}`}
+                  title={previewPayload.surface}
+                  src={previewPayload.url}
+                  className="eop-react-preview-frame"
+                  scrolling="no"
+                  onLoad={(event) => {
+                    try {
+                      const doc = event.currentTarget.contentDocument;
+                      const height = doc
+                        ? Math.max(doc.documentElement?.scrollHeight ?? 0, doc.body?.scrollHeight ?? 0)
+                        : 0;
+                      if (height > 0) {
+                        event.currentTarget.style.height = `${height}px`;
+                      }
+                    } catch {
+                      /* iframe cross-origin: mantem a altura padrao */
+                    }
+                  }}
+                />
               ) : null}
               {previewPayload.mode === 'html' && previewPayload.html ? (
                 <div
+                  ref={previewHtmlRef}
                   className="eop-react-preview-html"
                   dangerouslySetInnerHTML={{ __html: previewPayload.html }}
                 />

@@ -86,6 +86,7 @@ export const settingsSectionByView: Record<string, string> = {
 export const previewSurfaceByView: Record<string, string> = {
   'settings-proposal-link-style': 'proposal',
   'settings-new-order-style': 'new-order',
+  'settings-orders-list-style': 'orders-list',
   'settings-confirmation-preview': 'confirmation-contract',
   'settings-confirmation-upload-products-preview': 'confirmation-upload-products',
 };

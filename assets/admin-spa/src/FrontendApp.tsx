@@ -150,7 +150,13 @@ type View = 'new-order' | 'orders';
 
 function FrontendApp() {
   const [bootstrap, setBootstrap] = useState<BootstrapPayload | null>(() => getInlineBootstrap());
-  const [view, setView] = useState<View>('new-order');
+  const [view, setView] = useState<View>(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('view') === 'orders' ? 'orders' : 'new-order';
+    } catch {
+      return 'new-order';
+    }
+  });
   const [orders, setOrders] = useState<OrdersPayload | null>(null);
   const [search, setSearch] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('any');

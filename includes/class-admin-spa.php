@@ -426,6 +426,16 @@ class EOP_Admin_SPA {
 					)
 				);
 
+			case 'orders-list':
+				return rest_ensure_response(
+					array(
+						'surface' => $surface,
+						'mode'    => 'iframe',
+						'url'     => EOP_Admin_Page::get_preview_frame_url( 'orders' ),
+						'source'  => 'public-shortcode',
+					)
+				);
+
 			case 'proposal':
 				if ( class_exists( 'EOP_Public_Proposal' ) && method_exists( 'EOP_Public_Proposal', 'render_admin_preview_card' ) ) {
 					return rest_ensure_response(

@@ -2297,9 +2297,11 @@ class EOP_Post_Confirmation_Flow {
 							<span class="eop-post-flow__contract-brand-fallback"><?php echo esc_html( strtoupper( substr( $brand_name, 0, 1 ) ) ); ?></span>
 						<?php endif; ?>
 					</div>
-					<div class="eop-post-flow__contract-meta">
+					<div class="eop-post-flow__contract-copy">
 						<strong><?php echo esc_html( $brand_name ); ?></strong>
-						<span><?php echo esc_html( sprintf( __( 'Pedido #%d', EOP_TEXT_DOMAIN ), 5238 ) ); ?></span>
+						<span class="eop-post-flow__contract-chip"><?php echo esc_html( sprintf( __( 'Etapa %1$d de %2$d', EOP_TEXT_DOMAIN ), 2, 3 ) ); ?></span>
+						<span class="eop-post-flow__contract-eyebrow"><?php echo esc_html( sprintf( __( 'Pedido #%d', EOP_TEXT_DOMAIN ), 5238 ) ); ?></span>
+						<p class="eop-post-flow__contract-subtitle"><?php esc_html_e( 'Conclua a etapa atual para o fluxo continuar sem precisar voltar para esta proposta depois.', EOP_TEXT_DOMAIN ); ?></p>
 					</div>
 				</div>
 				<?php self::render_stage_breadcrumb( $steps, 'upload' ); ?>
@@ -3872,9 +3874,11 @@ class EOP_Post_Confirmation_Flow {
 							<span class="eop-post-flow__contract-brand-fallback"><?php echo esc_html( strtoupper( substr( $brand_name, 0, 1 ) ) ); ?></span>
 						<?php endif; ?>
 					</div>
-					<div class="eop-post-flow__contract-meta">
+					<div class="eop-post-flow__contract-copy">
 						<strong><?php echo esc_html( $brand_name ); ?></strong>
-						<span><?php echo esc_html( sprintf( __( 'Pedido #%d', EOP_TEXT_DOMAIN ), 5238 ) ); ?></span>
+						<span class="eop-post-flow__contract-chip"><?php echo esc_html( sprintf( __( 'Etapa %1$d de %2$d', EOP_TEXT_DOMAIN ), 1, 3 ) ); ?></span>
+						<span class="eop-post-flow__contract-eyebrow"><?php echo esc_html( sprintf( __( 'Pedido #%d', EOP_TEXT_DOMAIN ), 5238 ) ); ?></span>
+						<p class="eop-post-flow__contract-subtitle"><?php esc_html_e( 'Leia e registre o aceite do contrato para liberar as proximas etapas.', EOP_TEXT_DOMAIN ); ?></p>
 					</div>
 				</div>
 				<?php self::render_stage_breadcrumb( $steps, 'contract' ); ?>

@@ -1536,42 +1536,6 @@ function App() {
             <NewOrderForm />
           ) : null}
 
-          {!viewLoading && !viewError && selectedView === 'pdf' ? (
-            <div className="eop-react-block">
-              <div className="eop-react-block__head">
-                <div>
-                  <h4>Modulo PDF</h4>
-                  <p>
-                    O SPA principal esta ativo, mas a edicao completa do PDF ainda usa o modulo especializado ate a
-                    quebra por dominio ficar pronta.
-                  </p>
-                </div>
-                <a className="eop-react-link" href={currentUrl}>
-                  Abrir PDF completo
-                </a>
-              </div>
-
-              <div className="eop-react-module-grid">
-                <article className="eop-react-module-card">
-                  <strong>Configuracoes de loja</strong>
-                  <span>Logo, dados institucionais, endereco, telefone e rodape continuam centralizados.</span>
-                </article>
-                <article className="eop-react-module-card">
-                  <strong>Pedido e proposta</strong>
-                  <span>Templates, numeracao, exibicao de colunas e textos serao separados em chunks proprios.</span>
-                </article>
-                <article className="eop-react-module-card">
-                  <strong>Preview real</strong>
-                  <span>O renderer PHP continua sendo a fonte de verdade para evitar divergencia visual.</span>
-                </article>
-                <article className="eop-react-module-card">
-                  <strong>Proxima etapa</strong>
-                  <span>Substituir o fallback por telas React especificas: loja, pedido, proposta e preview.</span>
-                </article>
-              </div>
-            </div>
-          ) : null}
-
           {!viewLoading && !viewError && editableSettings && settingsPayload ? (
             <div className="eop-react-block">
               {settingsPayload.meta?.intro ? (

@@ -1001,11 +1001,6 @@ class EOP_Admin_SPA {
 				'prefix' => array( 'post_confirmation_upload_', 'post_confirmation_products_', 'post_confirmation_final_' ),
 				'exact'  => array( 'post_confirmation_locked_products' ),
 			),
-			'pdf' => array(
-				'source' => 'pdf',
-				'exact'  => array(),
-				'prefix' => array(),
-			),
 			'pdf-display' => array(
 				'source' => 'pdf',
 				'exact'  => array( 'display_mode', 'paper_size', 'template_name', 'ink_saving_mode', 'test_mode', 'font_subsetting', 'extended_currency_symbol' ),

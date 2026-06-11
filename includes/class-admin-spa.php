@@ -133,6 +133,19 @@ class EOP_Admin_SPA {
 			file_exists( $admin_css_path ) ? (string) filemtime( $admin_css_path ) : EOP_VERSION
 		);
 
+		// Mesmo CSS da tela de vendas (shortcode [expresso_order]). Como o conteudo
+		// React do admin usa os MESMOS componentes (NewOrderForm/OrdersBrowser) e o
+		// wrapper tem a classe .eop-pdv, as regras `.eop-pdv ...` do frontend.css
+		// estilizam o conteudo identico a tela de vendas. Carregado depois do
+		// admin.css para vencer por ordem/especificidade.
+		$frontend_css_path = EOP_PLUGIN_DIR . 'assets/css/frontend.css';
+		wp_enqueue_style(
+			'eop-admin-spa-frontend',
+			EOP_PLUGIN_URL . 'assets/css/frontend.css',
+			array( 'eop-admin-spa-legacy' ),
+			file_exists( $frontend_css_path ) ? (string) filemtime( $frontend_css_path ) : EOP_VERSION
+		);
+
 		// CSS do recolher de sidebar (botao "<"): colapsa a nav do plugin para uma
 		// faixa de icones com submenus em fly-in (.eop-admin-spa.is-sidebar-collapsed).
 		$flyin_css_path = EOP_PLUGIN_DIR . 'assets/css/admin-flyinmenu.css';

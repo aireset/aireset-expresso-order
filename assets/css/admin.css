@@ -171,8 +171,8 @@
 }
 
 .eop-item-defaults {
-  display: grid;
-  grid-template-columns: 140px minmax(120px, 160px) minmax(140px, 180px) minmax(110px, 140px);
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   align-items: end;
   margin-bottom: 14px;
@@ -182,6 +182,7 @@
   background: linear-gradient(180deg, #fff 0%, #f7f9ff 100%);
 }
 .eop-item-defaults__title {
+  flex: 1 1 110px;
   color: #2850dd;
   font-size: 12px;
   font-weight: 800;
@@ -190,12 +191,15 @@
   align-self: center;
 }
 .eop-item-defaults .eop-field {
+  flex: 1 1 130px;
+  min-width: 0;
   margin-bottom: 0;
 }
 .eop-item-defaults__discount-group {
   min-height: 44px;
 }
 .eop-item-defaults__action {
+  flex: 1 1 120px;
   display: flex;
   align-items: end;
 }

@@ -1217,18 +1217,21 @@ function App() {
     }
   }
 
-  // Ajusta a altura do iframe srcdoc do preview da proposta ao seu conteudo,
-  // eliminando a barra de rolagem interna. Roda quando o preview (re)carrega.
+  // Mantem a altura do iframe srcdoc do preview da proposta sempre igual ao seu
+  // conteudo, eliminando a barra de rolagem interna. Reage a QUALQUER reflow do
+  // conteudo (mudanca de cor/fonte, toggle Desktop/Mobile, atualizacao pos-save)
+  // via ResizeObserver, e a troca do proprio iframe pelo controlador legado via
+  // MutationObserver.
   useEffect(() => {
     const container = previewHtmlRef.current;
     if (!container) {
       return;
     }
-    const iframe = container.querySelector<HTMLIFrameElement>('iframe.eop-proposal-preview-render');
-    if (!iframe) {
-      return;
-    }
-    const resize = () => {
+
+    let contentObserver: ResizeObserver | null = null;
+    let trackedIframe: HTMLIFrameElement | null = null;
+
+    const fit = (iframe: HTMLIFrameElement) => {
       try {
         const doc = iframe.contentDocument;
         const height = doc
@@ -1246,9 +1249,39 @@ function App() {
         /* iframe inacessivel: mantem a altura padrao */
       }
     };
-    iframe.addEventListener('load', resize);
-    resize();
-    return () => iframe.removeEventListener('load', resize);
+
+    const observeContent = (iframe: HTMLIFrameElement) => {
+      fit(iframe);
+      try {
+        const doc = iframe.contentDocument;
+        if (doc && typeof ResizeObserver !== 'undefined') {
+          contentObserver?.disconnect();
+          contentObserver = new ResizeObserver(() => fit(iframe));
+          contentObserver.observe(doc.documentElement);
+        }
+      } catch {
+        /* sem acesso ao conteudo: ignora */
+      }
+    };
+
+    const attach = () => {
+      const iframe = container.querySelector<HTMLIFrameElement>('iframe.eop-proposal-preview-render');
+      if (!iframe || iframe === trackedIframe) {
+        return;
+      }
+      trackedIframe = iframe;
+      iframe.addEventListener('load', () => observeContent(iframe));
+      observeContent(iframe);
+    };
+
+    attach();
+    const domObserver = new MutationObserver(() => attach());
+    domObserver.observe(container, { childList: true, subtree: true });
+
+    return () => {
+      contentObserver?.disconnect();
+      domObserver.disconnect();
+    };
   }, [previewPayload, previewNonce]);
 
   async function saveCurrentSettings() {

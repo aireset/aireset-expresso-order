@@ -123,6 +123,7 @@
     // Achata cards aninhados dentro do card principal.
     .eop-post-flow__document-reader,
     .eop-post-flow__stage-intro,
+    .eop-post-flow__final-intro,
     .eop-post-flow__final-step-card,
     .eop-post-flow__acceptance-card {
       border: none;
@@ -905,11 +906,11 @@
     display: grid;
     gap: 10px;
     margin: 0 0 8px;
-    padding: 22px 24px;
-    border: 1px solid rgba(15, 27, 53, 0.08);
-    border-radius: 26px;
-    background: var(--eop-post-flow-panel-bg, #ffffff);
-    box-shadow: 0 12px 28px rgba(15, 27, 53, 0.05);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
   }
 
   &__final-intro-eyebrow {

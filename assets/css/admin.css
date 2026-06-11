@@ -1762,3 +1762,39 @@ body.eop-admin-spa-screen.is-plugin-fullscreen #wpcontent {
   color: #050a76;
   font-size: 18px;
 }
+
+/* Paridade dos accordions (Cliente / Ver detalhes de pagamento) com o frontend:
+   barra com label a esquerda e icone circular a direita, sem aparencia de botao. */
+.eop-admin-spa--react .eop-accordion__toggle,
+.eop-admin-spa--react .eop-totals-detail-toggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+}
+.eop-admin-spa--react .eop-accordion__toggle:hover, .eop-admin-spa--react .eop-accordion__toggle:focus, .eop-admin-spa--react .eop-accordion__toggle:active,
+.eop-admin-spa--react .eop-totals-detail-toggle:hover,
+.eop-admin-spa--react .eop-totals-detail-toggle:focus,
+.eop-admin-spa--react .eop-totals-detail-toggle:active {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+.eop-admin-spa--react .eop-accordion__toggle h2,
+.eop-admin-spa--react .eop-accordion__toggle > span:first-child,
+.eop-admin-spa--react .eop-totals-detail-toggle h2,
+.eop-admin-spa--react .eop-totals-detail-toggle > span:first-child {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 14px;
+  font-weight: 800;
+}

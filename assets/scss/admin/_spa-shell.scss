@@ -1529,3 +1529,40 @@ body.eop-admin-spa-screen.is-plugin-fullscreen {
     font-size: 18px;
   }
 }
+
+/* Paridade dos accordions (Cliente / Ver detalhes de pagamento) com o frontend:
+   barra com label a esquerda e icone circular a direita, sem aparencia de botao. */
+.eop-admin-spa--react {
+  .eop-accordion__toggle,
+  .eop-totals-detail-toggle {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+    min-height: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    text-align: left;
+
+    &:hover,
+    &:focus,
+    &:active {
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      transform: none;
+    }
+
+    h2,
+    > span:first-child {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      font-size: 14px;
+      font-weight: 800;
+    }
+  }
+}

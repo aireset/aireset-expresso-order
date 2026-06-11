@@ -193,6 +193,50 @@
   gap: 14px;
 }
 
+.eop-orders-chips {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.eop-orders-chips__label {
+  color: var(--eop-primary-strong);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.eop-orders-chips__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.eop-orders-chip {
+  padding: 7px 14px;
+  border: 1px solid var(--eop-border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--eop-text-soft);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, color .15s ease;
+}
+
+.eop-orders-chip:hover,
+.eop-orders-chip:focus {
+  border-color: var(--eop-primary);
+  color: var(--eop-primary);
+}
+
+.eop-orders-chip.is-active {
+  border-color: var(--eop-primary);
+  background: var(--eop-primary);
+  color: #fff;
+}
+
 .eop-orders-browser__summary {
   display: grid;
 }

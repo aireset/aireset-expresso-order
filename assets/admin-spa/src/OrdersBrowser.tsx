@@ -150,6 +150,7 @@ function OrdersBrowser() {
   const [orders, setOrders] = useState<OrdersPayload | null>(null);
   const [search, setSearch] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('any');
+  const [flowFilter, setFlowFilter] = useState<string>('any');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [editingOrderId, setEditingOrderId] = useState<number | null>(null);
@@ -163,17 +164,20 @@ function OrdersBrowser() {
     setError('');
 
     adminApi
-      .getOrders()
+      .getOrders({ status: statusFilter, flow: flowFilter, search })
       .then((payload) => setOrders(payload))
       .catch((fetchError) => setError(fetchError instanceof Error ? fetchError.message : 'Nao foi possivel carregar os pedidos agora.'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [statusFilter, flowFilter, search]);
 
+  // Recarrega no servidor quando muda filtro/busca (com debounce para a busca).
   useEffect(() => {
-    if (editingOrderId === null) {
-      loadOrders();
+    if (editingOrderId !== null) {
+      return;
     }
-  }, [editingOrderId, loadOrders]);
+    const timer = setTimeout(loadOrders, 250);
+    return () => clearTimeout(timer);
+  }, [loadOrders, editingOrderId]);
 
   if (editingOrderId !== null) {
     return (
@@ -185,16 +189,22 @@ function OrdersBrowser() {
     );
   }
 
-  const filteredItems = (orders?.items ?? []).filter((order) => {
-    const matchesStatus = statusFilter === 'any' || order.status === statusFilter;
-    const term = search.trim().toLowerCase();
-    const matchesSearch =
-      term === '' ||
-      order.number.toLowerCase().includes(term) ||
-      order.customer_name.toLowerCase().includes(term) ||
-      (order.customer_email || '').toLowerCase().includes(term);
-    return matchesStatus && matchesSearch;
-  });
+  const items = orders?.items ?? [];
+  const totalItems = orders?.pagination?.total_items ?? items.length;
+
+  const statusChips: Array<{ value: string; label: string }> = [
+    { value: 'any', label: 'Todos' },
+    { value: 'pending', label: 'Pendente' },
+    { value: 'processing', label: 'Processando' },
+    { value: 'on-hold', label: 'Aguardando' },
+    { value: 'completed', label: 'Concluido' },
+    { value: 'cancelled', label: 'Cancelado' },
+  ];
+  const flowChips: Array<{ value: string; label: string }> = [
+    { value: 'any', label: 'Todos' },
+    { value: 'pending', label: 'Em andamento' },
+    { value: 'completed', label: 'Fluxo concluido' },
+  ];
 
   return (
     <div className="eop-orders-browser">
@@ -209,26 +219,47 @@ function OrdersBrowser() {
           </button>
         </div>
 
-        <div className="eop-orders-browser__filters">
-          <div className="eop-field">
-            <label>Buscar</label>
-            <input
-              type="search"
-              value={search}
-              placeholder="Pedido, cliente ou e-mail"
-              onChange={(event) => setSearch(event.target.value)}
-            />
+        <div className="eop-field">
+          <label>Buscar</label>
+          <input
+            type="search"
+            value={search}
+            placeholder="Pedido, cliente ou e-mail"
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </div>
+
+        <div className="eop-orders-chips">
+          <span className="eop-orders-chips__label">Status</span>
+          <div className="eop-orders-chips__row">
+            {statusChips.map((chip) => (
+              <button
+                key={chip.value}
+                type="button"
+                className={`eop-orders-chip ${statusFilter === chip.value ? 'is-active' : ''}`}
+                aria-pressed={statusFilter === chip.value}
+                onClick={() => setStatusFilter(chip.value)}
+              >
+                {chip.label}
+              </button>
+            ))}
           </div>
-          <div className="eop-field">
-            <label>Status</label>
-            <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-              <option value="any">Todos</option>
-              <option value="pending">Pendente</option>
-              <option value="processing">Processando</option>
-              <option value="on-hold">Aguardando</option>
-              <option value="completed">Concluido</option>
-              <option value="cancelled">Cancelado</option>
-            </select>
+        </div>
+
+        <div className="eop-orders-chips">
+          <span className="eop-orders-chips__label">Etapa do fluxo</span>
+          <div className="eop-orders-chips__row">
+            {flowChips.map((chip) => (
+              <button
+                key={chip.value}
+                type="button"
+                className={`eop-orders-chip ${flowFilter === chip.value ? 'is-active' : ''}`}
+                aria-pressed={flowFilter === chip.value}
+                onClick={() => setFlowFilter(chip.value)}
+              >
+                {chip.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -237,7 +268,7 @@ function OrdersBrowser() {
         {orders ? (
           <div className="eop-orders-summary__card">
             <strong>{orders.viewer?.is_admin ? 'Todos os pedidos expresso' : 'Seus pedidos expresso'}</strong>
-            <span>{filteredItems.length} pedido(s) encontrado(s)</span>
+            <span>{totalItems} pedido(s) encontrado(s)</span>
           </div>
         ) : null}
       </div>
@@ -246,12 +277,12 @@ function OrdersBrowser() {
         {loading ? <div className="eop-card eop-orders-empty-state">Carregando pedidos...</div> : null}
         {error ? <div className="eop-notice eop-notice-error">{error}</div> : null}
 
-        {!loading && !error && filteredItems.length === 0 ? (
+        {!loading && !error && items.length === 0 ? (
           <div className="eop-card eop-orders-empty-state">Nenhum pedido encontrado para este filtro.</div>
         ) : null}
 
         {!loading && !error
-          ? filteredItems.map((order) => (
+          ? items.map((order) => (
               <OrderCard
                 key={order.id}
                 order={order}

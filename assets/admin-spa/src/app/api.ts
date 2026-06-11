@@ -89,7 +89,14 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify({ documents }),
     }),
-  getOrders: () => request<OrdersPayload>('orders'),
+  getOrders: (params: { status?: string; flow?: string; search?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.status && params.status !== 'any') query.set('status', params.status);
+    if (params.flow && params.flow !== 'any') query.set('flow', params.flow);
+    if (params.search) query.set('search', params.search);
+    const qs = query.toString();
+    return request<OrdersPayload>(qs ? `orders?${qs}` : 'orders');
+  },
   getOrder: (id: number) => request<OrderDetailResponse>(`orders/${id}`),
   createOrder: (order: NewOrderDraft) =>
     request<OrderCreateResponse>('orders', {

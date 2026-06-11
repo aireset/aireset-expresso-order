@@ -402,7 +402,7 @@ function App() {
   // Bump apos salvar para forcar o iframe do preview a recarregar e refletir as
   // configuracoes recem-salvas sem precisar de F5.
   const [previewNonce, setPreviewNonce] = useState<number>(0);
-  const previewHtmlRef = useRef<HTMLDivElement>(null);
+  const previewBlockRef = useRef<HTMLDivElement>(null);
   const settingsCacheRef = useRef<Record<string, SettingsPayload>>({});
   const previewCacheRef = useRef<Record<string, PreviewPayload>>({});
   const ordersCacheRef = useRef<OrdersPayload | null>(null);
@@ -1217,19 +1217,20 @@ function App() {
     }
   }
 
-  // Mantem a altura do iframe srcdoc do preview da proposta sempre igual ao seu
-  // conteudo, eliminando a barra de rolagem interna. Reage a QUALQUER reflow do
-  // conteudo (mudanca de cor/fonte, toggle Desktop/Mobile, atualizacao pos-save)
-  // via ResizeObserver, e a troca do proprio iframe pelo controlador legado via
-  // MutationObserver.
+  // Mantem a altura de QUALQUER iframe de preview (proposta, novo pedido, fluxo
+  // de confirmacao) sempre igual ao seu conteudo, eliminando a barra de rolagem
+  // interna. Reage a qualquer reflow (cor/fonte, toggle Desktop/Mobile,
+  // atualizacao pos-save, fontes carregando tarde) via ResizeObserver, e a troca
+  // do iframe pelo controlador legado via MutationObserver. Generico: cobre todas
+  // as telas de visual com preview.
   useEffect(() => {
-    const container = previewHtmlRef.current;
+    const container = previewBlockRef.current;
     if (!container) {
       return;
     }
 
-    let contentObserver: ResizeObserver | null = null;
-    let trackedIframe: HTMLIFrameElement | null = null;
+    const observers = new Map<HTMLIFrameElement, ResizeObserver>();
+    const tracked = new WeakSet<HTMLIFrameElement>();
 
     const fit = (iframe: HTMLIFrameElement) => {
       try {
@@ -1240,13 +1241,13 @@ function App() {
         if (height > 0) {
           iframe.style.height = `${height}px`;
           iframe.style.minHeight = '0';
-          const shell = container.querySelector<HTMLElement>('.eop-proposal-preview-card__shell');
+          const shell = iframe.closest<HTMLElement>('.eop-proposal-preview-card__shell');
           if (shell) {
             shell.style.minHeight = '0';
           }
         }
       } catch {
-        /* iframe inacessivel: mantem a altura padrao */
+        /* iframe inacessivel (cross-origin): mantem a altura padrao */
       }
     };
 
@@ -1255,23 +1256,32 @@ function App() {
       try {
         const doc = iframe.contentDocument;
         if (doc && typeof ResizeObserver !== 'undefined') {
-          contentObserver?.disconnect();
-          contentObserver = new ResizeObserver(() => fit(iframe));
-          contentObserver.observe(doc.documentElement);
+          observers.get(iframe)?.disconnect();
+          const observer = new ResizeObserver(() => fit(iframe));
+          // Observa o body (cresce quando o conteudo, ate apps React dentro do
+          // iframe, renderiza) e tambem o documentElement como reforco.
+          if (doc.body) {
+            observer.observe(doc.body);
+          }
+          observer.observe(doc.documentElement);
+          observers.set(iframe, observer);
         }
+        // Re-ajusta apos render tardio (conteudo que monta depois do load).
+        [120, 400, 1000].forEach((delay) => window.setTimeout(() => fit(iframe), delay));
       } catch {
         /* sem acesso ao conteudo: ignora */
       }
     };
 
     const attach = () => {
-      const iframe = container.querySelector<HTMLIFrameElement>('iframe.eop-proposal-preview-render');
-      if (!iframe || iframe === trackedIframe) {
-        return;
-      }
-      trackedIframe = iframe;
-      iframe.addEventListener('load', () => observeContent(iframe));
-      observeContent(iframe);
+      container.querySelectorAll<HTMLIFrameElement>('iframe').forEach((iframe) => {
+        if (tracked.has(iframe)) {
+          return;
+        }
+        tracked.add(iframe);
+        iframe.addEventListener('load', () => observeContent(iframe));
+        observeContent(iframe);
+      });
     };
 
     attach();
@@ -1279,10 +1289,10 @@ function App() {
     domObserver.observe(container, { childList: true, subtree: true });
 
     return () => {
-      contentObserver?.disconnect();
+      observers.forEach((observer) => observer.disconnect());
       domObserver.disconnect();
     };
-  }, [previewPayload, previewNonce]);
+  }, [previewPayload, previewNonce, viewLoading, viewError]);
 
   async function saveCurrentSettings() {
     if (!settingsPayload || !getAdminSpaConfig()) {
@@ -1600,7 +1610,7 @@ function App() {
           {!viewLoading && !viewError && selectedView === 'orders' ? <OrdersBrowser /> : null}
 
           {!viewLoading && !viewError && previewPayload ? (
-            <div className="eop-react-block">
+            <div className="eop-react-block" ref={previewBlockRef}>
               {previewPayload.mode === 'iframe' && previewPayload.url ? (
                 <iframe
                   key={`${previewPayload.surface}-${previewNonce}`}
@@ -1608,24 +1618,10 @@ function App() {
                   src={previewPayload.url}
                   className="eop-react-preview-frame"
                   scrolling="no"
-                  onLoad={(event) => {
-                    try {
-                      const doc = event.currentTarget.contentDocument;
-                      const height = doc
-                        ? Math.max(doc.documentElement?.scrollHeight ?? 0, doc.body?.scrollHeight ?? 0)
-                        : 0;
-                      if (height > 0) {
-                        event.currentTarget.style.height = `${height}px`;
-                      }
-                    } catch {
-                      /* iframe cross-origin: mantem a altura padrao */
-                    }
-                  }}
                 />
               ) : null}
               {previewPayload.mode === 'html' && previewPayload.html ? (
                 <div
-                  ref={previewHtmlRef}
                   className="eop-react-preview-html"
                   dangerouslySetInnerHTML={{ __html: previewPayload.html }}
                 />

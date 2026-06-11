@@ -293,7 +293,7 @@ class EOP_Post_Confirmation_Flow {
 			'documents'             => __( 'Dados do pedido', EOP_TEXT_DOMAIN ),
 			'upload'                => __( 'Upload e personalização', EOP_TEXT_DOMAIN ),
 			'products'              => __( 'Upload e personalização', EOP_TEXT_DOMAIN ),
-			'completed'             => __( 'Fluxo concluído', EOP_TEXT_DOMAIN ),
+			'completed'             => __( 'Conclusão', EOP_TEXT_DOMAIN ),
 			'awaiting_confirmation' => __( 'Aguardando confirmação', EOP_TEXT_DOMAIN ),
 			'inactive'              => __( 'Fluxo inativo', EOP_TEXT_DOMAIN ),
 		);

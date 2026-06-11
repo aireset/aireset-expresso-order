@@ -93,7 +93,7 @@ export function OrderCard({
           </div>
           <div className="eop-order-card__flow-list">
             <FlowPill label="Contrato" value={contractAccepted ? 'Aceito' : 'Pendente'} tone={contractAccepted ? 'success' : 'warning'} />
-            <FlowPill label="Campos" value={docsValue} tone={docsDone ? 'success' : 'info'} />
+            <FlowPill label="Dados" value={docsValue} tone={docsDone ? 'success' : 'info'} />
             <FlowPill
               label="Anexo"
               value={attachmentUploaded ? 'Enviado' : attachmentOptional ? 'Opcional' : 'Pendente'}

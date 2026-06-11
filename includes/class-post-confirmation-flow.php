@@ -2539,14 +2539,17 @@ class EOP_Post_Confirmation_Flow {
 			</div>
 		<?php endif; ?>
 		<div class="eop-post-flow__actions">
-			<?php if ( ! empty( $final_pdf['public_download_url'] ) ) : ?>
-				<a class="eop-proposal-button" href="<?php echo esc_url( $final_pdf['public_download_url'] ); ?>" download="<?php echo esc_attr( $final_pdf['filename'] ); ?>"><?php esc_html_e( 'Baixar PDF final da personalização', EOP_TEXT_DOMAIN ); ?></a>
-			<?php endif; ?>
-			<?php if ( $flow_pdf_url ) : ?>
-				<a class="eop-proposal-button eop-proposal-button--secondary" href="<?php echo esc_url( $flow_pdf_url ); ?>" download="<?php echo esc_attr( self::get_pdf_filename( $order ) ); ?>"><?php esc_html_e( 'Baixar PDF complementar', EOP_TEXT_DOMAIN ); ?></a>
-			<?php endif; ?>
-			<?php if ( $pdf_url ) : ?>
-				<a class="eop-proposal-button eop-proposal-button--secondary" href="<?php echo esc_url( $pdf_url ); ?>" download="documento-<?php echo esc_attr( time() ); ?>.pdf"><?php esc_html_e( 'Baixar PDF da proposta', EOP_TEXT_DOMAIN ); ?></a>
+			<?php if ( current_user_can( 'edit_shop_orders' ) ) : ?>
+				<?php // Downloads de PDF sao ferramentas internas: so vendedor/admin ve, nunca o cliente final. ?>
+				<?php if ( ! empty( $final_pdf['public_download_url'] ) ) : ?>
+					<a class="eop-proposal-button" href="<?php echo esc_url( $final_pdf['public_download_url'] ); ?>" download="<?php echo esc_attr( $final_pdf['filename'] ); ?>"><?php esc_html_e( 'Baixar PDF final da personalização', EOP_TEXT_DOMAIN ); ?></a>
+				<?php endif; ?>
+				<?php if ( $flow_pdf_url ) : ?>
+					<a class="eop-proposal-button eop-proposal-button--secondary" href="<?php echo esc_url( $flow_pdf_url ); ?>" download="<?php echo esc_attr( self::get_pdf_filename( $order ) ); ?>"><?php esc_html_e( 'Baixar PDF complementar', EOP_TEXT_DOMAIN ); ?></a>
+				<?php endif; ?>
+				<?php if ( $pdf_url ) : ?>
+					<a class="eop-proposal-button eop-proposal-button--secondary" href="<?php echo esc_url( $pdf_url ); ?>" download="documento-<?php echo esc_attr( time() ); ?>.pdf"><?php esc_html_e( 'Baixar PDF da proposta', EOP_TEXT_DOMAIN ); ?></a>
+				<?php endif; ?>
 			<?php endif; ?>
 			<a class="eop-proposal-button eop-proposal-button--secondary" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Voltar para o site', EOP_TEXT_DOMAIN ); ?></a>
 		</div>

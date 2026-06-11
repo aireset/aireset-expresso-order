@@ -157,6 +157,17 @@ class EOP_Admin_SPA {
 				(string) filemtime( $flyin_css_path )
 			);
 		}
+
+		// Estrutura visual do preview de PDF (.eop-pdf-preview) nas telas de PDF do SPA.
+		$pdf_css_path = EOP_PLUGIN_DIR . 'assets/css/pdf-admin.css';
+		if ( file_exists( $pdf_css_path ) ) {
+			wp_enqueue_style(
+				'eop-admin-spa-pdf',
+				EOP_PLUGIN_URL . 'assets/css/pdf-admin.css',
+				array( 'eop-admin-spa-legacy' ),
+				(string) filemtime( $pdf_css_path )
+			);
+		}
 	}
 
 	public static function filter_script_loader_tag( $tag, $handle, $src ) {
@@ -474,6 +485,34 @@ class EOP_Admin_SPA {
 					);
 				}
 				break;
+
+				case 'pdf-order':
+				case 'pdf-proposal':
+					if ( class_exists( 'EOP_Document_Manager' ) && method_exists( 'EOP_Document_Manager', 'get_preview_html' ) ) {
+						$document_type = 'pdf-proposal' === $surface ? 'proposal' : 'order';
+						$preview_order = EOP_Document_Manager::get_preview_order();
+
+						if ( $preview_order instanceof WC_Order ) {
+							return rest_ensure_response(
+								array(
+									'surface' => $surface,
+									'mode'    => 'html',
+									'html'    => '<div class="eop-pdf-preview-shell">' . EOP_Document_Manager::get_preview_html( $preview_order, $document_type, false ) . '</div>',
+									'source'  => 'pdf-document-renderer',
+								)
+							);
+						}
+
+						return rest_ensure_response(
+							array(
+								'surface' => $surface,
+								'mode'    => 'html',
+								'html'    => '<div class="eop-react-preview-empty"><p>' . esc_html__( 'Crie um pedido para visualizar o PDF.', EOP_TEXT_DOMAIN ) . '</p></div>',
+								'source'  => 'pdf-document-renderer',
+							)
+						);
+					}
+					break;
 		}
 
 		return new WP_Error(
@@ -967,6 +1006,50 @@ class EOP_Admin_SPA {
 				'exact'  => array(),
 				'prefix' => array(),
 			),
+			'pdf-display' => array(
+				'source' => 'pdf',
+				'exact'  => array( 'display_mode', 'paper_size', 'template_name', 'ink_saving_mode', 'test_mode', 'font_subsetting', 'extended_currency_symbol' ),
+			),
+			'pdf-order' => array(
+				'source' => 'pdf',
+				'exact'  => array( 'order_enabled', 'order_attach_email', 'order_mark_printed', 'order_show_shipping', 'order_show_billing', 'order_show_email', 'order_show_phone', 'order_show_notes', 'order_myaccount_download', 'order_show_total_subtotal', 'order_show_total_shipping', 'order_show_total_discount', 'order_show_total_total', 'order_prefix', 'order_suffix', 'order_padding', 'order_next_number', 'order_reset_yearly' ),
+			),
+			'pdf-order-columns' => array(
+				'source' => 'pdf',
+				'exact'  => array( 'order_show_item_index', 'order_show_sku', 'order_show_quantity', 'order_show_unit_price', 'order_show_discount', 'order_show_discounted_unit_price', 'order_show_line_total', 'order_quantity_position', 'order_unit_price_position', 'order_discount_position', 'order_discounted_unit_price_position', 'order_line_total_position' ),
+			),
+			'pdf-order-texts' => array(
+				'source' => 'pdf',
+				'exact'  => array( 'order_item_index_label', 'order_product_label', 'order_quantity_label', 'order_unit_price_label', 'order_discount_label', 'order_discount_display_mode', 'order_discount_suffix', 'order_discounted_unit_price_label', 'order_discounted_unit_price_suffix', 'order_line_total_label' ),
+			),
+			'pdf-order-style' => array(
+				'source' => 'pdf',
+				'exact'  => array( 'order_header_background_color', 'order_header_text_color', 'order_body_text_color', 'order_muted_text_color', 'order_border_color', 'order_title_font_size', 'order_meta_font_size', 'order_table_header_font_size', 'order_table_body_font_size', 'order_table_body_line_height', 'order_totals_font_size', 'order_note_font_size' ),
+			),
+			'pdf-proposal' => array(
+				'source' => 'pdf',
+				'exact'  => array( 'proposal_enabled', 'proposal_attach_email', 'proposal_mark_printed', 'proposal_show_shipping', 'proposal_show_billing', 'proposal_show_email', 'proposal_show_phone', 'proposal_show_notes', 'proposal_public_pdf', 'proposal_show_total_subtotal', 'proposal_show_total_shipping', 'proposal_show_total_discount', 'proposal_show_total_total', 'proposal_prefix', 'proposal_suffix', 'proposal_padding', 'proposal_next_number', 'proposal_reset_yearly' ),
+			),
+			'pdf-proposal-columns' => array(
+				'source' => 'pdf',
+				'exact'  => array( 'proposal_show_item_index', 'proposal_show_sku', 'proposal_show_quantity', 'proposal_show_unit_price', 'proposal_show_discount', 'proposal_show_discounted_unit_price', 'proposal_show_line_total', 'proposal_quantity_position', 'proposal_unit_price_position', 'proposal_discount_position', 'proposal_discounted_unit_price_position', 'proposal_line_total_position' ),
+			),
+			'pdf-proposal-texts' => array(
+				'source' => 'pdf',
+				'exact'  => array( 'proposal_item_index_label', 'proposal_product_label', 'proposal_quantity_label', 'proposal_unit_price_label', 'proposal_discount_label', 'proposal_discount_display_mode', 'proposal_discount_suffix', 'proposal_discounted_unit_price_label', 'proposal_discounted_unit_price_suffix', 'proposal_line_total_label' ),
+			),
+			'pdf-proposal-style' => array(
+				'source' => 'pdf',
+				'exact'  => array( 'proposal_header_background_color', 'proposal_header_text_color', 'proposal_body_text_color', 'proposal_muted_text_color', 'proposal_border_color', 'proposal_title_font_size', 'proposal_meta_font_size', 'proposal_table_header_font_size', 'proposal_table_body_font_size', 'proposal_table_body_line_height', 'proposal_totals_font_size', 'proposal_note_font_size' ),
+			),
+			'pdf-edocuments' => array(
+				'source' => 'pdf',
+				'exact'  => array( 'edoc_enabled', 'edoc_format', 'edoc_embed_pdf', 'edoc_preview_xml', 'edoc_logging', 'edoc_supplier_scheme', 'edoc_customer_scheme', 'edoc_network_endpoint', 'edoc_network_eas' ),
+			),
+			'pdf-advanced' => array(
+				'source' => 'pdf',
+				'exact'  => array( 'advanced_link_access', 'advanced_pretty_links', 'advanced_html_output', 'advanced_debug', 'advanced_order_note_logs', 'advanced_auto_cleanup', 'advanced_danger_zone' ),
+			),
 		);
 
 		return self::$section_definitions;
@@ -1114,6 +1197,105 @@ class EOP_Admin_SPA {
 					array(
 						'title'       => __( 'Upload e produtos', EOP_TEXT_DOMAIN ),
 						'description' => __( 'Configure as etapas de envio de arquivos e personalizacao de produtos.', EOP_TEXT_DOMAIN ),
+					)
+				);
+
+			case 'pdf-display':
+				return array_merge(
+					$defaults,
+					array(
+						'title'       => __( 'Visualizacao do PDF', EOP_TEXT_DOMAIN ),
+						'description' => __( 'Como o documento e aberto, tamanho do papel, modelo e ajustes de renderizacao.', EOP_TEXT_DOMAIN ),
+					)
+				);
+
+			case 'pdf-order':
+				return array_merge(
+					$defaults,
+					array(
+						'title'       => __( 'Documento do pedido', EOP_TEXT_DOMAIN ),
+						'description' => __( 'Ativacao, dados exibidos, totais e numeracao do PDF do pedido.', EOP_TEXT_DOMAIN ),
+					)
+				);
+
+			case 'pdf-order-columns':
+				return array_merge(
+					$defaults,
+					array(
+						'title'       => __( 'Colunas do pedido', EOP_TEXT_DOMAIN ),
+						'description' => __( 'Quais colunas aparecem na tabela de itens do pedido e em que ordem.', EOP_TEXT_DOMAIN ),
+					)
+				);
+
+			case 'pdf-order-texts':
+				return array_merge(
+					$defaults,
+					array(
+						'title'       => __( 'Textos do pedido', EOP_TEXT_DOMAIN ),
+						'description' => __( 'Rotulos e sufixos personalizados das colunas da tabela do pedido.', EOP_TEXT_DOMAIN ),
+					)
+				);
+
+			case 'pdf-order-style':
+				return array_merge(
+					$defaults,
+					array(
+						'title'       => __( 'Estilo do pedido', EOP_TEXT_DOMAIN ),
+						'description' => __( 'Cores e tipografia do PDF do pedido.', EOP_TEXT_DOMAIN ),
+					)
+				);
+
+			case 'pdf-proposal':
+				return array_merge(
+					$defaults,
+					array(
+						'title'       => __( 'Documento da proposta', EOP_TEXT_DOMAIN ),
+						'description' => __( 'Geracao, dados exibidos, acesso publico, totais e numeracao da proposta.', EOP_TEXT_DOMAIN ),
+					)
+				);
+
+			case 'pdf-proposal-columns':
+				return array_merge(
+					$defaults,
+					array(
+						'title'       => __( 'Colunas da proposta', EOP_TEXT_DOMAIN ),
+						'description' => __( 'Quais colunas aparecem na tabela da proposta e em que ordem.', EOP_TEXT_DOMAIN ),
+					)
+				);
+
+			case 'pdf-proposal-texts':
+				return array_merge(
+					$defaults,
+					array(
+						'title'       => __( 'Textos da proposta', EOP_TEXT_DOMAIN ),
+						'description' => __( 'Rotulos das colunas e formato do desconto na tabela da proposta.', EOP_TEXT_DOMAIN ),
+					)
+				);
+
+			case 'pdf-proposal-style':
+				return array_merge(
+					$defaults,
+					array(
+						'title'       => __( 'Estilo da proposta', EOP_TEXT_DOMAIN ),
+						'description' => __( 'Cores e tipografia do documento de proposta.', EOP_TEXT_DOMAIN ),
+					)
+				);
+
+			case 'pdf-edocuments':
+				return array_merge(
+					$defaults,
+					array(
+						'title'       => __( 'Documentos eletronicos', EOP_TEXT_DOMAIN ),
+						'description' => __( 'Exportacao XML experimental, formato, identificadores e rede Peppol.', EOP_TEXT_DOMAIN ),
+					)
+				);
+
+			case 'pdf-advanced':
+				return array_merge(
+					$defaults,
+					array(
+						'title'       => __( 'Avancado', EOP_TEXT_DOMAIN ),
+						'description' => __( 'Acesso ao link, saida, logs de diagnostico e ferramentas de manutencao.', EOP_TEXT_DOMAIN ),
 					)
 				);
 		}
@@ -1392,6 +1574,952 @@ class EOP_Admin_SPA {
 						'label'   => __( 'Pagina da proposta', EOP_TEXT_DOMAIN ),
 						'help'    => __( 'Pagina publica do shortcode [expresso_order_proposal].', EOP_TEXT_DOMAIN ),
 						'options' => $page_options,
+					),
+				);
+
+			case 'pdf-display':
+				return array(
+					array(
+						'key'     => 'display_mode',
+						'type'    => 'select',
+						'group'   => __( 'Visualizacao', EOP_TEXT_DOMAIN ),
+						'label'   => __( 'Como visualizar o PDF', EOP_TEXT_DOMAIN ),
+						'help'    => __( 'Define se o navegador abre o arquivo em uma nova aba ou inicia download imediato.', EOP_TEXT_DOMAIN ),
+						'options' => array(
+							array( 'value' => 'new_tab', 'label' => __( 'Abrir em nova aba', EOP_TEXT_DOMAIN ) ),
+							array( 'value' => 'download', 'label' => __( 'Baixar automaticamente', EOP_TEXT_DOMAIN ) ),
+						),
+					),
+					array(
+						'key'     => 'paper_size',
+						'type'    => 'select',
+						'group'   => __( 'Visualizacao', EOP_TEXT_DOMAIN ),
+						'label'   => __( 'Tamanho do papel', EOP_TEXT_DOMAIN ),
+						'help'    => __( 'Escolhe a area fisica do documento entre A4 e Letter.', EOP_TEXT_DOMAIN ),
+						'options' => array(
+							array( 'value' => 'a4', 'label' => __( 'A4', EOP_TEXT_DOMAIN ) ),
+							array( 'value' => 'letter', 'label' => __( 'Carta (Letter)', EOP_TEXT_DOMAIN ) ),
+						),
+					),
+					array(
+						'key'     => 'template_name',
+						'type'    => 'select',
+						'group'   => __( 'Visualizacao', EOP_TEXT_DOMAIN ),
+						'label'   => __( 'Modelo do documento', EOP_TEXT_DOMAIN ),
+						'help'    => __( 'Seleciona a variacao visual usada para montar o HTML do documento.', EOP_TEXT_DOMAIN ),
+						'options' => array(
+							array( 'value' => 'simple', 'label' => __( 'Simples', EOP_TEXT_DOMAIN ) ),
+							array( 'value' => 'compact', 'label' => __( 'Compacto', EOP_TEXT_DOMAIN ) ),
+							array( 'value' => 'minimal', 'label' => __( 'Minimalista', EOP_TEXT_DOMAIN ) ),
+						),
+					),
+					array(
+						'key'   => 'ink_saving_mode',
+						'type'  => 'toggle',
+						'group' => __( 'Renderizacao', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Economia de tinta', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Aplica uma versao mais enxuta do layout, com menos peso visual.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'test_mode',
+						'type'  => 'toggle',
+						'group' => __( 'Renderizacao', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Modo de teste', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Marca visualmente o documento como ambiente de teste para evitar uso indevido.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'font_subsetting',
+						'type'  => 'toggle',
+						'group' => __( 'Renderizacao', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Font subsetting', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Controla se o Dompdf embute apenas os glifos usados ou a fonte inteira.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'extended_currency_symbol',
+						'type'  => 'toggle',
+						'group' => __( 'Renderizacao', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Simbolo de moeda estendido', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Usa o simbolo monetario completo na renderizacao, melhorando moedas com glifos especiais.', EOP_TEXT_DOMAIN ),
+					),
+				);
+
+			case 'pdf-order':
+				return array(
+					array(
+						'key'   => 'order_enabled',
+						'type'  => 'toggle',
+						'group' => __( 'Documento', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Documento habilitado', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Liga ou desliga a geracao do PDF do pedido.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_attach_email',
+						'type'  => 'toggle',
+						'group' => __( 'Documento', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Anexar em e-mails', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Inclui o PDF como anexo nos e-mails compativeis do WooCommerce.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_mark_printed',
+						'type'  => 'toggle',
+						'group' => __( 'Documento', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Marcar como impresso', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Registra metadados de impressao sempre que o documento e aberto ou baixado.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_show_shipping',
+						'type'  => 'toggle',
+						'group' => __( 'Dados exibidos', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir endereco de entrega', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra o bloco com dados de entrega do cliente.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_show_billing',
+						'type'  => 'toggle',
+						'group' => __( 'Dados exibidos', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir endereco de cobranca', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra o bloco com endereco de cobranca do cliente.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_show_email',
+						'type'  => 'toggle',
+						'group' => __( 'Dados exibidos', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir e-mail do cliente', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra o e-mail do cliente no resumo do documento.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_show_phone',
+						'type'  => 'toggle',
+						'group' => __( 'Dados exibidos', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir telefone do cliente', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra o telefone do cliente no resumo do documento.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_show_notes',
+						'type'  => 'toggle',
+						'group' => __( 'Dados exibidos', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir notas do cliente', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra as observacoes do pedido na parte final do documento.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_myaccount_download',
+						'type'  => 'toggle',
+						'group' => __( 'Acesso', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Download no Minha Conta', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra o link do PDF do pedido para o cliente logado em Minha Conta.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_show_total_subtotal',
+						'type'  => 'toggle',
+						'group' => __( 'Totais', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir subtotal', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra a linha de subtotal antes de frete, desconto e total final.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_show_total_shipping',
+						'type'  => 'toggle',
+						'group' => __( 'Totais', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir frete', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra a linha de frete no bloco de totais.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_show_total_discount',
+						'type'  => 'toggle',
+						'group' => __( 'Totais', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir desconto total', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra a linha com o desconto total do pedido.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_show_total_total',
+						'type'  => 'toggle',
+						'group' => __( 'Totais', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir total final', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra a linha final com o total consolidado.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_prefix',
+						'type'  => 'text',
+						'group' => __( 'Numeracao', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Prefixo do numero', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Texto colocado antes do numero sequencial do documento.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_suffix',
+						'type'  => 'text',
+						'group' => __( 'Numeracao', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Sufixo do numero', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Texto colocado depois do numero sequencial.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_padding',
+						'type'  => 'number',
+						'group' => __( 'Numeracao', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Padding', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Quantidade de zeros a esquerda do numero. Exemplo: padding 4 gera 0001.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_next_number',
+						'type'  => 'number',
+						'group' => __( 'Numeracao', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Proximo numero', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Numero que sera usado no proximo documento ainda sem sequencial persistido.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_reset_yearly',
+						'type'  => 'toggle',
+						'group' => __( 'Numeracao', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Reset anual', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Reinicia a sequencia em 1 quando o ano corrente mudar.', EOP_TEXT_DOMAIN ),
+					),
+				);
+
+			case 'pdf-order-columns':
+				return array(
+					array(
+						'key'   => 'order_show_item_index',
+						'type'  => 'toggle',
+						'group' => __( 'Colunas visiveis', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir numero do item', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra a coluna com a numeracao sequencial de cada item.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_show_sku',
+						'type'  => 'toggle',
+						'group' => __( 'Colunas visiveis', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir SKU do produto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra a linha de SKU abaixo do nome do item.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_show_quantity',
+						'type'  => 'toggle',
+						'group' => __( 'Colunas visiveis', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir coluna de quantidade', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra a coluna com quantidade do item.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_show_unit_price',
+						'type'  => 'toggle',
+						'group' => __( 'Colunas visiveis', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir coluna de valor unitario', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra o valor original por unidade.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_show_discount',
+						'type'  => 'toggle',
+						'group' => __( 'Colunas visiveis', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir coluna de desconto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra percentual e valor unitario descontado.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_show_discounted_unit_price',
+						'type'  => 'toggle',
+						'group' => __( 'Colunas visiveis', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir valor unitario com desconto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra o valor unitario final apos desconto.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_show_line_total',
+						'type'  => 'toggle',
+						'group' => __( 'Colunas visiveis', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir coluna de total do item', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra o total final por linha de item.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_quantity_position',
+						'type'  => 'number',
+						'group' => __( 'Ordem das colunas', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Posicao da quantidade', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Quanto menor, mais a esquerda.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_unit_price_position',
+						'type'  => 'number',
+						'group' => __( 'Ordem das colunas', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Posicao do valor unitario', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Quanto menor, mais a esquerda.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_discount_position',
+						'type'  => 'number',
+						'group' => __( 'Ordem das colunas', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Posicao do desconto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Quanto menor, mais a esquerda.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_discounted_unit_price_position',
+						'type'  => 'number',
+						'group' => __( 'Ordem das colunas', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Posicao do valor com desconto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Quanto menor, mais a esquerda.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_line_total_position',
+						'type'  => 'number',
+						'group' => __( 'Ordem das colunas', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Posicao do total do item', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Quanto menor, mais a esquerda.', EOP_TEXT_DOMAIN ),
+					),
+				);
+
+			case 'pdf-order-texts':
+				return array(
+					array(
+						'key'   => 'order_item_index_label',
+						'type'  => 'text',
+						'label' => __( 'Texto da coluna de numero do item', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Personaliza o nome da coluna de numeracao dos itens.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_product_label',
+						'type'  => 'text',
+						'label' => __( 'Texto da coluna de produto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Define o texto do cabecalho da coluna principal.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_quantity_label',
+						'type'  => 'text',
+						'label' => __( 'Texto da coluna de quantidade', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Personaliza o nome da coluna de quantidade.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_unit_price_label',
+						'type'  => 'text',
+						'label' => __( 'Texto da coluna de valor unitario', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Personaliza o nome da coluna de valor unitario.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_discount_label',
+						'type'  => 'text',
+						'label' => __( 'Texto da coluna de desconto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Personaliza o nome da coluna de desconto.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'     => 'order_discount_display_mode',
+						'type'    => 'select',
+						'label'   => __( 'Formato da coluna de desconto', EOP_TEXT_DOMAIN ),
+						'help'    => __( 'Escolhe se a coluna de desconto mostra porcentagem, valor monetario ou ambos.', EOP_TEXT_DOMAIN ),
+						'options' => array(
+							array( 'value' => 'percent', 'label' => __( 'Porcentagem', EOP_TEXT_DOMAIN ) ),
+							array( 'value' => 'currency', 'label' => __( 'Valor', EOP_TEXT_DOMAIN ) ),
+							array( 'value' => 'both', 'label' => __( 'Ambos', EOP_TEXT_DOMAIN ) ),
+						),
+					),
+					array(
+						'key'   => 'order_discount_suffix',
+						'type'  => 'text',
+						'label' => __( 'Texto complementar da coluna de desconto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Texto opcional mostrado depois do valor monetario do desconto por unidade.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_discounted_unit_price_label',
+						'type'  => 'text',
+						'label' => __( 'Texto da coluna de valor unitario com desconto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Personaliza o nome da coluna de valor final por unidade.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_discounted_unit_price_suffix',
+						'type'  => 'text',
+						'label' => __( 'Texto complementar do valor unitario com desconto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Texto opcional mostrado depois do valor unitario ja com desconto.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_line_total_label',
+						'type'  => 'text',
+						'label' => __( 'Texto da coluna de total do item', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Personaliza o nome da coluna de total do item.', EOP_TEXT_DOMAIN ),
+					),
+				);
+
+			case 'pdf-order-style':
+				return array(
+					array(
+						'key'   => 'order_header_background_color',
+						'type'  => 'color',
+						'group' => __( 'Cores', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Fundo do cabecalho', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Cor de fundo da faixa de cabecalho do documento.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_header_text_color',
+						'type'  => 'color',
+						'group' => __( 'Cores', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Texto do cabecalho', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Cor do texto exibido sobre o cabecalho.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_body_text_color',
+						'type'  => 'color',
+						'group' => __( 'Cores', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Texto do corpo', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Cor principal do texto no corpo do documento.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_muted_text_color',
+						'type'  => 'color',
+						'group' => __( 'Cores', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Texto secundario', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Cor de textos auxiliares e menos destacados.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_border_color',
+						'type'  => 'color',
+						'group' => __( 'Cores', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Cor das bordas', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Cor das linhas e bordas da tabela e dos blocos.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_title_font_size',
+						'type'  => 'number',
+						'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Tamanho do titulo', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Tamanho da fonte do titulo principal do documento.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_meta_font_size',
+						'type'  => 'number',
+						'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Tamanho dos metadados', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Tamanho da fonte dos dados de cabecalho, como numero e data.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_table_header_font_size',
+						'type'  => 'number',
+						'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Tamanho do cabecalho da tabela', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Tamanho da fonte do cabecalho das colunas da tabela.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_table_body_font_size',
+						'type'  => 'number',
+						'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Tamanho do corpo da tabela', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Tamanho da fonte das linhas de itens da tabela.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_table_body_line_height',
+						'type'  => 'text',
+						'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Altura da linha do corpo da tabela', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Controla o espacamento vertical das linhas de itens na tabela do PDF.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_totals_font_size',
+						'type'  => 'number',
+						'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Tamanho dos totais', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Tamanho da fonte do bloco de totais.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'order_note_font_size',
+						'type'  => 'number',
+						'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Tamanho das notas', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Tamanho da fonte das observacoes e do rodape.', EOP_TEXT_DOMAIN ),
+					),
+				);
+
+			case 'pdf-proposal':
+				return array(
+					array(
+						'key'   => 'proposal_enabled',
+						'type'  => 'toggle',
+						'group' => __( 'Documento', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Documento habilitado', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Liga ou desliga a geracao do PDF da proposta.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_attach_email',
+						'type'  => 'toggle',
+						'group' => __( 'Documento', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Anexar em e-mails', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Inclui o PDF como anexo nos e-mails compativeis do WooCommerce.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_mark_printed',
+						'type'  => 'toggle',
+						'group' => __( 'Documento', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Marcar como impresso', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Registra metadados de impressao sempre que o documento e aberto ou baixado.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_show_shipping',
+						'type'  => 'toggle',
+						'group' => __( 'Dados exibidos', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir endereco de entrega', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra o bloco com dados de entrega do cliente.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_show_billing',
+						'type'  => 'toggle',
+						'group' => __( 'Dados exibidos', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir endereco de cobranca', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra o bloco com endereco de cobranca do cliente.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_show_email',
+						'type'  => 'toggle',
+						'group' => __( 'Dados exibidos', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir e-mail do cliente', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra o e-mail do cliente no resumo do documento.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_show_phone',
+						'type'  => 'toggle',
+						'group' => __( 'Dados exibidos', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir telefone do cliente', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra o telefone do cliente no resumo do documento.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_show_notes',
+						'type'  => 'toggle',
+						'group' => __( 'Dados exibidos', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir notas do cliente', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra as observacoes do pedido na parte final do documento.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_public_pdf',
+						'type'  => 'toggle',
+						'group' => __( 'Acesso', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Permitir PDF publico da proposta', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Permite que o cliente baixe o PDF publico da proposta.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_show_total_subtotal',
+						'type'  => 'toggle',
+						'group' => __( 'Totais', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir subtotal', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra a linha de subtotal antes de frete, desconto e total final.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_show_total_shipping',
+						'type'  => 'toggle',
+						'group' => __( 'Totais', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir frete', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra a linha de frete no bloco de totais.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_show_total_discount',
+						'type'  => 'toggle',
+						'group' => __( 'Totais', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir desconto total', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra a linha com o desconto total do pedido.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_show_total_total',
+						'type'  => 'toggle',
+						'group' => __( 'Totais', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir total final', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra a linha final com o total consolidado.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_prefix',
+						'type'  => 'text',
+						'group' => __( 'Numeracao', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Prefixo do numero', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Texto colocado antes do numero sequencial do documento.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_suffix',
+						'type'  => 'text',
+						'group' => __( 'Numeracao', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Sufixo do numero', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Texto colocado depois do numero sequencial.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_padding',
+						'type'  => 'number',
+						'group' => __( 'Numeracao', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Padding', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Quantidade de zeros a esquerda do numero sequencial.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_next_number',
+						'type'  => 'number',
+						'group' => __( 'Numeracao', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Proximo numero', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Numero que sera usado no proximo documento ainda sem sequencial persistido.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_reset_yearly',
+						'type'  => 'toggle',
+						'group' => __( 'Numeracao', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Reset anual', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Reinicia a sequencia em 1 quando o ano corrente mudar.', EOP_TEXT_DOMAIN ),
+					),
+				);
+
+			case 'pdf-proposal-columns':
+				return array(
+					array(
+						'key'   => 'proposal_show_item_index',
+						'type'  => 'toggle',
+						'group' => __( 'Colunas visiveis', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir numero do item', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra a coluna com a posicao sequencial de cada item.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_show_sku',
+						'type'  => 'toggle',
+						'group' => __( 'Colunas visiveis', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir SKU do produto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra a linha de SKU abaixo do nome do item.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_show_quantity',
+						'type'  => 'toggle',
+						'group' => __( 'Colunas visiveis', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir coluna de quantidade', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra a coluna com quantidade do item.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_show_unit_price',
+						'type'  => 'toggle',
+						'group' => __( 'Colunas visiveis', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir coluna de valor unitario', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra o valor original por unidade.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_show_discount',
+						'type'  => 'toggle',
+						'group' => __( 'Colunas visiveis', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir coluna de desconto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra percentual e valor unitario descontado.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_show_discounted_unit_price',
+						'type'  => 'toggle',
+						'group' => __( 'Colunas visiveis', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir coluna de valor unitario com desconto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra o valor unitario final apos desconto.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_show_line_total',
+						'type'  => 'toggle',
+						'group' => __( 'Colunas visiveis', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Exibir coluna de total do item', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra o total final por linha de item.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_quantity_position',
+						'type'  => 'number',
+						'group' => __( 'Ordem das colunas', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Posicao da quantidade', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Quanto menor, mais a esquerda.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_unit_price_position',
+						'type'  => 'number',
+						'group' => __( 'Ordem das colunas', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Posicao do valor unitario', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Quanto menor, mais a esquerda.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_discount_position',
+						'type'  => 'number',
+						'group' => __( 'Ordem das colunas', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Posicao do desconto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Quanto menor, mais a esquerda.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_discounted_unit_price_position',
+						'type'  => 'number',
+						'group' => __( 'Ordem das colunas', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Posicao do valor unitario com desconto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Quanto menor, mais a esquerda.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_line_total_position',
+						'type'  => 'number',
+						'group' => __( 'Ordem das colunas', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Posicao do total do item', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Quanto menor, mais a esquerda.', EOP_TEXT_DOMAIN ),
+					),
+				);
+
+			case 'pdf-proposal-texts':
+				return array(
+					array(
+						'key'   => 'proposal_item_index_label',
+						'type'  => 'text',
+						'label' => __( 'Texto da coluna de numero do item', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Personaliza o nome da coluna de numero do item.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_product_label',
+						'type'  => 'text',
+						'label' => __( 'Texto da coluna de produto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Define o texto do cabecalho da coluna principal.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_quantity_label',
+						'type'  => 'text',
+						'label' => __( 'Texto da coluna de quantidade', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Personaliza o nome da coluna de quantidade.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_unit_price_label',
+						'type'  => 'text',
+						'label' => __( 'Texto da coluna de valor unitario', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Personaliza o nome da coluna de valor unitario.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_discount_label',
+						'type'  => 'text',
+						'label' => __( 'Texto da coluna de desconto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Personaliza o nome da coluna de desconto.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'     => 'proposal_discount_display_mode',
+						'type'    => 'select',
+						'label'   => __( 'Formato da coluna de desconto', EOP_TEXT_DOMAIN ),
+						'help'    => __( 'Escolhe se a coluna de desconto mostra porcentagem, valor monetario ou ambos.', EOP_TEXT_DOMAIN ),
+						'options' => array(
+							array( 'value' => 'percent', 'label' => __( 'Porcentagem', EOP_TEXT_DOMAIN ) ),
+							array( 'value' => 'currency', 'label' => __( 'Valor', EOP_TEXT_DOMAIN ) ),
+							array( 'value' => 'both', 'label' => __( 'Ambos', EOP_TEXT_DOMAIN ) ),
+						),
+					),
+					array(
+						'key'   => 'proposal_discount_suffix',
+						'type'  => 'text',
+						'label' => __( 'Texto complementar da coluna de desconto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Texto opcional mostrado depois do valor monetario do desconto por unidade.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_discounted_unit_price_label',
+						'type'  => 'text',
+						'label' => __( 'Texto da coluna de valor unitario com desconto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Personaliza o nome da coluna de valor final por unidade.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_discounted_unit_price_suffix',
+						'type'  => 'text',
+						'label' => __( 'Texto complementar do valor unitario com desconto', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Texto opcional mostrado depois do valor unitario ja com desconto.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_line_total_label',
+						'type'  => 'text',
+						'label' => __( 'Texto da coluna de total do item', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Personaliza o nome da coluna de total do item.', EOP_TEXT_DOMAIN ),
+					),
+				);
+
+			case 'pdf-proposal-style':
+				return array(
+					array(
+						'key'   => 'proposal_header_background_color',
+						'type'  => 'color',
+						'group' => __( 'Cores', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Cor de fundo do cabecalho', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Cor de fundo da faixa superior do documento.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_header_text_color',
+						'type'  => 'color',
+						'group' => __( 'Cores', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Cor do texto do cabecalho', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Cor do texto exibido no cabecalho do documento.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_body_text_color',
+						'type'  => 'color',
+						'group' => __( 'Cores', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Cor do texto do corpo', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Cor principal do texto no corpo do documento.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_muted_text_color',
+						'type'  => 'color',
+						'group' => __( 'Cores', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Cor do texto secundario', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Cor usada em textos auxiliares e de menor destaque.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_border_color',
+						'type'  => 'color',
+						'group' => __( 'Cores', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Cor das bordas', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Cor das linhas e bordas da tabela e dos blocos.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_title_font_size',
+						'type'  => 'number',
+						'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Tamanho da fonte do titulo', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Tamanho da fonte do titulo principal do documento.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_meta_font_size',
+						'type'  => 'number',
+						'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Tamanho da fonte dos metadados', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Tamanho da fonte dos dados de cabecalho e identificacao.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_table_header_font_size',
+						'type'  => 'number',
+						'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Tamanho da fonte do cabecalho da tabela', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Tamanho da fonte dos titulos das colunas da tabela.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_table_body_font_size',
+						'type'  => 'number',
+						'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Tamanho da fonte do corpo da tabela', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Tamanho da fonte das linhas de itens da tabela.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_table_body_line_height',
+						'type'  => 'text',
+						'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Altura da linha do corpo da tabela', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Controla o espacamento vertical das linhas de itens na tabela do PDF.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_totals_font_size',
+						'type'  => 'number',
+						'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Tamanho da fonte dos totais', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Tamanho da fonte do bloco de totais do documento.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'proposal_note_font_size',
+						'type'  => 'number',
+						'group' => __( 'Tipografia', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Tamanho da fonte das notas', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Tamanho da fonte das observacoes e do rodape do documento.', EOP_TEXT_DOMAIN ),
+					),
+				);
+
+			case 'pdf-edocuments':
+				return array(
+					array(
+						'key'   => 'edoc_enabled',
+						'type'  => 'toggle',
+						'group' => __( 'Documentos eletronicos', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Ativar documentos eletronicos', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Liga a montagem do XML tecnico experimental do documento.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'     => 'edoc_format',
+						'type'    => 'select',
+						'group'   => __( 'Documentos eletronicos', EOP_TEXT_DOMAIN ),
+						'label'   => __( 'Formato / sintaxe', EOP_TEXT_DOMAIN ),
+						'help'    => __( 'Escolhe a estrutura-base do XML tecnico.', EOP_TEXT_DOMAIN ),
+						'options' => array(
+							array( 'value' => 'ubl', 'label' => __( 'UBL', EOP_TEXT_DOMAIN ) ),
+							array( 'value' => 'cii', 'label' => __( 'CII', EOP_TEXT_DOMAIN ) ),
+							array( 'value' => 'peppol', 'label' => __( 'Peppol BIS', EOP_TEXT_DOMAIN ) ),
+						),
+					),
+					array(
+						'key'   => 'edoc_embed_pdf',
+						'type'  => 'toggle',
+						'group' => __( 'Documentos eletronicos', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Embutir PDF', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Inclui referencia ao PDF no XML tecnico quando disponivel.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'edoc_preview_xml',
+						'type'  => 'toggle',
+						'group' => __( 'Documentos eletronicos', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Habilitar preview XML', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Mostra o XML tecnico gerado para o pedido selecionado no preview.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'edoc_logging',
+						'type'  => 'toggle',
+						'group' => __( 'Documentos eletronicos', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Habilitar logs', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Registra a geracao e falhas dos documentos eletronicos.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'edoc_supplier_scheme',
+						'type'  => 'text',
+						'group' => __( 'Identificacao', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Identificador do fornecedor', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Esquema usado para identificar o fornecedor no XML, como CNPJ ou GLN.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'edoc_customer_scheme',
+						'type'  => 'text',
+						'group' => __( 'Identificacao', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Identificador do cliente', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Esquema usado para identificar o cliente no XML.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'edoc_network_endpoint',
+						'type'  => 'text',
+						'group' => __( 'Rede Peppol', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Peppol Endpoint ID', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Endpoint tecnico usado em cenarios Peppol.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'edoc_network_eas',
+						'type'  => 'text',
+						'group' => __( 'Rede Peppol', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Peppol EAS', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Electronic Address Scheme usado pelo endpoint de rede.', EOP_TEXT_DOMAIN ),
+					),
+				);
+
+			case 'pdf-advanced':
+				return array(
+					array(
+						'key'     => 'advanced_link_access',
+						'type'    => 'select',
+						'group'   => __( 'Acesso ao link', EOP_TEXT_DOMAIN ),
+						'label'   => __( 'Politica de acesso ao link', EOP_TEXT_DOMAIN ),
+						'help'    => __( 'Define se o link privado exige nonce, sessao do dono do pedido ou token compartilhavel.', EOP_TEXT_DOMAIN ),
+						'options' => array(
+							array( 'value' => 'private_nonce', 'label' => __( 'Privado (nonce do admin)', EOP_TEXT_DOMAIN ) ),
+							array( 'value' => 'public_token', 'label' => __( 'Publico por token', EOP_TEXT_DOMAIN ) ),
+							array( 'value' => 'order_owner', 'label' => __( 'Dono do pedido', EOP_TEXT_DOMAIN ) ),
+						),
+					),
+					array(
+						'key'   => 'advanced_pretty_links',
+						'type'  => 'toggle',
+						'group' => __( 'Acesso ao link', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Pretty links', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Usa rota frontal amigavel em vez de admin-post.php para o download.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'advanced_html_output',
+						'type'  => 'toggle',
+						'group' => __( 'Saida', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Forcar output HTML', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Desliga o preview HTML lateral e mantem apenas a geracao final do documento.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'advanced_debug',
+						'type'  => 'toggle',
+						'group' => __( 'Diagnostico', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Debug do modulo', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Liga logs tecnicos de geracao, fallback e acesso do modulo PDF.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'advanced_order_note_logs',
+						'type'  => 'toggle',
+						'group' => __( 'Diagnostico', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Logar nas notas do pedido', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Replica eventos do modulo PDF nas notas internas do pedido.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'advanced_auto_cleanup',
+						'type'  => 'toggle',
+						'group' => __( 'Manutencao', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Limpeza automatica', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Remove cache antigo e arquivos temporarios do modulo automaticamente.', EOP_TEXT_DOMAIN ),
+					),
+					array(
+						'key'   => 'advanced_danger_zone',
+						'type'  => 'toggle',
+						'group' => __( 'Manutencao', EOP_TEXT_DOMAIN ),
+						'label' => __( 'Danger zone', EOP_TEXT_DOMAIN ),
+						'help'  => __( 'Desbloqueia operacoes administrativas como limpeza manual de cache e reset de contadores.', EOP_TEXT_DOMAIN ),
 					),
 				);
 		}

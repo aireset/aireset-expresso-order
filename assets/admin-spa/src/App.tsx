@@ -1235,9 +1235,29 @@ function App() {
     const fit = (iframe: HTMLIFrameElement) => {
       try {
         const doc = iframe.contentDocument;
-        const height = doc
-          ? Math.max(doc.documentElement?.scrollHeight ?? 0, doc.body?.scrollHeight ?? 0)
-          : 0;
+        if (!doc || !doc.body) {
+          return;
+        }
+        // Teto de seguranca: no maximo 200vh.
+        const maxHeight = window.innerHeight * 2;
+        const bodyHeight = doc.body.scrollHeight;
+        let height: number;
+        if (bodyHeight > 0 && bodyHeight <= maxHeight) {
+          // srcdoc/conteudo limpo: o scrollHeight do body e confiavel e inclui
+          // o padding/margem final.
+          height = bodyHeight;
+        } else {
+          // body inflado (ex.: dialogs/popups do Elementor ancorados a
+          // ~2.000.000px na pagina do frontend): mede o root de conteudo real.
+          const root = doc.querySelector<HTMLElement>(
+            '.eop-frontend-app, .eop-pdv, .eop-proposal-wrap, .eop-proposal, .eop-post-flow, .eop-login-wrap, main'
+          );
+          const scrollTop = doc.documentElement.scrollTop || doc.body.scrollTop || 0;
+          height = root
+            ? Math.max(root.getBoundingClientRect().bottom + scrollTop, root.scrollHeight)
+            : maxHeight;
+        }
+        height = Math.ceil(Math.min(height, maxHeight));
         if (height > 0) {
           iframe.style.height = `${height}px`;
           iframe.style.minHeight = '0';

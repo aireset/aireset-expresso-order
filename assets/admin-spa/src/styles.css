@@ -67,17 +67,18 @@ body.eop-admin-react-shell #eop-admin-app {
 .eop-admin-spa--react .eop-admin-spa__sidebar {
   position: sticky;
   top: 16px;
+  align-self: flex-start;
   order: 0;
   display: flex;
   flex-direction: column;
   width: 280px;
   min-width: 280px;
-  max-height: calc(100vh - 48px);
+  max-height: none;
   border-radius: 18px;
   background: var(--eop-panel-bg);
   color: #fff;
   box-shadow: var(--eop-panel-shadow);
-  overflow-y: auto;
+  overflow: visible;
 }
 
 .eop-admin-spa--react .eop-admin-spa__brand {

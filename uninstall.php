@@ -18,13 +18,17 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 function eop_uninstall_cleanup_site() {
 	global $wpdb;
 
-	// Opcoes e transients com prefixo do plugin.
+	// Opcoes e transients com prefixo do plugin, incluindo as chaves/transients
+	// de licenca (prefixo 'Aireset-ExpressoOrder' e product_base 'aireset-expresso-order').
 	$wpdb->query(
 		"DELETE FROM {$wpdb->options}
 		 WHERE option_name LIKE 'eop\\_%'
 		    OR option_name LIKE '\\_transient\\_eop\\_%'
 		    OR option_name LIKE '\\_transient\\_timeout\\_eop\\_%'
-		    OR option_name LIKE '\\_site\\_transient\\_eop\\_%'"
+		    OR option_name LIKE '\\_site\\_transient\\_eop\\_%'
+		    OR option_name LIKE 'Aireset-ExpressoOrder%'
+		    OR option_name LIKE '\\_transient\\_aireset-expresso-order\\_up'
+		    OR option_name LIKE '\\_transient\\_timeout\\_aireset-expresso-order\\_up'"
 	);
 
 	// Role do vendedor.

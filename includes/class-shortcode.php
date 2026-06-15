@@ -226,8 +226,8 @@ class EOP_Shortcode {
     }
 
     /**
-     * Frontend React habilitado? Opt-in por `?eop_react=1` para validacao, com
-     * o bundle compilado disponivel. Mantemos o jQuery como padrao ate o cutover.
+     * Frontend React habilitado? React e o padrao para vendedores quando o bundle
+     * compilado existe; o frontend legado (jQuery) e opt-out via `?eop_legacy=1`.
      */
     public static function is_react_frontend() {
         if ( ! is_user_logged_in() || ! current_user_can( 'edit_shop_orders' ) ) {

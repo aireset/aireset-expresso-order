@@ -883,6 +883,16 @@ function App() {
         {field.type === 'multiselect' ? (
           <MultiSelectField field={field} onChange={(value) => updateDraft(field.key, value)} />
         ) : null}
+
+        {!(['media', 'select', 'text', 'textarea', 'number', 'color', 'toggle', 'multiselect'] as string[]).includes(
+          field.type
+        ) ? (
+          <input
+            type="text"
+            value={settingsDraft[field.key] ?? ''}
+            onChange={(event) => updateDraft(field.key, event.target.value)}
+          />
+        ) : null}
       </label>
     );
   }

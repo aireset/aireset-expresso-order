@@ -77,6 +77,18 @@ function RichTextEditor({
     onUpdate: ({ editor: current }) => onChange(current.getHTML()),
   });
 
+  // Re-sincroniza o conteudo quando `value` muda por fora (troca de documento,
+  // load do servidor) sem sobrescrever digitacao em andamento nem disparar onUpdate.
+  useEffect(() => {
+    if (!editor) {
+      return;
+    }
+    const incoming = value || '';
+    if (!editor.isFocused && incoming !== editor.getHTML()) {
+      editor.commands.setContent(incoming, false);
+    }
+  }, [value, editor]);
+
   if (!editor) {
     return null;
   }

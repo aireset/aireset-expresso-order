@@ -1957,12 +1957,13 @@ class EOP_Post_Confirmation_Flow {
 	 */
 	private static function customer_data_incomplete( WC_Order $order ) {
 		$required = array(
-			trim( $order->get_billing_first_name() . $order->get_billing_last_name() ),
+			trim( (string) $order->get_billing_first_name() ),
 			trim( (string) self::get_order_customer_document( $order ) ),
 			trim( (string) $order->get_billing_email() ),
 			trim( (string) $order->get_billing_phone() ),
 			trim( (string) $order->get_billing_address_1() ),
 			trim( (string) $order->get_billing_city() ),
+			trim( (string) $order->get_billing_state() ),
 			trim( (string) $order->get_billing_postcode() ),
 		);
 
@@ -2056,7 +2057,7 @@ class EOP_Post_Confirmation_Flow {
 		$city     = $get( 'eop_data_city' );
 		$state    = $get( 'eop_data_state' );
 
-		if ( '' === $first || '' === $document || '' === $email || '' === $phone || '' === $address || '' === $city || '' === $postcode ) {
+		if ( '' === $first || '' === $document || '' === $email || '' === $phone || '' === $address || '' === $city || '' === $state || '' === $postcode ) {
 			return 'data_incomplete';
 		}
 
@@ -2216,7 +2217,7 @@ class EOP_Post_Confirmation_Flow {
 							<div class="eop-post-flow__final-upload-row">
 								<label class="eop-post-flow__field eop-post-flow__field--file">
 									<span><?php echo esc_html( $field_label ); ?></span>
-									<input type="file" name="eop_post_confirmation_attachment" accept=".jpg,.jpeg,.png,.pdf" <?php echo 0 === $attachment_id ? 'required' : ''; ?> />
+									<input type="file" name="eop_post_confirmation_attachment" accept=".jpg,.jpeg,.png,.pdf" <?php echo ( 0 === $attachment_id && self::requires_attachment() ) ? 'required' : ''; ?> />
 								</label>
 								<?php if ( $show_upload_meta ) : ?>
 									<div class="eop-post-flow__final-upload-meta">
@@ -2599,7 +2600,9 @@ class EOP_Post_Confirmation_Flow {
 	}
 
 	private static function process_upload_submission( WC_Order $order ) {
-		return self::process_final_step_submission( $order, true );
+		// So exige anexo se a configuracao 'post_confirmation_require_attachment' estiver ligada;
+		// caso contrario o cliente fica preso na etapa final sem nunca poder enviar arquivo.
+		return self::process_final_step_submission( $order, self::requires_attachment() );
 	}
 
 	private static function process_products_submission( WC_Order $order ) {

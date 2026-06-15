@@ -1977,38 +1977,59 @@ class EOP_Post_Confirmation_Flow {
 
 	private static function render_customer_data_form( WC_Order $order, $token, $settings, $state ) {
 		$document = preg_replace( '/\D/', '', (string) self::get_order_customer_document( $order ) );
-		$field    = static function ( $name, $label, $value, $required = true, $type = 'text' ) {
+		$field    = static function ( $name, $label, $value, $cols = 6, $required = true, $type = 'text', $autocomplete = '', $inputmode = '' ) {
 			?>
-			<div class="eop-field eop-post-flow__data-field">
+			<div class="eop-post-flow__data-field eop-post-flow__data-field--<?php echo (int) $cols; ?>">
 				<label for="eop-data-<?php echo esc_attr( $name ); ?>">
 					<?php echo esc_html( $label ); ?><?php echo $required ? ' <span class="eop-post-flow__req">*</span>' : ''; ?>
 				</label>
-				<input type="<?php echo esc_attr( $type ); ?>" id="eop-data-<?php echo esc_attr( $name ); ?>" name="<?php echo esc_attr( $name ); ?>" value="<?php echo esc_attr( $value ); ?>"<?php echo $required ? ' required' : ''; ?> />
+				<input type="<?php echo esc_attr( $type ); ?>" id="eop-data-<?php echo esc_attr( $name ); ?>" name="<?php echo esc_attr( $name ); ?>" value="<?php echo esc_attr( $value ); ?>"<?php echo $required ? ' required' : ''; ?><?php echo $autocomplete ? ' autocomplete="' . esc_attr( $autocomplete ) . '"' : ''; ?><?php echo $inputmode ? ' inputmode="' . esc_attr( $inputmode ) . '"' : ''; ?> />
 			</div>
 			<?php
 		};
 		?>
-		<div class="eop-post-flow__final-step-card">
+		<div class="eop-post-flow__final-step-card eop-post-flow__data-card">
 			<form method="post" class="eop-post-flow__form eop-post-flow__form--data">
 				<?php wp_nonce_field( 'eop_post_confirmation_data', 'eop_post_confirmation_nonce' ); ?>
 				<input type="hidden" name="eop_post_confirmation_action" value="data" />
 				<input type="hidden" name="eop_proposal_token" value="<?php echo esc_attr( $token ); ?>" />
 
-				<div class="eop-post-flow__data-grid">
-					<?php $field( 'eop_data_first_name', __( 'Nome', EOP_TEXT_DOMAIN ), $order->get_billing_first_name() ); ?>
-					<?php $field( 'eop_data_last_name', __( 'Sobrenome', EOP_TEXT_DOMAIN ), $order->get_billing_last_name(), false ); ?>
-					<?php $field( 'eop_data_document', __( 'CPF / CNPJ', EOP_TEXT_DOMAIN ), $document ); ?>
-					<?php $field( 'eop_data_email', __( 'E-mail', EOP_TEXT_DOMAIN ), $order->get_billing_email(), true, 'email' ); ?>
-					<?php $field( 'eop_data_phone', __( 'Telefone', EOP_TEXT_DOMAIN ), $order->get_billing_phone(), true, 'tel' ); ?>
-					<?php $field( 'eop_data_company', __( 'Empresa (opcional)', EOP_TEXT_DOMAIN ), $order->get_billing_company(), false ); ?>
-					<?php $field( 'eop_data_ie', __( 'Inscrição estadual (opcional)', EOP_TEXT_DOMAIN ), (string) self::get_order_meta_value( $order, array( '_billing_ie', 'billing_ie' ) ), false ); ?>
-					<?php $field( 'eop_data_postcode', __( 'CEP', EOP_TEXT_DOMAIN ), $order->get_billing_postcode() ); ?>
-					<?php $field( 'eop_data_address_1', __( 'Endereço', EOP_TEXT_DOMAIN ), $order->get_billing_address_1() ); ?>
-					<?php $field( 'eop_data_number', __( 'Número', EOP_TEXT_DOMAIN ), (string) self::get_order_meta_value( $order, array( '_shipping_number', '_billing_number' ) ), false ); ?>
-					<?php $field( 'eop_data_neighborhood', __( 'Bairro', EOP_TEXT_DOMAIN ), (string) self::get_order_meta_value( $order, array( '_shipping_neighborhood', '_billing_neighborhood' ) ), false ); ?>
-					<?php $field( 'eop_data_city', __( 'Cidade', EOP_TEXT_DOMAIN ), $order->get_billing_city() ); ?>
-					<?php $field( 'eop_data_state', __( 'Estado (UF)', EOP_TEXT_DOMAIN ), $order->get_billing_state() ); ?>
+				<div class="eop-post-flow__data-intro">
+					<span class="eop-post-flow__data-eyebrow"><?php esc_html_e( 'Cadastro do cliente', EOP_TEXT_DOMAIN ); ?></span>
+					<h3 class="eop-post-flow__data-title"><?php esc_html_e( 'Confirme seus dados', EOP_TEXT_DOMAIN ); ?></h3>
+					<p class="eop-post-flow__data-subtitle"><?php esc_html_e( 'Usamos estes dados para emitir o contrato e o pedido. Os campos com * sao obrigatorios.', EOP_TEXT_DOMAIN ); ?></p>
 				</div>
+
+				<fieldset class="eop-post-flow__data-section">
+					<legend class="eop-post-flow__data-legend"><?php esc_html_e( 'Dados pessoais', EOP_TEXT_DOMAIN ); ?></legend>
+					<div class="eop-post-flow__data-grid">
+						<?php $field( 'eop_data_first_name', __( 'Nome', EOP_TEXT_DOMAIN ), $order->get_billing_first_name(), 6, true, 'text', 'given-name' ); ?>
+						<?php $field( 'eop_data_last_name', __( 'Sobrenome', EOP_TEXT_DOMAIN ), $order->get_billing_last_name(), 6, false, 'text', 'family-name' ); ?>
+						<?php $field( 'eop_data_document', __( 'CPF / CNPJ', EOP_TEXT_DOMAIN ), $document, 6, true, 'text', 'off', 'numeric' ); ?>
+						<?php $field( 'eop_data_ie', __( 'Inscricao estadual (opcional)', EOP_TEXT_DOMAIN ), (string) self::get_order_meta_value( $order, array( '_billing_ie', 'billing_ie' ) ), 6, false ); ?>
+						<?php $field( 'eop_data_company', __( 'Empresa (opcional)', EOP_TEXT_DOMAIN ), $order->get_billing_company(), 12, false, 'text', 'organization' ); ?>
+					</div>
+				</fieldset>
+
+				<fieldset class="eop-post-flow__data-section">
+					<legend class="eop-post-flow__data-legend"><?php esc_html_e( 'Contato', EOP_TEXT_DOMAIN ); ?></legend>
+					<div class="eop-post-flow__data-grid">
+						<?php $field( 'eop_data_email', __( 'E-mail', EOP_TEXT_DOMAIN ), $order->get_billing_email(), 6, true, 'email', 'email', 'email' ); ?>
+						<?php $field( 'eop_data_phone', __( 'Telefone', EOP_TEXT_DOMAIN ), $order->get_billing_phone(), 6, true, 'tel', 'tel', 'tel' ); ?>
+					</div>
+				</fieldset>
+
+				<fieldset class="eop-post-flow__data-section">
+					<legend class="eop-post-flow__data-legend"><?php esc_html_e( 'Endereco', EOP_TEXT_DOMAIN ); ?></legend>
+					<div class="eop-post-flow__data-grid">
+						<?php $field( 'eop_data_postcode', __( 'CEP', EOP_TEXT_DOMAIN ), $order->get_billing_postcode(), 3, true, 'text', 'postal-code', 'numeric' ); ?>
+						<?php $field( 'eop_data_address_1', __( 'Endereco', EOP_TEXT_DOMAIN ), $order->get_billing_address_1(), 6, true, 'text', 'address-line1' ); ?>
+						<?php $field( 'eop_data_number', __( 'Numero', EOP_TEXT_DOMAIN ), (string) self::get_order_meta_value( $order, array( '_shipping_number', '_billing_number' ) ), 3, false, 'text', '', 'numeric' ); ?>
+						<?php $field( 'eop_data_neighborhood', __( 'Bairro', EOP_TEXT_DOMAIN ), (string) self::get_order_meta_value( $order, array( '_shipping_neighborhood', '_billing_neighborhood' ) ), 4, false, 'text', 'address-level3' ); ?>
+						<?php $field( 'eop_data_city', __( 'Cidade', EOP_TEXT_DOMAIN ), $order->get_billing_city(), 5, true, 'text', 'address-level2' ); ?>
+						<?php $field( 'eop_data_state', __( 'Estado (UF)', EOP_TEXT_DOMAIN ), $order->get_billing_state(), 3, true, 'text', 'address-level1' ); ?>
+					</div>
+				</fieldset>
 
 				<button type="submit" class="eop-proposal-button eop-post-flow__final-submit"><?php esc_html_e( 'Salvar e continuar', EOP_TEXT_DOMAIN ); ?></button>
 			</form>

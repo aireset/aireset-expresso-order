@@ -2,6 +2,16 @@
 
 Todas as alteracoes relevantes do plugin `Aireset Expresso Order` devem ser registradas aqui.
 
+## 1.4.0 - 2026-06-25
+
+- PDF: gestao completa migrada da pagina legada para 11 secoes React nativas (Visualizacao; Pedido e Proposta: documento/colunas/textos/estilo; Documentos eletronicos; Avancado), no mesmo sistema de configuracoes do resto do plugin, com preview ao vivo do documento; a pagina legada permanece so como degradacao quando os assets React faltam
+- fluxo: formulario "Dados do cliente" redesenhado (intro + grupos Dados pessoais/Contato/Endereco, grade de 12 colunas com larguras corretas, autocomplete/inputmode para mobile)
+- fluxo: watcher de confirmacao de pagamento na pagina de obrigado e na etapa de pagamento — polling do status (cartao/PIX assincrono) que avanca sozinho quando aprovado
+- fluxo: etapa final renomeada para "Conclusao"; etapa "Dados do cliente" agora ocupa a tela como as demais; botoes de baixar PDF da Conclusao so aparecem para vendedor/admin
+- fluxo: corrige a etapa de upload que exigia anexo mesmo com a opcao desativada; validacao de nome e UF alinhada com o formulario
+- distribuicao: uninstall remove options/transients de licenca; default da cor do cabecalho do PDF passa para o navy da identidade (#00034b)
+- correcoes: re-sincronizacao do editor de documentos (TipTap), fallback de campo desconhecido nas configuracoes, remocao de codigo morto e comentarios desatualizados
+
 ## 1.3.0 - 2026-06-10
 
 - performance: cacheia a verificacao de licenca (phone-home bloqueante a cada request do admin), derrubando o tempo das chamadas REST do painel de ~2-3s para ~0,8s; quando o servidor nao envia `request_duration`, o resultado valido passa a ser memoizado por 12h em vez de revalidado a cada carregamento, e o timeout do request cai de 120s para 12s (sem alterar a logica de validacao)

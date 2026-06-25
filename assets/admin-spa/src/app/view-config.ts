@@ -81,7 +81,6 @@ export const navGroups: NavGroup[] = [
 
 export const utilityNavItems: NavItem[] = [
   { view: 'documentation', label: 'Documentacao', icon: 'dashicons-book-alt' },
-  { view: 'export-import', label: 'Exportar e Importar', icon: 'dashicons-migrate' },
   { view: 'license', label: 'Licenca', icon: 'dashicons-admin-network' },
 ];
 

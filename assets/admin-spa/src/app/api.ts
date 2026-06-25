@@ -83,7 +83,6 @@ export const adminApi = {
       body: JSON.stringify({ values }),
     }),
   getPreview: (surface: string) => request<PreviewPayload>(`previews/${surface}`),
-  getView: (view: string) => request<{ view: string; html: string }>(`views/${view}`),
   getConfirmationDocuments: () => request<ConfirmationDocumentsPayload>('confirmation-documents'),
   saveConfirmationDocuments: (documents: ConfirmationDocument[]) =>
     request<ConfirmationDocumentsPayload>('confirmation-documents', {

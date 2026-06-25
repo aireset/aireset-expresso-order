@@ -406,8 +406,6 @@ function App() {
   const settingsCacheRef = useRef<Record<string, SettingsPayload>>({});
   const previewCacheRef = useRef<Record<string, PreviewPayload>>({});
   const ordersCacheRef = useRef<OrdersPayload | null>(null);
-  const lazyHtmlCacheRef = useRef<Record<string, string>>({});
-  const [lazyHtml, setLazyHtml] = useState<string | null>(null);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     general: true,
     confirmation: true,
@@ -511,20 +509,6 @@ function App() {
       setPreviewPayload(null);
     }
 
-    const lazyView = (['export-import', 'license'] as string[]).includes(selectedView) ? selectedView : null;
-
-    if (lazyView) {
-      const cachedLazy = lazyHtmlCacheRef.current[lazyView];
-      if (cachedLazy) {
-        setLazyHtml(cachedLazy);
-      } else {
-        hasBlockingRequest = true;
-        setLazyHtml(null);
-      }
-    } else {
-      setLazyHtml(null);
-    }
-
     if (selectedView !== 'orders') {
       setOrderError('');
       setOrderSaveState('idle');
@@ -587,19 +571,6 @@ function App() {
             setPreviewPayload(payload);
           }
         )
-      );
-    }
-
-    if (lazyView) {
-      requests.push(
-        adminApi.getView(lazyView).then((payload) => {
-          lazyHtmlCacheRef.current[lazyView] = payload.html;
-          if (cancelled) {
-            return;
-          }
-
-          setLazyHtml(payload.html);
-        })
       );
     }
 
@@ -1667,14 +1638,11 @@ function App() {
             </div>
           ) : null}
 
-          {!viewLoading &&
-          !viewError &&
-          (selectedView === 'export-import' || selectedView === 'license') &&
-          lazyHtml ? (
-            <div
-              className="eop-react-block eop-react-lazy-view"
-              dangerouslySetInnerHTML={{ __html: lazyHtml }}
-            />
+          {!viewLoading && !viewError && selectedView === 'license' ? (
+            <div className="eop-react-block">
+              <h4>Licenca e governanca</h4>
+              <p>A ativacao e a gestao da licenca continuam no fluxo dedicado do plugin.</p>
+            </div>
           ) : null}
         </section>
         </main>

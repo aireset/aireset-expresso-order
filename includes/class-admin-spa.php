@@ -604,7 +604,12 @@ class EOP_Admin_SPA {
 	}
 
 	public static function handle_lazy_view_request( WP_REST_Request $request ) {
+		// Alguns renderers legados (ex.: portabilidade) podem emitir saida direta
+		// durante o request REST, corrompendo o JSON. Bufferiza e descarta qualquer
+		// vazamento; o HTML util ja vem dentro do payload['html'].
+		ob_start();
 		$payload = EOP_Admin_Page::get_lazy_view_payload( (string) $request->get_param( 'view_name' ), $request );
+		ob_end_clean();
 
 		if ( is_wp_error( $payload ) ) {
 			return $payload;

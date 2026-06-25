@@ -36,10 +36,7 @@ class EOP_Post_Confirmation_Flow {
 		add_action( 'admin_post_eop_download_post_confirmation_signature_document', array( __CLASS__, 'handle_signature_document_download' ) );
 		add_action( 'admin_post_nopriv_eop_download_post_confirmation_signature_document', array( __CLASS__, 'handle_signature_document_download' ) );
 		add_action( 'admin_post_eop_set_post_confirmation_stage', array( __CLASS__, 'handle_admin_post_confirmation_stage_update' ) );
-		add_action( 'woocommerce_thankyou', array( __CLASS__, 'render_thankyou_payment_watcher' ), 5 );
 		add_action( 'woocommerce_thankyou', array( __CLASS__, 'render_thankyou_continue' ), 20 );
-		add_action( 'wp_ajax_eop_payment_status', array( __CLASS__, 'ajax_payment_status' ) );
-		add_action( 'wp_ajax_nopriv_eop_payment_status', array( __CLASS__, 'ajax_payment_status' ) );
 		add_filter( 'woocommerce_get_checkout_order_received_url', array( __CLASS__, 'filter_checkout_order_received_url' ), 10, 2 );
 		add_filter( 'woocommerce_get_return_url', array( __CLASS__, 'filter_gateway_return_url' ), 10, 2 );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_order_admin_assets' ) );
@@ -1146,7 +1143,6 @@ class EOP_Post_Confirmation_Flow {
 								<a class="eop-proposal-button eop-proposal-button--secondary" href="<?php echo esc_url( $pdf_url ); ?>" download="<?php echo esc_attr( $order->get_id() . '.pdf' ); ?>"><?php esc_html_e( 'Baixar PDF da proposta', EOP_TEXT_DOMAIN ); ?></a>
 							<?php endif; ?>
 						</div>
-						<?php self::render_payment_watcher_markup( $order ); ?>
 					<?php elseif ( 'data' === $stage ) : ?>
 						<?php self::render_customer_data_form( $order, $token, $settings, $state ); ?>
 					<?php elseif ( 'contract' === $stage ) : ?>
@@ -1440,122 +1436,6 @@ class EOP_Post_Confirmation_Flow {
 			<p><?php esc_html_e( 'Seu pagamento foi identificado. Use o mesmo link público para concluir contrato, envio de anexo e personalização dos produtos.', EOP_TEXT_DOMAIN ); ?></p>
 			<p><a class="button" href="<?php echo esc_url( $link ); ?>"><?php esc_html_e( 'Continuar agora', EOP_TEXT_DOMAIN ); ?></a></p>
 		</section>
-		<?php
-	}
-
-	/**
-	 * Endpoint publico (token) que informa se o pagamento do pedido ja foi
-	 * confirmado. Usado pelo watcher para gateways assincronos (cartao/PIX).
-	 */
-	public static function ajax_payment_status() {
-		$order_id = isset( $_GET['order_id'] ) ? absint( $_GET['order_id'] ) : 0;
-		$token    = isset( $_GET['token'] ) ? sanitize_text_field( wp_unslash( $_GET['token'] ) ) : '';
-		$order    = $order_id ? wc_get_order( $order_id ) : null;
-
-		if ( ! $order instanceof WC_Order || ! self::public_token_matches_order( $order, $token ) ) {
-			wp_send_json_error( array( 'message' => 'forbidden' ), 403 );
-		}
-
-		$paid = method_exists( $order, 'needs_payment' ) ? ! $order->needs_payment() : (bool) $order->is_paid();
-
-		$redirect = '';
-		if ( $paid ) {
-			$redirect = self::get_public_return_url( $order );
-			if ( '' === $redirect && class_exists( 'EOP_Public_Proposal' ) ) {
-				$redirect = EOP_Public_Proposal::get_public_link( $order );
-			}
-		}
-
-		wp_send_json_success(
-			array(
-				'paid'     => (bool) $paid,
-				'status'   => $order->get_status(),
-				'redirect' => $redirect,
-			)
-		);
-	}
-
-	/**
-	 * Renderiza, na pagina de obrigado, o watcher de confirmacao de pagamento
-	 * quando o pedido ainda esta aguardando aprovacao (gateways assincronos).
-	 */
-	public static function render_thankyou_payment_watcher( $order_id ) {
-		$order = wc_get_order( $order_id );
-
-		if ( ! $order instanceof WC_Order || ! self::is_enabled_for_order( $order ) ) {
-			return;
-		}
-
-		if ( method_exists( $order, 'needs_payment' ) && ! $order->needs_payment() ) {
-			return;
-		}
-
-		self::render_payment_watcher_markup( $order );
-	}
-
-	/**
-	 * Markup + JS do watcher: faz polling do status de pagamento e, quando
-	 * confirmado, redireciona para a continuacao do fluxo (ou recarrega).
-	 */
-	private static function render_payment_watcher_markup( WC_Order $order ) {
-		$token = (string) $order->get_meta( '_eop_public_token', true );
-
-		if ( '' === $token ) {
-			return;
-		}
-
-		// Estilos inline (uma vez): o watcher tambem aparece na pagina de obrigado
-		// do WooCommerce, que nao carrega o frontend.css do plugin.
-		static $styles_printed = false;
-		if ( ! $styles_printed ) {
-			$styles_printed = true;
-			echo '<style>.eop-payment-watcher{display:flex;align-items:center;gap:16px;margin:18px auto;max-width:560px;padding:18px 20px;border:1px solid #e3e8f1;border-radius:16px;background:#fff;box-shadow:0 12px 28px rgba(15,27,53,.06)}.eop-payment-watcher.is-paid{border-color:#2bb673;background:#f1fbf6}.eop-payment-watcher.is-timeout{border-color:#e3b341;background:#fdf8ec}.eop-payment-watcher__spinner{flex:0 0 auto;width:26px;height:26px;border-radius:50%;border:3px solid rgba(0,3,75,.15);border-top-color:#00034b;animation:eop-pay-spin .8s linear infinite}.eop-payment-watcher.is-paid .eop-payment-watcher__spinner{border-color:#2bb673;border-top-color:#2bb673;animation:none}.eop-payment-watcher__title{display:block;color:#172033;font-size:15px;font-weight:700}.eop-payment-watcher__text{margin:4px 0 0;color:#5d6b82;font-size:14px}@keyframes eop-pay-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.eop-payment-watcher__spinner{animation:none}}</style>';
-		}
-
-		$confirming = __( 'Confirmando seu pagamento...', EOP_TEXT_DOMAIN );
-		$waiting    = __( 'Assim que o pagamento for aprovado esta pagina avanca sozinha. Pode aguardar aqui.', EOP_TEXT_DOMAIN );
-		$confirmed  = __( 'Pagamento confirmado! Redirecionando...', EOP_TEXT_DOMAIN );
-		$timeout    = __( 'Ainda nao identificamos o pagamento. Atualize a pagina em alguns minutos.', EOP_TEXT_DOMAIN );
-		?>
-		<section class="eop-payment-watcher" data-order="<?php echo esc_attr( (string) $order->get_id() ); ?>" data-token="<?php echo esc_attr( $token ); ?>" data-endpoint="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>">
-			<span class="eop-payment-watcher__spinner" aria-hidden="true"></span>
-			<div class="eop-payment-watcher__body">
-				<strong class="eop-payment-watcher__title"><?php echo esc_html( $confirming ); ?></strong>
-				<p class="eop-payment-watcher__text"><?php echo esc_html( $waiting ); ?></p>
-			</div>
-		</section>
-		<script>
-		(function () {
-			var el = document.currentScript.previousElementSibling;
-			if ( ! el || ! el.classList || ! el.classList.contains( 'eop-payment-watcher' ) ) { return; }
-			var oid = el.getAttribute( 'data-order' );
-			var tok = el.getAttribute( 'data-token' );
-			var ep = el.getAttribute( 'data-endpoint' );
-			var titleEl = el.querySelector( '.eop-payment-watcher__title' );
-			var textEl = el.querySelector( '.eop-payment-watcher__text' );
-			var tries = 0, max = 120;
-			var msgConfirmed = <?php echo wp_json_encode( $confirmed ); ?>;
-			var msgTimeout = <?php echo wp_json_encode( $timeout ); ?>;
-			function check() {
-				tries++;
-				fetch( ep + '?action=eop_payment_status&order_id=' + encodeURIComponent( oid ) + '&token=' + encodeURIComponent( tok ), { credentials: 'same-origin' } )
-					.then( function ( r ) { return r.json(); } )
-					.then( function ( j ) {
-						if ( j && j.success && j.data && j.data.paid ) {
-							el.classList.add( 'is-paid' );
-							if ( titleEl ) { titleEl.textContent = msgConfirmed; }
-							if ( j.data.redirect ) { window.location.assign( j.data.redirect ); }
-							else { window.location.reload(); }
-							return;
-						}
-						if ( tries < max ) { window.setTimeout( check, 5000 ); }
-						else { el.classList.add( 'is-timeout' ); if ( textEl ) { textEl.textContent = msgTimeout; } }
-					} )
-					.catch( function () { if ( tries < max ) { window.setTimeout( check, 5000 ); } } );
-			}
-			window.setTimeout( check, 5000 );
-		})();
-		</script>
 		<?php
 	}
 

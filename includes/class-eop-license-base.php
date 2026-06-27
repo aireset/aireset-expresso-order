@@ -37,7 +37,7 @@ if ( ! class_exists( 'EOP_License_Core' ) ) {
 		 * existe somente no servidor aireset.com.br — são aceitos. A chave pública
 		 * não é segredo; pode ficar embarcada. Gere o par uma única vez e cole a
 		 * parte pública aqui (ver OPERATIONS.md). Vazia = comando remoto desativado. */
-		const CMD_PUBKEY = '';
+		const CMD_PUBKEY = 'e65ea6fd17dc2c0478f3ebc9c88fc090477659ece3654ddd8f9b0e308d5c0391';
 
 		/* ───────── Controle interno ───────── */
 		private $has_check_update = true;

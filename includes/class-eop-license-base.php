@@ -32,6 +32,13 @@ if ( ! class_exists( 'EOP_License_Core' ) ) {
 		private $product_base = 'aireset-expresso-order';
 		private $server_host  = 'https://aireset.com.br/wp-json/zhi-linc/';
 
+		/* Chave pública Ed25519 (hex) do servidor de licenças. Apenas comandos
+		 * remotos (rl/rc/dl) ASSINADOS com a chave privada correspondente — que
+		 * existe somente no servidor aireset.com.br — são aceitos. A chave pública
+		 * não é segredo; pode ficar embarcada. Gere o par uma única vez e cole a
+		 * parte pública aqui (ver OPERATIONS.md). Vazia = comando remoto desativado. */
+		const CMD_PUBKEY = '';
+
 		/* ───────── Controle interno ───────── */
 		private $has_check_update = true;
 		private $plugin_file;
@@ -376,11 +383,99 @@ if ( ! class_exists( 'EOP_License_Core' ) ) {
 		 *  Handler de requisição do servidor
 		 * ══════════════════════════════════════════════ */
 		public function init_action_handler() {
-			$handler = hash( 'crc32b', $this->product_id . $this->key . $this->get_domain() ) . '_handle';
-			if ( isset( $_GET['action'] ) && sanitize_text_field( wp_unslash( $_GET['action'] ) ) === $handler ) {
-				$this->handle_server_request();
+			/*
+			 * Canal de comando remoto (rl/rc/dl).
+			 *
+			 * O gatilho legado — hash('crc32b', product_id . key . domain) — foi
+			 * REMOVIDO: o único "segredo" era a chave de produto embarcada em todo
+			 * cliente, então qualquer pessoa com uma cópia do plugin conseguia
+			 * computar o token e deletar/resetar instalações sem autenticação.
+			 *
+			 * Agora só aceitamos comandos ASSINADOS (Ed25519) pela chave privada do
+			 * servidor. Quem tem o plugin possui apenas a chave pública e não
+			 * consegue forjar. O comando é preso ao domínio, tem validade curta e
+			 * nonce de uso único (anti-replay).
+			 */
+			if ( empty( $_GET['eop_cmd'] ) || empty( $_GET['eop_sig'] ) ) {
+				return;
+			}
+			if ( $this->verify_signed_command() ) {
+				$this->handle_server_request(); // lê $_GET['type'], já validado/definido abaixo.
 				exit;
 			}
+		}
+
+		/**
+		 * Valida um comando remoto assinado pelo servidor de licenças.
+		 *
+		 * Em caso de sucesso, define $_GET['type'] com o tipo validado e retorna
+		 * true; caso contrário retorna false e nada é executado. Falha de forma
+		 * segura (bail) quando o sodium não está disponível ou a chave pública
+		 * não foi configurada.
+		 *
+		 * @return bool
+		 */
+		private function verify_signed_command() {
+			if ( ! function_exists( 'sodium_crypto_sign_verify_detached' ) ) {
+				return false;
+			}
+			if ( '' === self::CMD_PUBKEY ) {
+				return false;
+			}
+
+			$payload = base64_decode( wp_unslash( $_GET['eop_cmd'] ), true ); // phpcs:ignore WordPress.Security.NonceVerification, WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode
+			$sig_hex = sanitize_text_field( wp_unslash( $_GET['eop_sig'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
+			if ( false === $payload || ! ctype_xdigit( $sig_hex ) ) {
+				return false;
+			}
+
+			$pub = @sodium_hex2bin( self::CMD_PUBKEY );
+			$sig = @sodium_hex2bin( $sig_hex );
+			if ( strlen( $pub ) !== SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES || strlen( $sig ) !== SODIUM_CRYPTO_SIGN_BYTES ) {
+				return false;
+			}
+			if ( ! sodium_crypto_sign_verify_detached( $sig, $payload, $pub ) ) {
+				return false;
+			}
+
+			$cmd = json_decode( $payload, true );
+			if ( ! is_array( $cmd ) ) {
+				return false;
+			}
+
+			// Comando preso a ESTE site e a ESTE produto.
+			if ( ! isset( $cmd['domain'] ) || $cmd['domain'] !== $this->get_domain() ) {
+				return false;
+			}
+			if ( ! isset( $cmd['product'] ) || (string) $cmd['product'] !== (string) $this->product_id ) {
+				return false;
+			}
+
+			// Tipo permitido.
+			$type = isset( $cmd['type'] ) ? strtolower( (string) $cmd['type'] ) : '';
+			if ( ! in_array( $type, array( 'rl', 'rc', 'dl' ), true ) ) {
+				return false;
+			}
+
+			// Validade curta (evita reuso de comando antigo capturado).
+			$expires = isset( $cmd['expires'] ) ? (int) $cmd['expires'] : 0;
+			if ( $expires < time() || $expires > time() + DAY_IN_SECONDS ) {
+				return false;
+			}
+
+			// Nonce de uso único (anti-replay dentro da janela de validade).
+			$nonce = isset( $cmd['nonce'] ) ? sanitize_text_field( (string) $cmd['nonce'] ) : '';
+			if ( '' === $nonce || strlen( $nonce ) > 64 ) {
+				return false;
+			}
+			$seen_key = 'eop_cmd_' . md5( $nonce );
+			if ( false !== get_transient( $seen_key ) ) {
+				return false;
+			}
+			set_transient( $seen_key, 1, DAY_IN_SECONDS );
+
+			$_GET['type'] = $type; // handle_server_request() lê este valor já validado.
+			return true;
 		}
 
 		private function handle_server_request() {

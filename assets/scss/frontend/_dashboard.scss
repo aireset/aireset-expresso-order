@@ -4,6 +4,7 @@
   max-width: 1420px;
   margin: 0 auto;
   padding: 28px 22px 56px;
+  container-type: inline-size; /* layout responde a largura DO PDV (embed Elementor), nao da viewport */
 
   &-header {
     position: relative;
@@ -147,7 +148,7 @@
 
 .eop-pdv-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(300px, .85fr);
+  grid-template-columns: minmax(0, 1.65fr) minmax(280px, .85fr);
   gap: 24px;
   align-items: start;
 }
@@ -161,6 +162,17 @@
 .eop-pdv-sidebar {
   position: sticky;
   top: 24px;
+}
+
+/* Colapsa para 1 coluna pela largura do PROPRIO PDV (container), nao da viewport.
+   Assim o embed estreito do Elementor vira 1 col, mas tela larga fica 2 col. */
+@container (max-width: 760px) {
+  .eop-pdv-grid {
+    grid-template-columns: 1fr;
+  }
+  .eop-pdv-sidebar {
+    position: static;
+  }
 }
 
 .eop-orders-browser {

@@ -1,12 +1,11 @@
 @media (max-width: 1280px) {
-  .eop-login-wrap,
-  .eop-pdv-grid {
+  .eop-login-wrap {
     grid-template-columns: 1fr;
   }
 
-  .eop-pdv-sidebar {
-    position: static;
-  }
+  /* .eop-pdv-grid / .eop-pdv-sidebar agora colapsam por container query
+     (ver _dashboard.scss) — nao mais por viewport, pois o PDV vive embutido
+     num container Elementor mais estreito que a tela. */
 
   .eop-orders-browser__filters,
   .eop-order-card__meta {

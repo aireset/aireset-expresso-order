@@ -157,6 +157,7 @@
 .eop-pdv-sidebar {
   display: grid;
   gap: 22px;
+  min-width: 0; /* deixa o item de grid encolher ate o track; sem isso o conteudo transborda e sobrepoe a outra coluna */
 }
 
 .eop-pdv-sidebar {
@@ -798,7 +799,7 @@
 
 .eop-pdv .eop-item-defaults {
   display: grid;
-  grid-template-columns: 136px minmax(92px, 120px) minmax(126px, 150px) minmax(110px, 132px);
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 0.9fr);
   gap: 10px;
   align-items: end;
   margin-bottom: 14px;
@@ -831,6 +832,9 @@
   min-height: 46px;
   padding: 10px 12px;
   font-size: 15px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .eop-pdv .eop-item-defaults__discount-group {

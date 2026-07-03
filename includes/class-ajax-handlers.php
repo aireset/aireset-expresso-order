@@ -106,31 +106,40 @@ class EOP_Ajax_Handlers {
     public static function search_products_payload( $term ) {
         $term = sanitize_text_field( $term );
 
-        if ( empty( $term ) ) {
-            return array( 'results' => array() );
-        }
-
         $results = array();
 
-        // Search by SKU first.
-        $by_sku = wc_get_products( array(
-            'sku'    => $term,
-            'limit'  => 5,
-            'status' => 'publish',
-            'return' => 'ids',
-        ) );
+        if ( empty( $term ) ) {
+            // Pre-carga estilo Select2: lista os primeiros produtos publicados para a UI
+            // filtrar localmente, sem exigir digitacao.
+            $product_ids = wc_get_products( array(
+                'limit'   => 100,
+                'status'  => 'publish',
+                'orderby' => 'title',
+                'order'   => 'ASC',
+                'return'  => 'ids',
+            ) );
+        } else {
+            // Search by SKU first.
+            $by_sku = wc_get_products( array(
+                'sku'    => $term,
+                'limit'  => 5,
+                'status' => 'publish',
+                'return' => 'ids',
+            ) );
 
-        // Search by title.
-        $by_title = wc_get_products( array(
-            's'      => $term,
-            'limit'  => 15,
-            'status' => 'publish',
-            'return' => 'ids',
-        ) );
+            // Search by title.
+            $by_title = wc_get_products( array(
+                's'      => $term,
+                'limit'  => 15,
+                'status' => 'publish',
+                'return' => 'ids',
+            ) );
 
-        $product_ids = array_unique( array_merge( $by_sku, $by_title ) );
+            $product_ids = array_unique( array_merge( $by_sku, $by_title ) );
+        }
 
-        foreach ( array_slice( $product_ids, 0, 20 ) as $pid ) {
+        $eop_limit = empty( $term ) ? 100 : 20;
+        foreach ( array_slice( $product_ids, 0, $eop_limit ) as $pid ) {
             $product = wc_get_product( $pid );
             if ( ! $product ) {
                 continue;
@@ -183,20 +192,20 @@ class EOP_Ajax_Handlers {
     public static function search_product_categories_payload( $term ) {
         $term = sanitize_text_field( $term );
 
-        if ( empty( $term ) ) {
-            return array( 'results' => array() );
+        $term_query_args = array(
+            'taxonomy'   => 'product_cat',
+            'hide_empty' => false,
+            'number'     => empty( $term ) ? 200 : 20,
+            'orderby'    => 'name',
+            'order'      => 'ASC',
+        );
+
+        if ( ! empty( $term ) ) {
+            // Pre-carga (term vazio) lista todas; com termo, filtra no servidor.
+            $term_query_args['search'] = $term;
         }
 
-        $terms = get_terms(
-            array(
-                'taxonomy'   => 'product_cat',
-                'hide_empty' => false,
-                'search'     => $term,
-                'number'     => 20,
-                'orderby'    => 'name',
-                'order'      => 'ASC',
-            )
-        );
+        $terms = get_terms( $term_query_args );
 
         if ( is_wp_error( $terms ) || empty( $terms ) ) {
             return array( 'results' => array() );

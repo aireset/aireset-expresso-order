@@ -1,8 +1,4 @@
 @media (max-width: 1280px) {
-  .eop-login-wrap {
-    grid-template-columns: 1fr;
-  }
-
   /* .eop-pdv-grid / .eop-pdv-sidebar agora colapsam por container query
      (ver _dashboard.scss) — nao mais por viewport, pois o PDV vive embutido
      num container Elementor mais estreito que a tela. */
@@ -154,5 +150,12 @@
 
   .eop-post-flow__actions .eop-proposal-button {
     width: 100%;
+  }
+}
+
+/* Login: colapsa 2->1 coluna so em tela estreita (antes era 1280px e quebrava no desktop ~1277). */
+@media (max-width: 760px) {
+  .eop-login-wrap {
+    grid-template-columns: 1fr;
   }
 }

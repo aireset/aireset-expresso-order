@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { OrderSummary, OrdersPayload } from './app/types';
+import type { FlowSummary, OrderSummary, OrdersPayload } from './app/types';
 import { adminApi, getAdminSpaConfig } from './app/api';
 import NewOrderForm from './NewOrderForm';
 import Select2 from './Select2';
@@ -25,10 +25,12 @@ export function OrderCard({
   order,
   onRefresh,
   onEdit,
+  onStagePatched,
 }: {
   order: OrderSummary;
   onRefresh: () => void;
   onEdit: (id: number) => void;
+  onStagePatched?: (id: number, summary: FlowSummary) => void;
 }) {
   const flow = order.post_confirmation_flow_summary;
   const controls = flow?.stage_controls;
@@ -40,8 +42,13 @@ export function OrderCard({
     setUpdating(true);
     setStageError('');
     try {
-      await adminApi.updateOrderStage(order.id, stage);
-      onRefresh();
+      const result = (await adminApi.updateOrderStage(order.id, stage)) as { summary?: FlowSummary } | null;
+      // Atualiza so este pedido (sem refetch da lista inteira, que "recarregava a tela toda").
+      if (result?.summary && onStagePatched) {
+        onStagePatched(order.id, result.summary);
+      } else {
+        onRefresh();
+      }
     } catch (error) {
       setStageError(error instanceof Error ? error.message : 'Nao foi possivel atualizar a etapa.');
     } finally {
@@ -67,7 +74,9 @@ export function OrderCard({
           <div className="eop-order-card__number">{order.number}</div>
           <h3>{order.customer_name}</h3>
         </div>
-        <span className="eop-order-card__status">{order.status_label || order.status}</span>
+        <span className="eop-order-card__status">
+          {flow?.active_for_order && flow.stage_label ? flow.stage_label : order.status_label || order.status}
+        </span>
       </div>
 
       <div className="eop-order-card__meta">
@@ -154,6 +163,7 @@ function OrdersBrowser() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [editingOrderId, setEditingOrderId] = useState<number | null>(null);
+  const [page, setPage] = useState<number>(1);
 
   const loadOrders = useCallback(() => {
     if (!getAdminSpaConfig()) {
@@ -164,13 +174,18 @@ function OrdersBrowser() {
     setError('');
 
     adminApi
-      .getOrders({ status: statusFilter, flow: flowFilter, search })
+      .getOrders({ status: statusFilter, flow: flowFilter, search, page })
       .then((payload) => setOrders(payload))
       .catch((fetchError) => setError(fetchError instanceof Error ? fetchError.message : 'Nao foi possivel carregar os pedidos agora.'))
       .finally(() => setLoading(false));
+  }, [statusFilter, flowFilter, search, page]);
+
+  // Volta para a pagina 1 quando muda filtro/busca (senao ficaria numa pagina inexistente).
+  useEffect(() => {
+    setPage(1);
   }, [statusFilter, flowFilter, search]);
 
-  // Recarrega no servidor quando muda filtro/busca (com debounce para a busca).
+  // Recarrega no servidor quando muda filtro/busca/pagina (com debounce para a busca).
   useEffect(() => {
     if (editingOrderId !== null) {
       return;
@@ -288,10 +303,46 @@ function OrdersBrowser() {
                 order={order}
                 onRefresh={loadOrders}
                 onEdit={(id) => setEditingOrderId(id)}
+                onStagePatched={(id, summary) =>
+                  setOrders((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          items: prev.items.map((current) =>
+                            current.id === id ? { ...current, post_confirmation_flow_summary: summary } : current
+                          ),
+                        }
+                      : prev
+                  )
+                }
               />
             ))
           : null}
       </div>
+
+      {orders && (orders.pagination?.total_pages ?? 1) > 1 ? (
+        <div className="eop-orders-browser__pagination">
+          <button
+            type="button"
+            className="eop-btn"
+            disabled={page <= 1 || loading}
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+          >
+            Anterior
+          </button>
+          <span className="eop-orders-page-indicator">
+            Pagina {page} de {orders.pagination?.total_pages ?? 1}
+          </span>
+          <button
+            type="button"
+            className="eop-btn"
+            disabled={page >= (orders.pagination?.total_pages ?? 1) || loading}
+            onClick={() => setPage((current) => current + 1)}
+          >
+            Proxima
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

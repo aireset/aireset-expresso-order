@@ -8,6 +8,32 @@ class EOP_Shortcode {
         add_action( 'wp_enqueue_scripts', array( __CLASS__, 'maybe_enqueue' ) );
         add_action( 'wp_enqueue_scripts', array( __CLASS__, 'dequeue_unrelated_frontend_assets' ), 999 );
         add_filter( 'login_redirect', array( __CLASS__, 'preserve_frontend_redirect' ), 20, 3 );
+
+        // Preview embutido no admin (iframe aponta para a pagina publica real com ?eop_preview=1):
+        // esconde a barra do wp-admin para o admin logado, deixando a previa limpa.
+        if ( isset( $_GET['eop_preview'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['eop_preview'] ) ) ) {
+            add_filter( 'show_admin_bar', '__return_false', 99999 );
+        }
+
+        add_action( 'template_redirect', array( __CLASS__, 'maybe_send_nocache' ) );
+    }
+
+    /**
+     * O HTML da pagina do PDV nao deve ser cacheado: ele referencia o bundle React
+     * (versionado por hash) e injeta config/bootstrap inline. Sem nocache, o navegador
+     * servia HTML antigo apontando para bundle antigo apos um deploy. O bundle em si
+     * (hash imutavel) continua cacheavel normalmente.
+     */
+    public static function maybe_send_nocache() {
+        if ( is_admin() ) {
+            return;
+        }
+
+        global $post;
+
+        if ( is_a( $post, 'WP_Post' ) && has_shortcode( $post->post_content, 'expresso_order' ) ) {
+            nocache_headers();
+        }
     }
 
     /**
@@ -209,9 +235,10 @@ class EOP_Shortcode {
             <script>
                 window.eopAdminSpaConfig = <?php echo wp_json_encode(
                     array(
-                        'rest_root'    => esc_url_raw( rest_url( 'aireset-expresso-order/v1/admin' ) ),
-                        'rest_nonce'   => wp_create_nonce( 'wp_rest' ),
-                        'initial_view' => 'orders',
+                        'rest_root'     => esc_url_raw( rest_url( 'aireset-expresso-order/v1/admin' ) ),
+                        'rest_nonce'    => wp_create_nonce( 'wp_rest' ),
+                        'initial_view'  => 'orders',
+                        'discount_mode' => EOP_Settings::get( 'discount_mode', 'both' ),
                     )
                 ); ?>;
             </script>
@@ -299,9 +326,10 @@ class EOP_Shortcode {
             'eop-frontend-react',
             'window.eopAdminSpaConfig=' . wp_json_encode(
                 array(
-                    'rest_root'    => esc_url_raw( rest_url( 'aireset-expresso-order/v1/admin' ) ),
-                    'rest_nonce'   => wp_create_nonce( 'wp_rest' ),
-                    'initial_view' => 'orders',
+                    'rest_root'     => esc_url_raw( rest_url( 'aireset-expresso-order/v1/admin' ) ),
+                    'rest_nonce'    => wp_create_nonce( 'wp_rest' ),
+                    'initial_view'  => 'orders',
+                    'discount_mode' => EOP_Settings::get( 'discount_mode', 'both' ),
                 )
             ) . ';',
             'before'

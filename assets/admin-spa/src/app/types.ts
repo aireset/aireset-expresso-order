@@ -291,4 +291,5 @@ export type AdminSpaConfig = {
   rest_nonce?: string;
   legacy_admin_url?: string;
   initial_view?: string;
+  discount_mode?: 'both' | 'percent' | 'fixed';
 };

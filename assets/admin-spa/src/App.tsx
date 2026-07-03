@@ -143,6 +143,22 @@ function ColorField({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Coloris altera input.value direto no DOM e dispara evento nativo 'input'/'change';
+  // o onChange controlado do React nao captura mudanca programatica. Ouvimos o nativo.
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) {
+      return;
+    }
+    const handler = () => onChange(input.value);
+    input.addEventListener('input', handler);
+    input.addEventListener('change', handler);
+    return () => {
+      input.removeEventListener('input', handler);
+      input.removeEventListener('change', handler);
+    };
+  }, [onChange]);
+
   return (
     <div className="eop-react-color">
       <div className="eop-react-color__control">
@@ -232,9 +248,41 @@ function MultiSelectField({
 }) {
   const [items, setItems] = useState<Array<{ value: string; label: string }>>(field.selected ?? []);
   const [term, setTerm] = useState('');
-  const [results, setResults] = useState<Array<{ value: string; label: string }>>([]);
-  const [searchState, setSearchState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
-  const minChars = field.minChars ?? 1;
+  const [available, setAvailable] = useState<Array<{ value: string; label: string }>>([]);
+  const [loadState, setLoadState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [open, setOpen] = useState(false);
+
+  // Select2: pre-carrega todas as opcoes no mount e filtra localmente ao digitar
+  // (antes exigia digitar e buscava no servidor a cada vez, sem ver a lista completa).
+  useEffect(() => {
+    let cancelled = false;
+    setLoadState('loading');
+    const load =
+      field.searchSource === 'categories'
+        ? adminApi.searchProductCategories('')
+        : adminApi.searchProducts('');
+    load
+      .then((payload) => {
+        if (cancelled) {
+          return;
+        }
+        setAvailable(
+          payload.results.map((result) => ({
+            value: String(result.id),
+            label: String((result as { text?: string }).text ?? result.id),
+          }))
+        );
+        setLoadState('done');
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setLoadState('error');
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [field.searchSource]);
 
   function commit(next: Array<{ value: string; label: string }>) {
     setItems(next);
@@ -246,36 +294,19 @@ function MultiSelectField({
       commit([...items, item]);
     }
     setTerm('');
-    setResults([]);
-    setSearchState('idle');
   }
 
   function removeItem(value: string) {
     commit(items.filter((item) => item.value !== value));
   }
 
-  async function runSearch() {
-    if (term.trim().length < minChars) {
-      return;
-    }
-
-    setSearchState('loading');
-
-    try {
-      const payload =
-        field.searchSource === 'categories'
-          ? await adminApi.searchProductCategories(term)
-          : await adminApi.searchProducts(term);
-      const mapped = payload.results.map((result) => ({
-        value: String(result.id),
-        label: String((result as { text?: string }).text ?? result.id),
-      }));
-      setResults(mapped.filter((result) => !items.some((current) => current.value === result.value)));
-      setSearchState('done');
-    } catch {
-      setSearchState('error');
-    }
-  }
+  const selectedValues = new Set(items.map((item) => item.value));
+  const normalizedTerm = term.trim().toLowerCase();
+  const filtered = available
+    .filter((option) => !selectedValues.has(option.value))
+    .filter((option) => normalizedTerm === '' || option.label.toLowerCase().includes(normalizedTerm))
+    .slice(0, 50);
+  const showResults = loadState !== 'loading' && (open || normalizedTerm !== '');
 
   return (
     <div className="eop-react-multiselect">
@@ -292,51 +323,42 @@ function MultiSelectField({
         </div>
       ) : null}
 
-      <div className="eop-react-inline-action">
-        <input
-          type="search"
-          value={term}
-          placeholder={
-            field.searchSource === 'categories'
-              ? 'Buscar categorias...'
-              : 'Buscar produtos por nome ou SKU...'
-          }
-          onChange={(event) => setTerm(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              event.preventDefault();
-              void runSearch();
-            }
-          }}
-        />
-        <button
-          type="button"
-          className="eop-react-button"
-          onClick={() => void runSearch()}
-          disabled={searchState === 'loading'}
-        >
-          {searchState === 'loading' ? '...' : 'Buscar'}
-        </button>
-      </div>
+      <input
+        type="search"
+        value={term}
+        placeholder={
+          loadState === 'loading'
+            ? 'Carregando...'
+            : field.searchSource === 'categories'
+              ? 'Filtrar categorias...'
+              : 'Filtrar produtos por nome ou SKU...'
+        }
+        onChange={(event) => setTerm(event.target.value)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => window.setTimeout(() => setOpen(false), 150)}
+      />
 
-      {searchState === 'error' ? <small className="eop-react-error">Falha na busca.</small> : null}
+      {loadState === 'error' ? <small className="eop-react-error">Falha ao carregar.</small> : null}
 
-      {results.length ? (
-        <div className="eop-react-multiselect__results">
-          {results.map((result) => (
-            <button
-              key={result.value}
-              type="button"
-              className="eop-react-multiselect__result"
-              onClick={() => addItem(result)}
-            >
-              {result.label}
-            </button>
-          ))}
+      {showResults ? (
+        <div className="eop-react-multiselect__results" style={{ maxHeight: 260, overflowY: 'auto' }}>
+          {filtered.length ? (
+            filtered.map((result) => (
+              <button
+                key={result.value}
+                type="button"
+                className="eop-react-multiselect__result"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => addItem(result)}
+              >
+                {result.label}
+              </button>
+            ))
+          ) : (
+            <small>{available.length === 0 ? 'Nada disponivel.' : 'Nenhum resultado.'}</small>
+          )}
         </div>
       ) : null}
-
-      {searchState === 'done' && !results.length ? <small>Nenhum resultado novo.</small> : null}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { NewOrderDraft, OrderDetail, OrderItem, ProductResult, ShippingPackage } from './app/types';
-import { adminApi } from './app/api';
+import { adminApi, getAdminSpaConfig } from './app/api';
 import ProductSelect2 from './ProductSelect2';
 
 function createInitialDraft(): NewOrderDraft {
@@ -42,9 +42,22 @@ function discountInputValue(item: OrderItem): string {
   return item.discount_type === 'percent' ? `${item.discount_value}%` : `${item.discount_value}`;
 }
 
+function getDiscountMode(): 'both' | 'percent' | 'fixed' {
+  return getAdminSpaConfig()?.discount_mode ?? 'both';
+}
+
+function discountPlaceholder(): string {
+  const mode = getDiscountMode();
+  return mode === 'percent' ? '10%' : mode === 'fixed' ? '10' : '10 ou 10%';
+}
+
+// Respeita a config discount_mode: 'percent' forca %, 'fixed' forca valor, 'both' detecta o %.
 function parseDiscountInput(raw: string): { type: 'fixed' | 'percent'; value: number } {
-  const isPercent = raw.includes('%');
-  return { type: isPercent ? 'percent' : 'fixed', value: parseNumber(raw.replace('%', '')) };
+  const mode = getDiscountMode();
+  const value = parseNumber(raw.replace('%', ''));
+  if (mode === 'percent') return { type: 'percent', value };
+  if (mode === 'fixed') return { type: 'fixed', value };
+  return { type: raw.includes('%') ? 'percent' : 'fixed', value };
 }
 
 function onlyDigits(value: string): string {
@@ -202,17 +215,15 @@ function NewOrderForm({ orderId, onExit }: { orderId?: number; onExit?: () => vo
 
   function applyDefaults() {
     const qty = Math.max(1, Math.round(parseNumber(defaultQty)));
-    const raw = defaultDiscount.trim();
-    const isPercent = raw.includes('%');
-    const discountValue = parseNumber(raw.replace('%', ''));
+    const parsed = parseDiscountInput(defaultDiscount.trim());
 
     update((current) => ({
       ...current,
       items: current.items.map((item) => ({
         ...item,
         quantity: qty,
-        discount_type: isPercent ? 'percent' : 'fixed',
-        discount_value: discountValue,
+        discount_type: parsed.type,
+        discount_value: parsed.value,
       })),
     }));
   }
@@ -458,7 +469,7 @@ function NewOrderForm({ orderId, onExit }: { orderId?: number; onExit?: () => vo
               <input
                 type="text"
                 value={defaultDiscount}
-                placeholder="10 ou 10%"
+                placeholder={discountPlaceholder()}
                 onChange={(event) => setDefaultDiscount(event.target.value)}
               />
             </div>
@@ -703,7 +714,7 @@ function NewOrderForm({ orderId, onExit }: { orderId?: number; onExit?: () => vo
                   className="eop-discount-text-input"
                   inputMode="decimal"
                   value={draft.discount ? (draft.discount_type === 'percent' ? `${draft.discount}%` : `${draft.discount}`) : ''}
-                  placeholder="10% ou 10"
+                  placeholder={discountPlaceholder()}
                   onChange={(event) => {
                     const parsed = parseDiscountInput(event.target.value);
                     update((c) => ({ ...c, discount_type: parsed.type, discount: parsed.value }));
@@ -716,14 +727,18 @@ function NewOrderForm({ orderId, onExit }: { orderId?: number; onExit?: () => vo
                   <span>Subtotal:</span>
                   <span>{formatCurrency(itemsTotal)}</span>
                 </div>
-                <div className="eop-total-row">
-                  <span>Frete:</span>
-                  <span>{formatCurrency(draft.shipping)}</span>
-                </div>
-                <div className="eop-total-row">
-                  <span>Desconto:</span>
-                  <span>- {formatCurrency(generalDiscount)}</span>
-                </div>
+                {draft.shipping > 0 ? (
+                  <div className="eop-total-row">
+                    <span>Frete:</span>
+                    <span>{formatCurrency(draft.shipping)}</span>
+                  </div>
+                ) : null}
+                {generalDiscount > 0 ? (
+                  <div className="eop-total-row">
+                    <span>Desconto:</span>
+                    <span>- {formatCurrency(generalDiscount)}</span>
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>

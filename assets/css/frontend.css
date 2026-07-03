@@ -429,11 +429,19 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
 }
 
 /*! Generated from assets/scss/frontend/*.scss. Edit the SCSS source files, not assets/css/frontend.css. */
+/* O block theme limita o conteudo a --wp--style--global--content-size (800px),
+   o que esmagava o PDV. Libera o mount para usar a largura total do container. */
+#eop-frontend-app {
+  --wp--style--global--content-size: 100%;
+  max-width: none;
+  width: 100%;
+}
+
 .eop-pdv {
   max-width: 1420px;
   margin: 0 auto;
   padding: 28px 22px 56px;
-  container-type: inline-size; /* layout responde a largura DO PDV (embed Elementor), nao da viewport */
+  container-type: inline-size; /* layout responde a largura DO PDV, nao da viewport */
 }
 .eop-pdv-header {
   position: relative;
@@ -2333,6 +2341,26 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
   font-size: 15px;
   line-height: 1.6;
 }
+.eop-post-flow__contract-copy .eop-post-flow__contract-context {
+  order: 4;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.eop-post-flow__contract-copy .eop-post-flow__contract-ctx {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
 .eop-post-flow__contract-copy > span:not([class]) {
   order: 1;
   display: block;
@@ -3269,9 +3297,9 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
   width: 100%;
   min-height: 46px;
   padding: 11px 14px;
-  border: 1px solid var(--eop-border, #e3e8f1);
-  border-radius: 12px;
-  background: #fff;
+  border: 1px solid var(--eop-border, #e3e8f1) !important;
+  border-radius: 12px !important;
+  background: #fff !important;
   font-size: 15px;
   color: var(--eop-text, #172033);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -3325,9 +3353,6 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
   }
 }
 @media (max-width: 1280px) {
-  .eop-login-wrap {
-    grid-template-columns: 1fr;
-  }
   /* .eop-pdv-grid / .eop-pdv-sidebar agora colapsam por container query
      (ver _dashboard.scss) — nao mais por viewport, pois o PDV vive embutido
      num container Elementor mais estreito que a tela. */
@@ -3449,5 +3474,11 @@ body .eop-proposal-wrap .eop-notice.eop-notice-success {
   }
   .eop-post-flow__actions .eop-proposal-button {
     width: 100%;
+  }
+}
+/* Login: colapsa 2->1 coluna so em tela estreita (antes era 1280px e quebrava no desktop ~1277). */
+@media (max-width: 760px) {
+  .eop-login-wrap {
+    grid-template-columns: 1fr;
   }
 }

@@ -85,7 +85,9 @@ function RichTextEditor({
     }
     const incoming = value || '';
     if (!editor.isFocused && incoming !== editor.getHTML()) {
-      editor.commands.setContent(incoming, false);
+      // TipTap v3: 2o arg e options ({ emitUpdate }), nao mais boolean. Com `false`
+      // o setContent nao carregava o HTML salvo (documento abria "fora do formato").
+      editor.commands.setContent(incoming, { emitUpdate: false });
     }
   }, [value, editor]);
 
@@ -322,6 +324,7 @@ export default function DocumentsManager() {
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -366,6 +369,24 @@ export default function DocumentsManager() {
 
   function removeDocument(index: number) {
     setDocuments((current) => current.filter((_, i) => i !== index));
+    setOpenIndex(null);
+    setSaveState('idle');
+    setMessage('');
+  }
+
+  // Reordena via drag-and-drop (handle ≡). A ordem do array e a ordem salva/exibida,
+  // entao arrastar + salvar persiste.
+  function dropOnto(targetIndex: number) {
+    setDocuments((current) => {
+      if (dragIndex === null || dragIndex === targetIndex || dragIndex < 0 || dragIndex >= current.length) {
+        return current;
+      }
+      const next = [...current];
+      const [moved] = next.splice(dragIndex, 1);
+      next.splice(targetIndex, 0, moved);
+      return next;
+    });
+    setDragIndex(null);
     setOpenIndex(null);
     setSaveState('idle');
     setMessage('');
@@ -432,13 +453,45 @@ export default function DocumentsManager() {
             const isOpen = openIndex === index;
 
             return (
-              <div className={`eop-react-accordion ${isOpen ? 'is-open' : ''}`} key={index}>
-                <div className="eop-react-doc__head">
+              <div
+                className={`eop-react-accordion ${isOpen ? 'is-open' : ''} ${dragIndex === index ? 'is-dragging' : ''}`}
+                key={index}
+                onDragOver={(event) => {
+                  if (dragIndex !== null) {
+                    event.preventDefault();
+                  }
+                }}
+                onDrop={() => dropOnto(index)}
+                style={dragIndex === index ? { opacity: 0.5 } : undefined}
+              >
+                <div className="eop-react-doc__head" style={{ display: 'flex', alignItems: 'stretch', gap: 6 }}>
+                  <span
+                    className="eop-react-doc__drag-handle"
+                    draggable
+                    onDragStart={() => setDragIndex(index)}
+                    onDragEnd={() => setDragIndex(null)}
+                    title="Arraste para reordenar"
+                    aria-label="Arraste para reordenar"
+                    role="button"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '0 12px',
+                      cursor: 'grab',
+                      color: '#9aa3b8',
+                      fontSize: 18,
+                      lineHeight: 1,
+                      userSelect: 'none',
+                    }}
+                  >
+                    ☰
+                  </span>
                   <button
                     type="button"
                     className="eop-react-accordion__head"
                     aria-expanded={isOpen}
                     onClick={() => setOpenIndex(isOpen ? null : index)}
+                    style={{ flex: 1 }}
                   >
                     <span className="eop-react-accordion__title">{document.title || 'Novo documento'}</span>
                     <span className="eop-react-doc__type-tag">

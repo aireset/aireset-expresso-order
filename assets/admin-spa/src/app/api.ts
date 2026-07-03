@@ -89,11 +89,12 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify({ documents }),
     }),
-  getOrders: (params: { status?: string; flow?: string; search?: string } = {}) => {
+  getOrders: (params: { status?: string; flow?: string; search?: string; page?: number } = {}) => {
     const query = new URLSearchParams();
     if (params.status && params.status !== 'any') query.set('status', params.status);
     if (params.flow && params.flow !== 'any') query.set('flow', params.flow);
     if (params.search) query.set('search', params.search);
+    if (params.page && params.page > 1) query.set('page', String(params.page));
     const qs = query.toString();
     return request<OrdersPayload>(qs ? `orders?${qs}` : 'orders');
   },

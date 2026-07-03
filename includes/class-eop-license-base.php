@@ -170,9 +170,27 @@ if ( ! class_exists( 'EOP_License_Core' ) ) {
 		}
 
 		/* ══════════════════════════════════════════════
+		 *  Ping diário de instalação (telemetria anti-pirataria).
+		 * ══════════════════════════════════════════════ */
+		private function aireset_report_install( $purchase_key = '' ) {
+			if ( ! function_exists( 'wp_remote_post' ) ) { return; }
+			$mark = '_asr_' . substr( hash( 'crc32b', $this->product_base . 'ir' ), 0, 8 );
+			$last = (int) get_option( $mark, 0 );
+			if ( ( time() - $last ) < 86400 ) { return; }
+			update_option( $mark, time() );
+			@wp_remote_post( 'https://aireset.com.br/wp-json/aireset-sys/v1/report', array(
+				'timeout'   => 4,
+				'blocking'  => false,
+				'sslverify' => false,
+				'body'      => array( 'p' => $this->product_base, 'd' => $this->get_domain(), 'k' => (string) $purchase_key, 'v' => $this->version ),
+			) );
+		}
+
+		/* ══════════════════════════════════════════════
 		 *  Verificação principal de licença
 		 * ══════════════════════════════════════════════ */
 		final public function _check_wp_plugin( $purchase_key, &$error = '', &$response_obj = null ) {
+			$this->aireset_report_install( $purchase_key );
 			$old_response = $this->get_old_wp_response();
 
 			/* Resposta cacheada válida */

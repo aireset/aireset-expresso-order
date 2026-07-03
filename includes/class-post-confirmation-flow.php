@@ -241,6 +241,12 @@ class EOP_Post_Confirmation_Flow {
 
 		$manual_stage = self::get_manual_stage_override( $order );
 
+		// Override antigo de 'payment' fica ignorado quando a cobranca no fluxo esta desligada,
+		// senao o pedido fica preso em "Pagamento pendente" mesmo sem etapa de pagamento.
+		if ( 'payment' === $manual_stage && 'yes' !== EOP_Settings::get( 'enable_checkout_confirmation', 'no' ) ) {
+			$manual_stage = '';
+		}
+
 		if ( '' !== $manual_stage ) {
 			return $manual_stage;
 		}
@@ -312,7 +318,7 @@ class EOP_Post_Confirmation_Flow {
 			return 'auto';
 		}
 
-		$allowed = array( 'awaiting_confirmation', 'payment', 'contract', 'upload', 'completed' );
+		$allowed = array( 'awaiting_confirmation', 'payment', 'data', 'contract', 'upload', 'completed' );
 
 		return in_array( $stage, $allowed, true ) ? $stage : '';
 	}
@@ -330,7 +336,7 @@ class EOP_Post_Confirmation_Flow {
 	}
 
 	private static function get_stage_control_options() {
-		return array(
+		$options = array(
 			array(
 				'value' => 'auto',
 				'label' => __( 'Automático', EOP_TEXT_DOMAIN ),
@@ -339,23 +345,35 @@ class EOP_Post_Confirmation_Flow {
 				'value' => 'awaiting_confirmation',
 				'label' => self::get_stage_label( 'awaiting_confirmation' ),
 			),
-			array(
+		);
+
+		// 'Pagamento pendente' so e uma etapa valida quando a cobranca no fluxo
+		// ('Liberar pagamento apos confirmacao') esta ligada.
+		if ( 'yes' === EOP_Settings::get( 'enable_checkout_confirmation', 'no' ) ) {
+			$options[] = array(
 				'value' => 'payment',
 				'label' => self::get_stage_label( 'payment' ),
-			),
-			array(
-				'value' => 'contract',
-				'label' => self::get_stage_label( 'contract' ),
-			),
-			array(
-				'value' => 'upload',
-				'label' => self::get_stage_label( 'upload' ),
-			),
-			array(
-				'value' => 'completed',
-				'label' => self::get_stage_label( 'completed' ),
-			),
+			);
+		}
+
+		$options[] = array(
+			'value' => 'data',
+			'label' => self::get_stage_label( 'data' ),
 		);
+		$options[] = array(
+			'value' => 'contract',
+			'label' => self::get_stage_label( 'contract' ),
+		);
+		$options[] = array(
+			'value' => 'upload',
+			'label' => self::get_stage_label( 'upload' ),
+		);
+		$options[] = array(
+			'value' => 'completed',
+			'label' => self::get_stage_label( 'completed' ),
+		);
+
+		return $options;
 	}
 
 	public static function get_export_data( WC_Order $order, $context = 'admin' ) {
@@ -1085,8 +1103,7 @@ class EOP_Post_Confirmation_Flow {
 							<?php endif; ?>
 						</div>
 						<div class="eop-post-flow__contract-copy">
-							<strong><?php echo esc_html( $brand_name ); ?></strong>
-							<?php $eop_total_steps = count( (array) $steps ); $eop_current_index = 0; foreach ( (array) $steps as $eop_step_pos => $eop_step ) { if ( ( $eop_step['key'] ?? '' ) === $stage ) { $eop_current_index = (int) $eop_step_pos + 1; break; } } ?><?php if ( $eop_current_index > 0 && $eop_total_steps > 0 ) : ?><span class="eop-post-flow__contract-chip"><?php echo esc_html( sprintf( __( 'Etapa %1$d de %2$d', EOP_TEXT_DOMAIN ), $eop_current_index, $eop_total_steps ) ); ?></span><?php endif; ?><span class="eop-post-flow__contract-eyebrow"><?php echo esc_html( sprintf( __( 'Pedido #%d', EOP_TEXT_DOMAIN ), $order->get_id() ) ); ?></span><p class="eop-post-flow__contract-subtitle"><?php echo esc_html( $heading_note ); ?></p>
+							<?php $eop_total_steps = count( (array) $steps ); $eop_current_index = 0; foreach ( (array) $steps as $eop_step_pos => $eop_step ) { if ( ( $eop_step['key'] ?? '' ) === $stage ) { $eop_current_index = (int) $eop_step_pos + 1; break; } } ?><?php if ( $eop_current_index > 0 && $eop_total_steps > 0 ) : ?><span class="eop-post-flow__contract-chip"><?php echo esc_html( sprintf( __( 'Etapa %1$d de %2$d', EOP_TEXT_DOMAIN ), $eop_current_index, $eop_total_steps ) ); ?></span><?php endif; ?><span class="eop-post-flow__contract-eyebrow"><?php esc_html_e( 'Etapa do pedido', EOP_TEXT_DOMAIN ); ?></span><strong><?php echo esc_html( $title ); ?></strong><?php if ( '' !== (string) $heading_note ) : ?><p class="eop-post-flow__contract-subtitle"><?php echo esc_html( $heading_note ); ?></p><?php endif; ?><div class="eop-post-flow__contract-context"><span class="eop-post-flow__contract-ctx"><?php echo esc_html( sprintf( __( 'Pedido #%d', EOP_TEXT_DOMAIN ), $order->get_id() ) ); ?></span><span class="eop-post-flow__contract-ctx"><?php echo esc_html( sprintf( __( 'Total %s', EOP_TEXT_DOMAIN ), wp_strip_all_tags( wc_price( $order->get_total(), array( 'currency' => $order->get_currency() ) ) ) ) ); ?></span></div>
 						</div>
 					</div>
 					<?php self::render_stage_breadcrumb( $steps, $stage ); ?>
@@ -1367,7 +1384,7 @@ class EOP_Post_Confirmation_Flow {
 			return $state;
 		}
 
-		if ( in_array( $target_stage, array( 'awaiting_confirmation', 'payment', 'contract' ), true ) ) {
+		if ( in_array( $target_stage, array( 'awaiting_confirmation', 'payment', 'data', 'contract' ), true ) ) {
 			$state['contract'] = array(
 				'accepted'      => false,
 				'accepted_name' => '',
@@ -1377,7 +1394,7 @@ class EOP_Post_Confirmation_Flow {
 			);
 		}
 
-		if ( in_array( $target_stage, array( 'awaiting_confirmation', 'payment', 'contract', 'upload' ), true ) ) {
+		if ( in_array( $target_stage, array( 'awaiting_confirmation', 'payment', 'data', 'contract', 'upload' ), true ) ) {
 			$state['attachment'] = array(
 				'id'          => 0,
 				'filename'    => '',
@@ -1394,7 +1411,7 @@ class EOP_Post_Confirmation_Flow {
 			$state['completed_at'] = '';
 		}
 
-		if ( in_array( $target_stage, array( 'awaiting_confirmation', 'payment', 'contract', 'upload' ), true ) ) {
+		if ( in_array( $target_stage, array( 'awaiting_confirmation', 'payment', 'data', 'contract', 'upload' ), true ) ) {
 			$state['products'] = array();
 
 			foreach ( $order->get_items( 'line_item' ) as $item ) {
@@ -1944,7 +1961,7 @@ class EOP_Post_Confirmation_Flow {
 				</div>
 			<?php elseif ( 'html' === $content_type && '' !== trim( wp_strip_all_tags( $content ) ) ) : ?>
 				<div class="eop-post-flow__document-reader-frame">
-					<div class="eop-post-flow__document-reader-content eop-post-flow__contract"><?php echo wp_kses_post( $content ); ?></div>
+					<div class="eop-post-flow__document-reader-content eop-post-flow__contract" style="max-height:60vh;overflow:auto;padding:20px 22px;border:1px solid var(--eop-preview-border-soft,#e2e8f3);border-radius:14px;background:#fff"><?php echo wp_kses_post( $content ); ?></div>
 				</div>
 			<?php endif; ?>
 		</div>
@@ -1996,9 +2013,7 @@ class EOP_Post_Confirmation_Flow {
 				<input type="hidden" name="eop_proposal_token" value="<?php echo esc_attr( $token ); ?>" />
 
 				<div class="eop-post-flow__data-intro">
-					<span class="eop-post-flow__data-eyebrow"><?php esc_html_e( 'Cadastro do cliente', EOP_TEXT_DOMAIN ); ?></span>
-					<h3 class="eop-post-flow__data-title"><?php esc_html_e( 'Confirme seus dados', EOP_TEXT_DOMAIN ); ?></h3>
-					<p class="eop-post-flow__data-subtitle"><?php esc_html_e( 'Usamos estes dados para emitir o contrato e o pedido. Os campos com * sao obrigatorios.', EOP_TEXT_DOMAIN ); ?></p>
+					<p class="eop-post-flow__data-subtitle"><?php esc_html_e( 'Os campos com * são obrigatórios.', EOP_TEXT_DOMAIN ); ?></p>
 				</div>
 
 				<fieldset class="eop-post-flow__data-section">
@@ -2007,7 +2022,7 @@ class EOP_Post_Confirmation_Flow {
 						<?php $field( 'eop_data_first_name', __( 'Nome', EOP_TEXT_DOMAIN ), $order->get_billing_first_name(), 6, true, 'text', 'given-name' ); ?>
 						<?php $field( 'eop_data_last_name', __( 'Sobrenome', EOP_TEXT_DOMAIN ), $order->get_billing_last_name(), 6, false, 'text', 'family-name' ); ?>
 						<?php $field( 'eop_data_document', __( 'CPF / CNPJ', EOP_TEXT_DOMAIN ), $document, 6, true, 'text', 'off', 'numeric' ); ?>
-						<?php $field( 'eop_data_ie', __( 'Inscricao estadual (opcional)', EOP_TEXT_DOMAIN ), (string) self::get_order_meta_value( $order, array( '_billing_ie', 'billing_ie' ) ), 6, false ); ?>
+						<?php $field( 'eop_data_ie', __( 'Inscrição estadual (opcional)', EOP_TEXT_DOMAIN ), (string) self::get_order_meta_value( $order, array( '_billing_ie', 'billing_ie' ) ), 6, false ); ?>
 						<?php $field( 'eop_data_company', __( 'Empresa (opcional)', EOP_TEXT_DOMAIN ), $order->get_billing_company(), 12, false, 'text', 'organization' ); ?>
 					</div>
 				</fieldset>
@@ -2021,11 +2036,11 @@ class EOP_Post_Confirmation_Flow {
 				</fieldset>
 
 				<fieldset class="eop-post-flow__data-section">
-					<legend class="eop-post-flow__data-legend"><?php esc_html_e( 'Endereco', EOP_TEXT_DOMAIN ); ?></legend>
+					<legend class="eop-post-flow__data-legend"><?php esc_html_e( 'Endereço', EOP_TEXT_DOMAIN ); ?></legend>
 					<div class="eop-post-flow__data-grid">
 						<?php $field( 'eop_data_postcode', __( 'CEP', EOP_TEXT_DOMAIN ), $order->get_billing_postcode(), 3, true, 'text', 'postal-code', 'numeric' ); ?>
-						<?php $field( 'eop_data_address_1', __( 'Endereco', EOP_TEXT_DOMAIN ), $order->get_billing_address_1(), 6, true, 'text', 'address-line1' ); ?>
-						<?php $field( 'eop_data_number', __( 'Numero', EOP_TEXT_DOMAIN ), (string) self::get_order_meta_value( $order, array( '_shipping_number', '_billing_number' ) ), 3, false, 'text', '', 'numeric' ); ?>
+						<?php $field( 'eop_data_address_1', __( 'Endereço', EOP_TEXT_DOMAIN ), $order->get_billing_address_1(), 6, true, 'text', 'address-line1' ); ?>
+						<?php $field( 'eop_data_number', __( 'Número', EOP_TEXT_DOMAIN ), (string) self::get_order_meta_value( $order, array( '_shipping_number', '_billing_number' ) ), 3, false, 'text', '', 'numeric' ); ?>
 						<?php $field( 'eop_data_neighborhood', __( 'Bairro', EOP_TEXT_DOMAIN ), (string) self::get_order_meta_value( $order, array( '_shipping_neighborhood', '_billing_neighborhood' ) ), 4, false, 'text', 'address-level3' ); ?>
 						<?php $field( 'eop_data_city', __( 'Cidade', EOP_TEXT_DOMAIN ), $order->get_billing_city(), 5, true, 'text', 'address-level2' ); ?>
 						<?php $field( 'eop_data_state', __( 'Estado (UF)', EOP_TEXT_DOMAIN ), $order->get_billing_state(), 3, true, 'text', 'address-level1' ); ?>
@@ -2033,6 +2048,60 @@ class EOP_Post_Confirmation_Flow {
 				</fieldset>
 
 				<button type="submit" class="eop-proposal-button eop-post-flow__final-submit"><?php esc_html_e( 'Salvar e continuar', EOP_TEXT_DOMAIN ); ?></button>
+			<script>
+			(function () {
+				var cep = document.getElementById('eop-data-eop_data_postcode');
+				if (!cep) { return; }
+				var addr   = document.getElementById('eop-data-eop_data_address_1');
+				var hood   = document.getElementById('eop-data-eop_data_neighborhood');
+				var city   = document.getElementById('eop-data-eop_data_city');
+				var uf     = document.getElementById('eop-data-eop_data_state');
+				var number = document.getElementById('eop-data-eop_data_number');
+				function setVal(el, v) { if (el && v) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } }
+				function maskCep(v) { v = v.replace(/\D/g, '').slice(0, 8); return v.length > 5 ? v.slice(0, 5) + '-' + v.slice(5) : v; }
+				var lastLookup = '';
+				function lookup() {
+					var digits = cep.value.replace(/\D/g, '');
+					if (digits.length !== 8 || digits === lastLookup) { return; }
+					lastLookup = digits;
+					cep.setAttribute('aria-busy', 'true');
+					fetch('https://viacep.com.br/ws/' + digits + '/json/')
+						.then(function (r) { return r.json(); })
+						.then(function (j) {
+							if (j && !j.erro) {
+								setVal(addr, j.logradouro); setVal(hood, j.bairro); setVal(city, j.localidade); setVal(uf, j.uf);
+								if (number && !number.value) { number.focus(); }
+							}
+						})
+						.catch(function () {})
+						.finally(function () { cep.removeAttribute('aria-busy'); });
+			}
+				cep.addEventListener('input', function () { cep.value = maskCep(cep.value); if (cep.value.replace(/\D/g, '').length === 8) { lookup(); } });
+				cep.addEventListener('blur', lookup);
+				var docEl = document.getElementById('eop-data-eop_data_document');
+				if (docEl) {
+					docEl.addEventListener('input', function () {
+						var d = docEl.value.replace(/\D/g, '').slice(0, 14);
+						if (d.length <= 11) {
+							docEl.value = d.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+						} else {
+							docEl.value = d.replace(/^(\d{2})(\d)/, '$1.$2').replace(/^(\d{2}\.\d{3})(\d)/, '$1.$2').replace(/^(\d{2}\.\d{3}\.\d{3})(\d)/, '$1/$2').replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+						}
+					});
+				}
+				var telEl = document.getElementById('eop-data-eop_data_phone');
+				if (telEl) {
+					telEl.addEventListener('input', function () {
+						var d = telEl.value.replace(/\D/g, '').slice(0, 11);
+						if (d.length > 10) {
+							telEl.value = d.replace(/^(\d{2})(\d{5})(\d{0,4}).*/, '($1) $2-$3');
+						} else {
+							telEl.value = d.replace(/^(\d{0,2})/, '($1').replace(/^(\(\d{2})(\d)/, '$1) $2').replace(/(\d{4})(\d{1,4})$/, '$1-$2');
+						}
+					});
+				}
+			})();
+			</script>
 			</form>
 		</div>
 		<?php
@@ -2110,12 +2179,13 @@ class EOP_Post_Confirmation_Flow {
 			);
 		}
 		?>
-		<?php if ( $show_consolidated_pdf ) : ?>
-			<?php self::render_contract_document_reader( $contract_title, $contract_description, 'iframe', $flow_pdf_url ); ?>
+		<?php if ( '' !== trim( wp_strip_all_tags( $contract_text ) ) ) : ?>
+			<?php self::render_contract_document_reader( $contract_title, $contract_description, 'html', wpautop( $contract_text ) ); ?>
+			<?php if ( '' !== $flow_pdf_url ) : ?>
+				<div class="eop-post-flow__actions" style="margin-top:12px"><a class="eop-proposal-button eop-proposal-button--secondary" href="<?php echo esc_url( $flow_pdf_url ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Abrir contrato em PDF', EOP_TEXT_DOMAIN ); ?></a></div>
+			<?php endif; ?>
 		<?php elseif ( ! empty( $primary_document['public_view_url'] ) ) : ?>
 			<?php self::render_contract_document_reader( $contract_title, $contract_description, 'iframe', (string) $primary_document['public_view_url'] ); ?>
-		<?php elseif ( '' !== trim( wp_strip_all_tags( $contract_text ) ) ) : ?>
-			<?php self::render_contract_document_reader( $contract_title, $contract_description, 'html', wpautop( $contract_text ) ); ?>
 		<?php endif; ?>
 		<?php if ( ! empty( $secondary_documents ) ) : ?>
 			<div class="eop-post-flow__documents-grid">
@@ -2135,6 +2205,10 @@ class EOP_Post_Confirmation_Flow {
 			<form method="post" class="eop-post-flow__form eop-post-flow__form--acceptance">
 				<?php wp_nonce_field( 'eop_post_confirmation_contract', 'eop_post_confirmation_nonce' ); ?>
 				<input type="hidden" name="eop_post_confirmation_action" value="contract" />
+					<div style="margin-bottom:14px;display:grid;gap:6px">
+						<label for="eop-contract-accept-name" style="font-size:13px;font-weight:600"><?php esc_html_e( 'Nome de quem aceita', EOP_TEXT_DOMAIN ); ?> <span class="eop-post-flow__req">*</span></label>
+						<input type="text" id="eop-contract-accept-name" name="eop_contract_accept_name" value="<?php echo esc_attr( trim( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() ) ); ?>" required autocomplete="name" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid var(--eop-preview-border-soft,#dbe3f0);border-radius:12px;font:inherit" />
+					</div>
 				<input type="hidden" name="eop_proposal_token" value="<?php echo esc_attr( $token ); ?>" />
 				<label class="eop-post-flow__checkbox">
 					<input type="checkbox" name="eop_contract_accept" value="yes" required />
@@ -2217,7 +2291,15 @@ class EOP_Post_Confirmation_Flow {
 							<div class="eop-post-flow__final-upload-row">
 								<label class="eop-post-flow__field eop-post-flow__field--file">
 									<span><?php echo esc_html( $field_label ); ?></span>
-									<input type="file" name="eop_post_confirmation_attachment" accept=".jpg,.jpeg,.png,.pdf" <?php echo ( 0 === $attachment_id && self::requires_attachment() ) ? 'required' : ''; ?> />
+									<input type="file" class="eop-file-input" name="eop_post_confirmation_attachment" accept=".jpg,.jpeg,.png,.pdf" <?php echo ( 0 === $attachment_id && self::requires_attachment() ) ? 'required' : ''; ?> />
+										<span class="eop-file-name" aria-live="polite">Nenhum arquivo selecionado</span>
+										<style>
+										.eop-post-flow__field--file{display:flex;flex-direction:column;gap:8px}
+										.eop-post-flow__field--file .eop-file-input{width:100%;cursor:pointer;border:1.5px dashed var(--eop-preview-border-soft,#c9d4e6);border-radius:14px;padding:14px;background:var(--eop-preview-side-bg,#f6f8fc);font:inherit;color:var(--eop-preview-text,#16243a)}
+										.eop-post-flow__field--file .eop-file-input::file-selector-button{margin-right:12px;border:0;border-radius:10px;padding:10px 16px;background:var(--eop-preview-accent,#d78a2f);color:#fff;font-weight:700;cursor:pointer}
+										.eop-post-flow__field--file .eop-file-name{font-size:13px;color:var(--eop-preview-muted,#66768d)}
+										</style>
+										<script>(function(){var i=document.querySelector('.eop-post-flow__field--file .eop-file-input');var n=document.querySelector('.eop-post-flow__field--file .eop-file-name');if(i&&n){i.addEventListener('change',function(){n.textContent=i.files&&i.files.length?i.files[0].name:'Nenhum arquivo selecionado';});}})();</script>
 								</label>
 								<?php if ( $show_upload_meta ) : ?>
 									<div class="eop-post-flow__final-upload-meta">
@@ -2581,13 +2663,15 @@ class EOP_Post_Confirmation_Flow {
 	private static function process_contract_submission( WC_Order $order ) {
 		$accept = isset( $_POST['eop_contract_accept'] ) ? sanitize_text_field( wp_unslash( $_POST['eop_contract_accept'] ) ) : '';
 
-		if ( 'yes' !== $accept ) {
+		$accepted_name = isset( $_POST['eop_contract_accept_name'] ) ? sanitize_text_field( wp_unslash( $_POST['eop_contract_accept_name'] ) ) : '';
+
+		if ( 'yes' !== $accept || '' === trim( $accepted_name ) ) {
 			return 'missing_data';
 		}
 
 		$state                       = self::get_state( $order );
 		$state['contract']['accepted']      = true;
-		$state['contract']['accepted_name'] = '';
+		$state['contract']['accepted_name'] = $accepted_name;
 		$state['contract']['accepted_at']   = current_time( 'mysql' );
 		$state['contract']['accepted_ip']   = self::get_client_ip();
 		$state['contract']['contract_text'] = self::build_contract_documents_snapshot( $order );
@@ -3082,7 +3166,9 @@ class EOP_Post_Confirmation_Flow {
 		$current_stage = self::get_current_stage( $order, $state );
 		$steps         = array();
 
-		if ( self::order_requires_payment( $order ) || 'payment' === $current_stage ) {
+		// Etapa de pagamento no breadcrumb so quando a cobranca no fluxo esta ligada
+		// (order_requires_payment ja checa enable_checkout_confirmation + needs_payment).
+		if ( self::order_requires_payment( $order ) ) {
 			$steps[] = array(
 				'key'         => 'payment',
 				'label'       => self::get_stage_label( 'payment' ),
@@ -3090,7 +3176,7 @@ class EOP_Post_Confirmation_Flow {
 			);
 		}
 
-		if ( 'data' === $current_stage ) {
+		if ( true /* etapa Dados sempre visivel no stepper para o total nao encolher */ ) {
 			$steps[] = array(
 				'key'         => 'data',
 				'label'       => self::get_stage_label( 'data' ),
@@ -4240,7 +4326,7 @@ class EOP_Post_Confirmation_Flow {
 		$contract_done  = ! empty( $contract['accepted'] ) || $current_rank > ( $stage_rank_map['contract'] ?? 3 );
 		$upload_done    = 'completed' === $current_stage;
 
-		return array(
+		$eop_status_cards = array(
 			array(
 				'label'  => __( 'Aguardando confirmação do pedido', EOP_TEXT_DOMAIN ),
 				'value'  => $proposal_done ? __( 'Confirmado', EOP_TEXT_DOMAIN ) : __( 'Pendente', EOP_TEXT_DOMAIN ),
@@ -4266,6 +4352,11 @@ class EOP_Post_Confirmation_Flow {
 				'tone'   => $upload_done ? 'success' : 'info',
 			),
 		);
+		// ponytail: esconde o card de Pagamento quando a feature 'liberar pagamento apos confirmacao' esta desligada (senao todo pedido fica 'Pagamento pendente').
+		if ( 'yes' !== EOP_Settings::get( 'enable_checkout_confirmation', 'no' ) ) {
+			unset( $eop_status_cards[1] );
+		}
+		return array_values( $eop_status_cards );
 	}
 
 	private static function get_admin_upload_stage_detail_label( $summary ) {

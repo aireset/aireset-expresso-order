@@ -615,13 +615,24 @@ class EOP_Admin_Page {
         $public_url = self::get_order_shortcode_page_url();
 
         if ( $public_url ) {
-            return 'orders' === $view ? add_query_arg( 'view', 'orders', $public_url ) : $public_url;
+            // eop_preview=1 -> esconde a barra do wp-admin no iframe (ver EOP_Shortcode::init).
+            // eop_v -> cache-bust por versao para o iframe nao ficar preso em cache antigo.
+            $args = array(
+                'eop_preview' => '1',
+                'eop_v'       => EOP_VERSION,
+            );
+            if ( 'orders' === $view ) {
+                $args['view'] = 'orders';
+            }
+            return add_query_arg( $args, $public_url );
         }
 
         return add_query_arg(
             array(
                 'page'              => 'eop-pedido-expresso',
                 'eop_preview_frame' => '1',
+                'eop_preview'       => '1',
+                'eop_v'             => EOP_VERSION,
                 'preview_view'      => $view,
             ),
             admin_url( 'admin.php' )
@@ -780,6 +791,10 @@ class EOP_Admin_Page {
 
     private static function render_preview_frame_page() {
         $view = self::normalize_preview_frame_view( isset( $_GET['preview_view'] ) ? wp_unslash( $_GET['preview_view'] ) : '' );
+
+        // Preview e um render isolado da pagina publica; nao deve mostrar a barra do wp-admin
+        // (a previa da proposta ja vem limpa via srcdoc; aqui igualamos o comportamento).
+        show_admin_bar( false );
 
         if ( 'orders' === $view && ! isset( $_GET['view'] ) ) {
             $_GET['view'] = 'orders';

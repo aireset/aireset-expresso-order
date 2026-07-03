@@ -423,7 +423,9 @@ class EOP_Document_Manager {
             );
         }
 
-        if ( 'yes' === $config['show_total_shipping'] ) {
+        // Frete so aparece quando informado (> 0). Envio por transportadora e acordado depois,
+        // entao "Frete R$0,00" nao deve aparecer na proposta/documento.
+        if ( 'yes' === $config['show_total_shipping'] && (float) ( $totals['shipping_total'] ?? 0 ) > 0 ) {
             $rows[] = array(
                 'key'   => 'shipping',
                 'label' => __( 'Frete', EOP_TEXT_DOMAIN ),
@@ -1239,7 +1241,7 @@ class EOP_Document_Manager {
             $start_gap  = 21 - max( 0, $line_count - 1 ) * 5;
 
             foreach ( $lines as $line_index => $line ) {
-                $add_text_at( $line, $x, $header_top - $start_gap - ( $line_index * 11 ), 'F2', max( 7, $table_header_font_size - 1 ), 'center', $header_text_color );
+                $add_text_at( $line, $x, $header_top - $start_gap - ( $line_index * 11 ), 'F2', max( 7, $table_header_font_size - 1 ), 'right', $header_text_color );
             }
         };
 
@@ -1307,28 +1309,28 @@ class EOP_Document_Manager {
                 }
 
                 if ( 'quantity' === $column_key && isset( $meta_lines['quantity'] ) ) {
-                    $add_text_at( $meta_lines['quantity'], $column_x, $row_top, 'F1', $table_body_font_size, 'center', $body_text_color );
+                    $add_text_at( $meta_lines['quantity'], $column_x, $row_top, 'F1', $table_body_font_size, 'right', $body_text_color );
                     continue;
                 }
 
                 if ( 'unit_price' === $column_key && isset( $meta_lines['unit_price'] ) ) {
-                    $add_text_at( $meta_lines['unit_price'], $column_x, $row_top, 'F1', $table_body_font_size, 'center', $body_text_color );
+                    $add_text_at( $meta_lines['unit_price'], $column_x, $row_top, 'F1', $table_body_font_size, 'right', $body_text_color );
                     continue;
                 }
 
                 if ( 'discount' === $column_key && isset( $meta_lines['discount'] ) ) {
-                    $add_text_at( $meta_lines['discount'], $column_x, $row_top, 'F2', $discount_secondary_size, 'center', $body_text_color );
+                    $add_text_at( $meta_lines['discount'], $column_x, $row_top, 'F2', $discount_secondary_size, 'right', $body_text_color );
 
                     continue;
                 }
 
                 if ( 'discounted_unit_price' === $column_key && isset( $meta_lines['discounted_unit_price'] ) ) {
-                    $add_text_at( $meta_lines['discounted_unit_price'], $column_x, $row_top, 'F1', $table_body_font_size, 'center', $body_text_color );
+                    $add_text_at( $meta_lines['discounted_unit_price'], $column_x, $row_top, 'F1', $table_body_font_size, 'right', $body_text_color );
                     continue;
                 }
 
                 if ( 'line_total' === $column_key && isset( $meta_lines['line_total'] ) ) {
-                    $add_text_at( $meta_lines['line_total'], $column_x, $row_top, 'F2', $table_body_font_size, 'center', $body_text_color );
+                    $add_text_at( $meta_lines['line_total'], $column_x, $row_top, 'F2', $table_body_font_size, 'right', $body_text_color );
                 }
             }
 
@@ -2330,16 +2332,19 @@ class EOP_Document_Manager {
         }
 
         if ( 1 === $count ) {
-            $positions[ $column_keys[0] ] = 500;
+            $positions[ $column_keys[0] ] = 545;
             return $positions;
         }
 
-        $start = 325;
-        $end   = 515;
-        $step  = ( $end - $start ) / max( 1, $count - 1 );
+        // Posicoes = BORDA DIREITA de cada coluna (valores sao right-aligned). Assim um valor
+        // largo (ex.: "R$5.125,77") cresce para a esquerda no proprio espaco, sem colidir com a
+        // coluna vizinha nem ultrapassar a borda da pagina (page_right=549). Antes era center com
+        // passo ~47pt, e valores de ~55pt se sobrepunham ("R$13,1" colado em "R$5.125,77").
+        $end  = 545;
+        $step = 66;
 
         foreach ( $column_keys as $index => $column_key ) {
-            $positions[ $column_key ] = (int) round( $start + ( $step * $index ) );
+            $positions[ $column_key ] = (int) round( $end - ( ( $count - 1 - $index ) * $step ) );
         }
 
         return $positions;

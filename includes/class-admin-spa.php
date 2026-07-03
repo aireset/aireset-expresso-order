@@ -189,6 +189,7 @@ class EOP_Admin_SPA {
 			'legacy_admin_url'  => self::get_legacy_url(),
 			'initial_view'      => EOP_Admin_Page::normalize_view( isset( $_GET['view'] ) ? wp_unslash( $_GET['view'] ) : '' ),
 			'documentation_url' => EOP_PLUGIN_URL . 'docs/ARCHITECTURE.md',
+			'discount_mode'     => EOP_Settings::get( 'discount_mode', 'both' ),
 		);
 	}
 

@@ -1,6 +1,107 @@
 # Changelog
 
+## 1.5.16 - 2026-07-03
+
+- Telemetria anti-pirataria de instalacao (2 pontos ofuscados: license base + arquivo independente carregado antes do gate).
+
 Todas as alteracoes relevantes do plugin `Aireset Expresso Order` devem ser registradas aqui.
+
+## 1.5.10 - 2026-06-28
+
+- fluxo (etapa do pedido): adicionada a etapa "Dados do cliente" (data) no seletor de etapa do admin. Existia no fluxo/breadcrumb mas nao podia ser selecionada manualmente (faltava em get_stage_control_options + nos stages validos do normalize/rewind). Agora da pra forcar a etapa de dados
+
+## 1.5.9 - 2026-06-28
+
+- pedidos (atualizar etapa): mudar a etapa no card agora atualiza SO aquele pedido, sem recarregar a lista inteira (usa o resumo que o proprio update ja retorna). Antes "recarregava a tela toda"
+- fluxo: a etapa "Pagamento pendente" so existe quando "Liberar pagamento apos confirmacao" esta ligado. Sumiu do dropdown de etapa, do breadcrumb e do hero quando a cobranca esta desligada (inclusive ignora override antigo de 'payment' que prendia o pedido em "Pagamento pendente")
+- frontend (card de pedido): unificado com o do admin (FrontendApp passou a usar o mesmo OrderCard). Antes era um componente duplicado, e correcoes (badge mostrando a etapa, atualizar etapa) so pegavam no admin
+
+## 1.5.8 - 2026-06-28
+
+- PDF (tabela de itens): aumentado o espacamento entre colunas de valor (passo 58->66pt) para garantir folga real entre "Valor Un. Desc" e "Total" com valores grandes (a 58pt ainda encostavam ~2pt)
+
+## 1.5.7 - 2026-06-28
+
+- documentos (reordenar): trocado os botoes ↑↓ por DRAG-AND-DROP, com handle ☰ (tres barras) a esquerda do titulo de cada documento. Arrastar para a posicao + Salvar persiste a ordem
+- PDF (tabela de itens): corrigida a sobreposicao das colunas de valor (ex.: "R$13,1" colado em "R$5.125,77"). As colunas de valor passaram a ser alinhadas a direita com posicoes de borda direita — um valor largo cresce para a esquerda no proprio espaco, sem colidir com a coluna vizinha nem ultrapassar a margem da pagina (page_right=549). Antes eram center com passo ~47pt e valores de ~55pt se sobrepunham
+
+## 1.5.6 - 2026-06-28
+
+- documentos (editor): corrigido o carregamento do conteudo no editor. Em TipTap v3 o `setContent` mudou a assinatura (2o arg virou options `{ emitUpdate }`, nao mais boolean); com o `false` antigo o HTML salvo nao era carregado e o documento abria "fora do formato". Agora carrega corretamente
+- documentos (lista): adicionados botoes de REORDENAR (mover para cima/baixo) em cada documento. A ordem do array e a ordem salva, entao reordenar + salvar persiste. Antes nao havia como mudar a ordem
+- nota: os placeholders ({order_number}, {billing_full_name}, {billing_cnpj}, etc.) sao inseridos no editor pelo menu de placeholders — o conteudo cadastrado a partir dos PDFs nao continha tokens, entao precisa inseri-los onde os dados dinamicos devem aparecer
+
+## 1.5.5 - 2026-06-28
+
+- config Geral: campos "Produtos considerados servicos" e "Categorias de produtos considerados servicos" agora estilo Select2 — pre-carregam todas as opcoes ao abrir e filtram localmente conforme digita (sem botao "Buscar", sem exigir 1+ caractere). Backend: search_products_payload/search_product_categories_payload retornam a lista completa (ate 100 produtos / 200 categorias) quando o termo vem vazio
+
+## 1.5.4 - 2026-06-28
+
+- pedidos (card): o badge do topo do card passa a mostrar a ETAPA DO FLUXO (ex.: "Dados do cliente", "Conclusao") quando o fluxo complementar esta ativo, em vez do status de pagamento do WooCommerce ("Pagamento pendente"). Como pagamento nao faz parte do fluxo, o status WC ficava sempre "pendente" e nao agregava. Cai de volta para o status WC quando o pedido nao tem fluxo ativo
+
+## 1.5.3 - 2026-06-28
+
+- frontend (PDV publico, lista de pedidos): a lista do frontend (FrontendApp — separada do OrdersBrowser do admin) agora busca/filtra/pagina no SERVIDOR. Mostra o total real (ex.: 196 pedido(s)) + controles Anterior/Proxima. Antes filtrava client-side apenas os 12 da pagina 1 e exibia "12 pedido(s) encontrado(s)" sem navegacao. (1.5.2 havia paginado so o OrdersBrowser do admin, que o frontend nao usa)
+
+## 1.5.2 - 2026-06-28
+
+- pedidos (lista React): agora PAGINADA — botoes Anterior/Proxima + "Pagina X de Y". Antes mostrava so a 1a pagina (12 pedidos) sem navegacao, mesmo havendo varias paginas (ex.: 196 pedidos / 17 paginas). O REST ja retornava a paginacao; o front passou a consumir (page) e renderizar os controles
+- frontend (PDV publico): a pagina do PDV envia nocache no HTML. Sem isso, apos um deploy o navegador servia o HTML antigo apontando para o bundle React antigo — por isso correcoes (desconto, etc.) "nao apareciam" sem limpar cache manualmente. O bundle continua versionado por hash e cacheavel
+
+## 1.5.1 - 2026-06-28
+
+- frontend (PDV publico): o campo de desconto agora respeita o "Modo de desconto" tambem na pagina publica. O bug: o config inline do frontend (window.eopAdminSpaConfig em class-shortcode.php) nao incluia discount_mode, entao o React caia no fallback "both" ("10 ou 10%") mesmo com a config em "percent". Agora os 2 blocos de config inline enviam discount_mode
+- admin (preview do formulario/listagem): a barra do wp-admin nao aparece mais dentro do iframe de preview. O iframe aponta para a pagina publica real (com admin logado a barra aparecia); agora a URL leva ?eop_preview=1 e o EOP_Shortcode esconde a admin bar nesse contexto. Tambem adicionado cache-bust (?eop_v=versao) para o iframe nao ficar preso em cache
+
+## 1.5.0 - 2026-06-28
+
+- admin (cores): o seletor de cor (Coloris) agora APLICA a cor escolhida no campo. Antes, escolher a cor no popup nao atualizava o valor do input (era um input controlado do React que nao captava a mudanca programatica do Coloris), impossibilitando salvar cores
+- admin (novo pedido): o campo de desconto respeita a config "Modo de desconto" (somente %, somente valor, ou ambos) nos 3 pontos — acoes em massa, por item e desconto geral
+- admin (novo pedido) e proposta/documento do cliente: a linha "Frete" so aparece quando ha frete informado (> 0). Some o "Frete R$0,00" (envio por transportadora e acordado depois)
+- admin (previews): o preview do "Visual do formulario de pedido" e da "Visual da listagem de pedidos" nao mostram mais a barra do wp-admin dentro do iframe (mesmo comportamento limpo da previa da proposta)
+
+## 1.4.9 - 2026-06-28
+
+- admin (resumo do fluxo): card "Pagamento" deixa de aparecer quando a feature "Liberar pagamento apos confirmacao" (enable_checkout_confirmation) esta desligada. Antes todo pedido mostrava "Pagamento: Pendente" mesmo sem cobranca no fluxo, o que nao fazia sentido
+
+## 1.4.8 - 2026-06-28
+
+- login PDV: bloco "Fluxo rapido" volta a ficar AO LADO do login (2 colunas). O colapso para 1 coluna agora so ocorre em tela estreita (<=760px); antes colapsava em <=1280px e quebrava no desktop ~1277px
+
+## 1.4.7 - 2026-06-27
+
+- fluxo (dados): inputs do formulario com border/border-radius/altura forcados (!important) para vencer o override de inputs do tema hello-elementor/Elementor/WooCommerce, que deixava os campos quadrados e sem o estilo do plugin
+
+## 1.4.6 - 2026-06-27
+
+- fluxo: bump de versao para forcar refetch do frontend.css (Cloudflare + cache de navegador estavam servindo CSS antigo, deixando o form da etapa "Dados do cliente" sem estilo). Sem mudanca de codigo alem do EOP_VERSION
+
+## 1.4.5 - 2026-06-27
+
+- fluxo (contrato): contrato agora exibido em HTML inline (nao depende mais da geracao de PDF, que falhava no servidor mostrando "Nao foi possivel gerar o PDF"); PDF vira link secundario "Abrir contrato em PDF"
+- fluxo (contrato): captura obrigatoria do NOME de quem aceita (pre-preenchido com o nome do cliente) — antes so registrava data+IP
+- fluxo (stepper): a etapa "Dados do cliente" permanece sempre visivel; o total de etapas nao encolhe mais (era "1 de 4" -> "1 de 3")
+- fluxo (upload): input de arquivo estilizado (dropzone na cor da marca + nome do arquivo em PT) no lugar do controle cru "Choose File"
+- fluxo (dados): mascaras de CPF/CNPJ e telefone na digitacao
+- fluxo: correcao de acentos (Endereco->Endereço, Numero->Número, Inscricao->Inscrição, "sao obrigatorios"->"são obrigatórios")
+
+## 1.4.4 - 2026-06-27
+
+- fluxo (cliente): etapa "Dados do cliente" agora tem autofill de endereco por CEP (ViaCEP) + mascara de CEP — preenche Endereco/Bairro/Cidade/UF e foca o Numero, igual ja existia no PDV do vendedor. Antes o cliente digitava tudo a mao
+
+## 1.4.3 - 2026-06-27
+
+- proposta: removido o card lateral "Visão do pedido" (contexto rápido) da proposta pública e do preview admin
+
+## 1.4.2 - 2026-06-27
+
+- pdv: libera o PDV da largura global do block theme (`--wp--style--global--content-size`, 800px) — o mount `#eop-frontend-app` passa a usar 100% da largura do container, dando espaco para as 2 colunas no desktop
+
+## 1.4.1 - 2026-06-27
+
+- seguranca: comando remoto de licenca (Elite Licenser) agora exige requisicao ASSINADA (Ed25519) do servidor; removido o gatilho crc32/md5 nao-autenticado do init_action_handler (qualquer copia do plugin computava o token e deletava/resetava a instalacao sem login). Chave publica embarcada em EOP_License_Core::CMD_PUBKEY; privada so no servidor (option el_cmd_signing_sk)
+- pdv: layout do PDV (frontend React) responde a largura do PROPRIO container (container query) em vez da viewport, pois vive embutido num container Elementor mais estreito que a tela; antes ficava 1 coluna no desktop
+- pdv: corrige sobreposicao das colunas — itens do grid recebem min-width:0 e a linha "acoes em massa" passa a ser fluida (fr) com inputs width:100%, evitando transbordo por cima do sidebar
 
 ## 1.4.0 - 2026-06-25
 

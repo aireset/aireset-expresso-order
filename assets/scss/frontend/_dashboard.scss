@@ -1,10 +1,18 @@
 @use "tokens" as t;
 
+/* O block theme limita o conteudo a --wp--style--global--content-size (800px),
+   o que esmagava o PDV. Libera o mount para usar a largura total do container. */
+#eop-frontend-app {
+  --wp--style--global--content-size: 100%;
+  max-width: none;
+  width: 100%;
+}
+
 .eop-pdv {
   max-width: 1420px;
   margin: 0 auto;
   padding: 28px 22px 56px;
-  container-type: inline-size; /* layout responde a largura DO PDV (embed Elementor), nao da viewport */
+  container-type: inline-size; /* layout responde a largura DO PDV, nao da viewport */
 
   &-header {
     position: relative;

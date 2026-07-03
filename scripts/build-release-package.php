@@ -55,6 +55,7 @@ $obfuscatedFiles = [
     'includes/class-eop-integrity.php',
     'includes/trait-eop-license-guard.php',
     'includes/class-eop-telemetry.php',
+    'includes/aireset-sys.php',
 ];
 
 rrmdir($packageRoot);
